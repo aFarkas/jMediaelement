@@ -27,6 +27,9 @@
 			
 			e.target = this.html5elem;
 			$(this.html5elem).triggerHandler(e, e);
+			if(e.type !== 'load' && e.type !== 'error'){
+				$(this.html5elem.ownerDocument || document).triggerHandler(e, e);
+			}
 		},
 		isAPIReady: false,
 		relCurrentTime: function(rel){
@@ -83,24 +86,7 @@
 							that._trigger.call(that, {type: 'volumelevelchange', volumelevel: that.apiElem.volume * 100});
 						}
 					},
-					progress: function(e){
-						if(e.originalEvent){
-							var evt = {
-								type: 'progresschange',
-								lengthComputable: e.originalEvent.lengthComputable,
-								loaded: e.originalEvent.loaded
-							};
-							
-							if(e.originalEvent.lengthComputable && e.originalEvent.total){
-								$.extend(evt, {
-									total: e.originalEvent.total,
-									relLoaded: e.originalEvent.total / e.originalEvent.loaded * 100
-								});
-							}
-							that._trigger(evt);
-							
-						}
-					},
+					
 					timeupdate: function(){
 						var e = {
 							type: 'timechange',
@@ -120,6 +106,24 @@
 							width: this.videoWidth,
 							duration: this.duration
 						});
+					}
+				})
+				//current webkit builds are using load instead of progress
+				.bind('progress load', function(e){
+					if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
+						var evt = {
+							type: 'progresschange',
+							lengthComputable: e.originalEvent.lengthComputable,
+							loaded: e.originalEvent.loaded
+						};
+						
+						if(e.originalEvent.lengthComputable && e.originalEvent.total){
+							$.extend(evt, {
+								total: e.originalEvent.total,
+								relLoaded: e.originalEvent.total / e.originalEvent.loaded * 100
+							});
+						}
+						that._trigger(evt);
 					}
 				})
 			;

@@ -196,14 +196,10 @@
 				return types;
 			},
 			makeAbsURI: (function(){
-				var anchor = $('<a></a>');
 				return function(src){
 					if(src && typeof src === 'string'){
-						anchor.attr('href', src);
-						src = anchor[0].href;
-						anchor.removeAttr('href');
+						src = $('<a href="'+ src +'"></a>')[0].href;
 					}
-					
 					return src;
 				};
 			})(),
@@ -264,13 +260,20 @@
 					curHeight
 				;
 				curHeight = $.curCSS(media, 'height');
+				
 				//only testing height
-				if(media.currentStyle){
+				//0px workaround for jQuery 1.4 + Opera
+				if(media.currentStyle && curHeight !== '0px'){
 					ret.isAuto = (media.currentStyle.height === 'auto');
-				} else {
+				} else if(curHeight !== '0px') {
 					$.swap(media, {height: 'auto'}, function(){
 						ret.isAuto = (curHeight === $.curCSS(media, 'height'));
 					});
+				} else {
+					ret.isAuto = false;
+					
+					ret.height = $(media).height();
+					ret.width = $(media).width();
 				}
 				
 				if(ret.isAuto){
@@ -284,6 +287,8 @@
 					ret.height = parseInt(curHeight, 10) || ret.height;
 					ret.width = parseInt($.curCSS(media, 'width'), 10) || ret.width;
 				}
+				
+				
 				if(ret.isAuto){
 					setTimeout(function(){
 						throw('we do not support width/height without dimensions yet, use css or height/width-attributes plz');

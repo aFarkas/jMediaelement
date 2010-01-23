@@ -13,7 +13,7 @@ video {
 	zoom: 1;
 	position: relative;
 	margin: 5px 0 0;
-	padding: 0 170px 0 50px;
+	padding: 0 160px 0 40px;
 }
 .js-on .media-controls {
 	display: block;

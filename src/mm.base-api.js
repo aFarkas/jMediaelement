@@ -66,9 +66,6 @@
 	
 	
 	//add API for native MM-Support
-	var normalizeEvents = {
-		
-	};
 	var nativ = {
 		_init: function(){
 			var that 		= this,
@@ -169,7 +166,7 @@
 			if(this.html5elem.load){
 				this.html5elem.load();
 			} else {
-				jElm.trigger('error');
+				jElm.triggerHanlder('error');
 			}
 		},
 		isPlaying: function(){

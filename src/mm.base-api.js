@@ -66,63 +66,64 @@
 	
 	
 	//add API for native MM-Support
+	var normalizeEvents = {
+		
+	};
 	var nativ = {
 		_init: function(){
 			var that 		= this,
-				curMuted 	= this.apiElem.muted,
-				progressData
+				curMuted 	= this.apiElem.muted
 			;
 			//addEvents
 			
 			$(this.html5elem)
-				//add volumelevelchange + mute event
-				.bind('volumechange', function(){
-					if(curMuted !== that.apiElem.muted){
-						curMuted = that.apiElem.muted;
-						that._trigger.call(that, {type: 'mute', isMuted: curMuted});
-					} else {
-						that._trigger.call(that, {type: 'volumelevelchange', volumelevel: that.apiElem.volume * 100});
-					}
-				})
-				//add 
-				.bind('progress', function(e){
-					if(e.originalEvent){
-						var evt = {
-							type: 'progresschange',
-							lengthComputable: e.originalEvent.lengthComputable,
-							loaded: e.originalEvent.loaded
-						};
-						
-						if(e.originalEvent.lengthComputable && e.originalEvent.total){
-							$.extend(evt, {
-								total: e.originalEvent.total,
-								relLoaded: e.originalEvent.total / e.originalEvent.loaded * 100
-							});
+				.bind({
+					volumechange: function(){
+						if(curMuted !== that.apiElem.muted){
+							curMuted = that.apiElem.muted;
+							that._trigger.call(that, {type: 'mute', isMuted: curMuted});
+						} else {
+							that._trigger.call(that, {type: 'volumelevelchange', volumelevel: that.apiElem.volume * 100});
 						}
-						that._trigger(evt);
-						
+					},
+					progress: function(e){
+						if(e.originalEvent){
+							var evt = {
+								type: 'progresschange',
+								lengthComputable: e.originalEvent.lengthComputable,
+								loaded: e.originalEvent.loaded
+							};
+							
+							if(e.originalEvent.lengthComputable && e.originalEvent.total){
+								$.extend(evt, {
+									total: e.originalEvent.total,
+									relLoaded: e.originalEvent.total / e.originalEvent.loaded * 100
+								});
+							}
+							that._trigger(evt);
+							
+						}
+					},
+					timeupdate: function(){
+						var e = {
+							type: 'timechange',
+							time: this.currentTime
+						};
+						if(this.duration){
+							e.duration = this.duration;
+							e.timeProgress = e.time / e.duration * 100;
+						}
+						that._trigger(e);
+					},
+					loadedmetadata: function(e){
+						that._trigger('mmAPIReady');
+						that._trigger({
+							type: 'loadedmeta',
+							height: this.videoHeight,
+							width: this.videoWidth,
+							duration: this.duration
+						});
 					}
-				})
-				.bind('timeupdate', function(){
-					var e = {
-						type: 'timechange',
-						time: this.currentTime
-					};
-					if(this.duration){
-						e.duration = this.duration;
-						e.timeProgress = e.time / e.duration * 100;
-					}
-					that._trigger(e);
-				})
-				.bind('loadedmetadata', function(e){
-					that._trigger('mmAPIReady');
-					that._trigger({
-						type: 'loadedmeta',
-						height: this.videoHeight,
-						width: this.videoWidth,
-						duration: this.duration
-					});
-					
 				})
 			;
 		},
@@ -170,7 +171,6 @@
 			} else {
 				jElm.trigger('error');
 			}
-			
 		},
 		isPlaying: function(){
 			return (!this.html5elem.paused && this.html5elem.readyState > 2 && !this.error && !this.ended);

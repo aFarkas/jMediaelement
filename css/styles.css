@@ -1,0 +1,23 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+body { 
+    font: 100.1% arial, helvetica, sans-serif;
+	max-width: 1200px;
+	width: 980px;
+	min-width: 60em;
+	margin: auto;
+    color: #000;
+	background: #fff;
+}
+
+html > body {
+	width: 100%;
+}
+
+code {
+	display: block;
+	margin: 0 0 10px;
+	white-space: pre;
+}

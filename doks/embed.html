@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Embedding Media</title>
+		<link rel="stylesheet" href="../css/styles.css" />
+		
+	</head>
+	<body>
+		
+<h1>Embedding a Media Element</h1>
+<h2>HTML: Embed Code</h2>
+<code>
+&lt;video src="video.m4v"&gt;&lt;/video&gt;
+</code>
+<code>
+&lt;video poster="poster-frame.jpg" controls="controls"&gt;
+	&lt;source src="video.ogg"&gt;&lt;/source&gt;
+	&lt;source src="video.m4v"&gt;&lt;/source&gt;
+&lt;/video&gt;
+</code>
+<code>
+&lt;video poster="poster-frame.jpg" controls="controls"&gt;
+	&lt;source src="ogg-video-but-has-some-strange-extension.foo" type="video/ogg"&gt;&lt;/source&gt;
+	&lt;source src="mp4-video-but-has-some-strange-extension.bar" type="video/mp4"&gt;&lt;/source&gt;
+&lt;/video&gt;
+</code>
+<code>
+&lt;video autoplay="autoplay" src="video.flv"&gt;&lt;/video&gt;
+</code>
+<h2>HTML: Supported Attributs and Elements</h2>
+<ul>
+	<li>
+		Elements:
+		<ul>
+			<li>video</li>
+			<li>audio</li>
+			<li>source</li>
+		</ul>
+	</li>
+	<li>
+		Attributes:
+		<ul>
+			<li>src</li>
+			<li>poster</li>
+			<li>loop</li>
+			<li>autoplay</li>
+			<li>controls</li>
+			<li>type*</li>
+		</ul>
+	</li>
+</ul>
+<h2>Javscript</h2>
+<p>Simply include all mm.*-embed.js files. To use embedding cross-browser compilant fallback, if needed and call the mediaElementEmbed-method on all Mediaelements</p>
+
+<code>
+$('audio, video').mediaElementEmbed();
+</code>
+
+<h3>mediaElementEmbed:Options</h3>
+<dl>
+	<dt>removeControls (boolean: false)</dt>
+	<dd>removes the controls-Attribute. For unobtrusive, stylable Controlelements</dd>
+	<dt>debug (boolean: false)</dt>
+	<dd>Always load the (first) implementet fallback.</dd>
+</dl>
+
+<h3>jwPlayer extends the mediaElementEmbed:Options with additional options in the jwPlayer-namespace</h3>
+<dl>
+	<dt>path (string: 'player.swf')</dt>
+	<dd>path to the JW Player swf</dd>
+	<dt>vars (object: empty)</dt>
+	<dd>additional flashvars used by swfobject to embed JW Player</dd>
+	<dt>attrs (object: empty)</dt>
+	<dd>additional attrs used by swfobject to embed JW Player</dd>
+	<dt>params (object: empty)</dt>
+	<dd>additional params used by swfobject to embed JW Player</dd>
+</dl>
+<code>
+$('video').mediaElementEmbed({
+	removeControls: true,
+	jwPlayer: {
+		path: '/myPathToJwplayer/player.swf',
+		params: {
+			wmode: true
+		}
+	}
+});
+</code>
+	
+	</body>
+</html>

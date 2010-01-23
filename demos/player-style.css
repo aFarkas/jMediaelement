@@ -1,0 +1,49 @@
+video {
+	display: block;
+	width: 432px;
+	height: 240px;
+}
+
+.ui-media-player {
+	width: 432px;
+}
+.media-controls {
+	display: none;
+	height: 30px;
+	zoom: 1;
+	position: relative;
+	margin: 5px 0 0;
+	padding: 0 170px 0 50px;
+}
+.js-on .media-controls {
+	display: block;
+}
+.media-controls button.ui-state-default {
+	position: absolute;
+	top: 2px;
+	overflow: visible;
+}
+button.ui-state-default .button-text {
+	position: absolute;
+	display: block;
+	left: -9999px;
+	width: 3px;
+}
+.media-controls button.play-pause {
+	left: 0;
+}
+.timeline-slider {
+	top: 4px;
+}
+.media-controls button.mute-unmute {
+	right: 120px;
+}
+div.volume-slider {
+	position: absolute;
+	top: 5px;
+	right: 11px;
+	width: 90px;
+}
+.media-controls .ui-progressbar {
+	height: 0.8em;
+}

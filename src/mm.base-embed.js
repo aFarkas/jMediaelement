@@ -244,47 +244,35 @@
 			},
 			getDimensions: function(media){
 				var ret = {
-							height: 150,
-							width: 300,
-							isAuto: false
+							height: ( $.nodeName(media, 'video') ) ? 150 : 28,
+							width: 300
 						},
+					isAuto,
 					curHeight
 				;
 				curHeight = $.curCSS(media, 'height');
 				
 				//only testing height
-				//0px workaround for jQuery 1.4 + Opera
-				if(media.currentStyle && curHeight !== '0px'){
-					ret.isAuto = (media.currentStyle.height === 'auto');
-				} else if(curHeight !== '0px') {
+				//0px workaround for jQuery 1.4 + Opera, needs further testing
+				if( media.currentStyle ){
+					isAuto = (media.currentStyle.height === 'auto');
+				} else if( curHeight !== '0px' ) {
 					$.swap(media, {height: 'auto'}, function(){
-						ret.isAuto = (curHeight === $.curCSS(media, 'height'));
+						isAuto = ( curHeight === $.curCSS(media, 'height') );
 					});
+				}
+				
+				if(isAuto){
+					curHeight = media.getAttribute('height');
+					if(curHeight){
+						ret.height = parseInt( curHeight, 10);
+						ret.width = parseInt( media.getAttribute('width'), 10) || ret.width;
+					}
 				} else {
-					ret.isAuto = false;
-					
 					ret.height = $(media).height();
 					ret.width = $(media).width();
 				}
 				
-				if(ret.isAuto){
-					curHeight = media.getAttribute('height');
-					if(curHeight){
-						ret.isAuto = false;
-						ret.height = curHeight;
-						ret.width = media.getAttribute('width') || ret.width;
-					}
-				} else {
-					ret.height = parseInt(curHeight, 10) || ret.height;
-					ret.width = parseInt($.curCSS(media, 'width'), 10) || ret.width;
-				}
-				
-				
-				if(ret.isAuto){
-					setTimeout(function(){
-						throw('we do not support width/height without dimensions yet, use css or height/width-attributes plz');
-					}, 0);
-				}
 				return  ret;
 			}
 		}

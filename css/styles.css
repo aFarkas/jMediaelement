@@ -21,3 +21,6 @@ code {
 	margin: 0 0 10px;
 	white-space: pre;
 }
+.demo-themeswitcher {
+	float: right;
+}

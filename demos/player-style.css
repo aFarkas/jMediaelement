@@ -9,18 +9,18 @@ video {
 }
 .media-controls {
 	display: none;
-	height: 30px;
+	height: 2em;
 	zoom: 1;
 	position: relative;
 	margin: 5px 0 0;
-	padding: 0 160px 0 40px;
+	padding: 0 165px 0 45px;
 }
 .js-on .media-controls {
 	display: block;
 }
 .media-controls button.ui-state-default {
 	position: absolute;
-	top: 2px;
+	top: .4em;
 	overflow: visible;
 }
 button.ui-state-default .button-text {
@@ -30,18 +30,18 @@ button.ui-state-default .button-text {
 	width: 3px;
 }
 .media-controls button.play-pause {
-	left: 0;
+	left: 5px;
 }
 .timeline-slider {
-	top: 4px;
+	top: .5em;
 }
 .media-controls button.mute-unmute {
-	right: 120px;
+	right: 125px;
 }
 div.volume-slider {
 	position: absolute;
-	top: 5px;
-	right: 11px;
+	top: .5em;
+	right: 16px;
 	width: 90px;
 }
 .media-controls .ui-progressbar {

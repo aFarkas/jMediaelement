@@ -302,7 +302,7 @@
 		if(!apis){return;}
 		
 		var srces 	= $.attr(mm, 'srces'),
-			mmSrc, dims, id, fn, attrs, apiName,
+			mmSrc, dims, id, fn, attrs, apiName, e,
 			apiData	= $.data(mm, 'mediaElemSupport')
 		;
 		
@@ -327,7 +327,9 @@
 		});
 		
 		if(!mmSrc){
-			apis.nativ._trigger()
+			e.type = 'totalerror';
+			e.srces = srces;
+			apis.nativ._trigger(e);
 			return;
 		}
 		if(helper._setAPIActive(mm, apiName)){return;}

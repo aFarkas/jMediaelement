@@ -60,7 +60,7 @@
 		}
 		if(!set){
 			if(booleanNames[name]){
-				return (elem[name] || elem[name] === false) ? state : !!((elem.attributes[name] || {}).specified);
+				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
 			}
 			if(srcNames[name]){
 				return $.support.video && elem[name] || $.multimediaSupport.helper.makeAbsURI(elem.getAttribute(name));
@@ -133,8 +133,6 @@
 		ext = src.substr(pos);
 		return ext;
 	}
-	
-	var booleanAttrs = ['autoplay', 'loop', 'controls'];
 	
 	$.multimediaSupport = {
 		attrFns: {},
@@ -236,19 +234,12 @@
 				
 				return apiReady;
 			},
-			getAttrBoolState: function(elem, name){
-				var state = elem[name];
-				return (state || state === false) ? state : !!((elem.attributes[name] || {}).specified);
-			},
 			getAttrs: function(media){
-				var attrs 	= {
-					poster: media.poster || $.multimediaSupport.helper.makeAbsURI(media.getAttribute('poster'))
-				};
-				
-				$.each(booleanAttrs, function(i, name){
-					attrs[name] = $.multimediaSupport.helper.getAttrBoolState(media, name);
+				media = media;
+				var attrs 	= {};
+				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
+					attrs[name] = $.attr(media, name);
 				});
-				
 				return attrs;
 			},
 			getDimensions: function(media){
@@ -335,7 +326,10 @@
 			if(mmSrc){return false;}
 		});
 		
-		if(!mmSrc){return;}
+		if(!mmSrc){
+			apis.nativ._trigger()
+			return;
+		}
 		if(helper._setAPIActive(mm, apiName)){return;}
 		id = mm.id;
 		if(!id){

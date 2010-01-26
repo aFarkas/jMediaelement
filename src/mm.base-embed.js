@@ -301,7 +301,6 @@
 			}
 			
 			$.each(srces, function(i, src){
-				
 				//ToDo: Make a difference between maybe and probably
 				if(api._canPlaySrc(src)){
 					mmSrc = src.src;
@@ -334,7 +333,8 @@
 			$(apiElem).addClass(elemName);
 			apiData.apis[apiName]._init();
 		};
-		apiData.apis[apiName]._embed(mmSrc, apiData.name +'-'+ id, mm, dims, attrs, fn, opts);
+		//todo: shorten the arguments
+		apiData.apis[apiName]._embed(mmSrc, apiData.name +'-'+ id, mm, dims, attrs, fn, opts, apiData.apis[apiName]);
 	}
 	
 	

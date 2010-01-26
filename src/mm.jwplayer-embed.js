@@ -23,7 +23,7 @@
 	;
 	var jwMM = {
 			isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
-			_embed: function(src, id, mm, dims, attrs, fn, opts){
+			_embed: function(src, id, mm, dims, attrs, fn, opts, api){
 				var vars 		= $.extend({}, opts.jwPlayer.vars, {file: src, id: id}),
 					swfAttrs 	= $.extend({}, opts.jwPlayer.attrs, {name: id}),
 					div
@@ -32,9 +32,16 @@
 				if(attrs.poster){
 					vars.image = attrs.poster;
 				}
+				
+				
 				vars.autostart = ''+ attrs.autoplay;
 				vars.repeat = (attrs.loop) ? 'single' : 'false';
 				vars.controlbar = (attrs.controls) ? 'bottom' : 'none';
+				
+				if( opts.jwPlayer.playFirstFrame && !attrs.poster && !vars.autoplay ){
+					api.data.playFirstFrame = true;
+					vars.autostart = 'true';
+				}
 				
 				div = $('<div id="'+id+'"></div>').css(dims).insertBefore(mm);
 				

@@ -15,6 +15,10 @@
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
 	var privJwEvents = {
+		playFirstFrame: function(obj){
+			var api = getAPI(obj.id);
+			if(!api){return;}
+		},
 		Model: {
 			META: function(obj){
 				if(obj.type === 'metadata'){
@@ -41,6 +45,10 @@
 				if(obj.duration){
 					e.duration = obj.duration;
 					e.timeProgress = obj.position / obj.duration * 100;
+				}
+				if(obj.position && api.data.playFirstFrame && !api.data.playThrough){
+					api.pause();
+					api.data.playThrough = true;
 				}
 				api._trigger(e);
 			},
@@ -158,6 +166,7 @@
 			//add events
 			api.apiElem.addControllerListener('PLAY', 'jwTest');
 			$.each(jwEvents[apiVersion], function(mvcName, evts){
+				if(mvcName === 'playFirstFrame'){return;}
 				$.each(evts, function(evtName){
 					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
 				});
@@ -170,6 +179,7 @@
 	
 	var jwAPI = {
 		play: function(){
+			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
 		},
 		pause: function(){

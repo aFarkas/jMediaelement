@@ -23,9 +23,11 @@
 	;
 	var jwMM = {
 			isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
-			_embed: function(src, id, mm, dims, attrs, fn, opts, api){
-				var vars 		= $.extend({}, opts.jwPlayer.vars, {file: src, id: id}),
-					swfAttrs 	= $.extend({}, opts.jwPlayer.attrs, {name: id}),
+			_embed: function(src, id, api, dims, attrs, fn){
+				
+				var opts 		= api.embedOpts.jwPlayer,
+					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
+					swfAttrs 	= $.extend({}, opts.attrs, {name: id}),
 					div
 				;
 				
@@ -38,14 +40,14 @@
 				vars.repeat = (attrs.loop) ? 'single' : 'false';
 				vars.controlbar = (attrs.controls) ? 'bottom' : 'none';
 				
-				if( opts.jwPlayer.playFirstFrame && !attrs.poster && !vars.autoplay ){
+				if( (opts.playFirstFrame || attrs.autobuffer) && !attrs.poster && !vars.autoplay ){
 					api.data.playFirstFrame = true;
 					vars.autostart = 'true';
 				}
 				
-				div = $('<div id="'+id+'"></div>').css(dims).insertBefore(mm);
+				div = $('<div id="'+id+'"></div>').css(dims).insertBefore(api.html5elem);
 				
-				swfobject.embedSWF(opts.jwPlayer.path, id, dims.width, dims.height, '9.0.124', null, vars, opts.jwPlayer.params, swfAttrs, function(swf){
+				swfobject.embedSWF(opts.path, id, dims.width, dims.height, '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
 					if(swf.ref){
 						fn(swf.ref);
 						//swfobject bug in chorme

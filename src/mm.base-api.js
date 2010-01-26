@@ -59,6 +59,7 @@
 				}
 			});
 			if(canPlaySrc){
+				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._load(canPlaySrc, poster, extras);
 			} else {
 				$(this.html5elem).data('mediaElemSupport').apis.nativ.loadSrc(srces, poster, extras);
@@ -205,13 +206,14 @@
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
 		if( name.indexOf('_') !== 0 && $.inArray(name, attrFns) === -1 && fn && $.isFunction(fn) && !$.fn[name] ){
 			$.fn[name] =  function(){
-				var args = arguments;
+				var args = arguments, ret;
 				this.each(function(){
 					var api = $(this).getMMAPI();
 					if(api){
-						api[name].apply(api, args);
+						ret = api[name].apply(api, args);
 					}
 				});
+				return (ret === undefined) ? this : ret; 
 			};
 		}
 	});

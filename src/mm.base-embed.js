@@ -36,7 +36,8 @@
 		booleanNames = {
 			loop: true,
 			autoplay: true,
-			controls: true
+			controls: true,
+			autobuffer: true
 		}
 	;
 	
@@ -201,7 +202,7 @@
 					return src;
 				};
 			})(),
-			_create: function(elemName, supType, html5elem){
+			_create: function(elemName, supType, html5elem, opts){
 				var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
 				if(!data.apis[supType]){
 					var F = function(){};
@@ -211,6 +212,7 @@
 					data.apis[supType].nodeName = elemName;
 					data.apis[supType].name = supType;
 					data.apis[supType].data = {};
+					data.apis[supType].embedOpts = opts;
 				}
 				return data;
 			},
@@ -237,11 +239,12 @@
 			getAttrs: function(media){
 				media = media;
 				var attrs 	= {};
-				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
+				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
 					attrs[name] = $.attr(media, name);
 				});
 				return attrs;
 			},
+			//ToDo: Simplify
 			getDimensions: function(media){
 				var ret = {
 							height: ( $.nodeName(media, 'video') ) ? 150 : 28,
@@ -305,7 +308,7 @@
 				if(api._canPlaySrc(src)){
 					mmSrc = src.src;
 					apiName = name;
-					helper._create(elemName, name, mm);
+					helper._create(elemName, name, mm, opts);
 					return false;
 				}
 				
@@ -333,8 +336,7 @@
 			$(apiElem).addClass(elemName);
 			apiData.apis[apiName]._init();
 		};
-		//todo: shorten the arguments
-		apiData.apis[apiName]._embed(mmSrc, apiData.name +'-'+ id, mm, dims, attrs, fn, opts, apiData.apis[apiName]);
+		apiData.apis[apiName]._embed(mmSrc, apiData.name +'-'+ id, apiData.apis[apiName], dims, attrs, fn);
 	}
 	
 	
@@ -363,7 +365,7 @@
 				$(this).removeAttr('controls');
 			}
 			
-			var apiData = helper._create(elemName, 'nativ', this);
+			var apiData = helper._create(elemName, 'nativ', this, opts);
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			if(opts.debug || !enhancedSupport || this.error !== null){

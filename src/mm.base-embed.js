@@ -102,7 +102,7 @@
 				$('source', elem).remove();
 				elem.removeAttribute('src');
 				if(typeof value === 'string'){
-					elem.setAttribute(value);
+					elem.setAttribute('src', value);
 					return;
 				}
 				value = $.isArray(value) ? value : [value];
@@ -317,9 +317,11 @@
 		});
 		
 		if(!mmSrc){
-			e.type = 'totalerror';
-			e.srces = srces;
-			apis.nativ._trigger(e);
+			e = {
+				type: 'totalerror',
+				srces: srces
+			};
+			apiData.apis.nativ._trigger(e);
 			return;
 		}
 		if(helper._setAPIActive(mm, apiName)){return;}

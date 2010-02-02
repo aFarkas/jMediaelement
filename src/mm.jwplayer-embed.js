@@ -47,7 +47,7 @@
 				
 				div = $('<div id="'+id+'"></div>').css(dims).insertBefore(api.html5elem);
 				
-				swfobject.embedSWF(opts.path, id, dims.width, dims.height, '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
+				swfobject.embedSWF(opts.path, id, ''+dims.width, ''+dims.height, '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
 					if(swf.ref){
 						fn(swf.ref);
 						//swfobject bug in chorme
@@ -57,8 +57,8 @@
 				});
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E'],
-			canPlayExts: ['m4v', 'mp4', 'mov', 'flv', 'f4v', 'f4p', 'mp3', 'fla', 'flv', 'f4a'],
-			canPlayContainer: ['video/quicktime', 'video/x-m4v', 'video/mp4', 'video/x-flv', 'audio/mp3', 'audio/x-fla']
+			canPlayExts: ['avi', 'm4v', 'mp4', 'mov', 'flv', 'f4v', 'f4p', 'mp3', 'fla', 'flv', 'f4a'],
+			canPlayContainer: ['video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
 		}
 	;
 			

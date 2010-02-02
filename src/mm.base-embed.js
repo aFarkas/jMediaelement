@@ -6,39 +6,29 @@
  */
 
 (function(){
-	
-	var $ 					= jQuery,
-		v 					= $('<video />')[0],
-		a 					= $('<audio />')[0],
-		vID 				= new Date().getTime(),
-		isOldSaf 			= ($.browser.safari && 532 > parseInt($.browser.version, 10)),
-		oldAttr 			= $.attr,
-		doc					= document,
-		enhancedSupport
+	jQuery.multimediaSupport = {};
+	var $ 	= jQuery, 
+		m 	= $.multimediaSupport,
+		vID = new Date().getTime(),
+		doc	= document
 	;
+	$.support.video = !!($('<video />')[0].canPlayType);
+	$.support.audio = !!($('<audio />')[0].canPlayType);
+	$.support.mediaElements = ($.support.video && $.support.audio);
 	
-	$('<source></source>');
-	$('<itext></itext>');
 	
-	$.support.video = !!(v.canPlayType);
-	$.support.audio = !!(a.canPlayType);
-	
-	v = null;
-	a = null;
-	
-	enhancedSupport = ($.support.video && $.support.audio);// && !isOldSaf
-	
-	var attrElems = /video|audio|source/i,
-		srcNames = {
-			src: true,
-			poster: true
-		},
-		booleanNames = {
-			loop: true,
-			autoplay: true,
-			controls: true,
-			autobuffer: true
-		}
+	var oldAttr 		= $.attr,
+		attrElems 		= /video|audio|source/i,
+		srcNames 		= {
+					src: true,
+					poster: true
+				},
+		booleanNames 	= {
+					loop: true,
+					autoplay: true,
+					controls: true,
+					autobuffer: true
+				}
 	;
 	
 	$.attr = function(elem, name, value, pass){
@@ -47,7 +37,7 @@
 			return oldAttr(elem, name, value, pass);
 		}
 		
-		var set = (value !== undefined), api, ret;
+		var set = (value !== undefined), elemName, api, ret;
 		if($.multimediaSupport.attrFns[name]){
 			api = ($.data(this[0], 'mediaElemSupport') || {});
 			if( !api.name || !api.apis ) {
@@ -64,28 +54,45 @@
 				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
 			}
 			if(srcNames[name]){
-				return $.support.video && elem[name] || $.multimediaSupport.helper.makeAbsURI(elem.getAttribute(name));
+				
+				return $.support.video && elem[name] || m.helper.makeAbsURI(elem.getAttribute(name));
 			}
 			if(name === 'srces'){
-				ret = [];
-				$('source', elem).each(function(i){
-					ret.push({
-						src: $.attr(this, 'src'),
-						type: this.getAttribute('type'),
-						media: this.getAttribute('media')
-					});
-				});
-				if(! ret.length ){
+				ret = $.attr(elem, 'src');
+				
+				if( ret ){
+					
 					ret = [{
-							src: $.attr(elem, 'src'),
+							src: ret,
 							type: elem.getAttribute('type'),
 							media: elem.getAttribute('media')
 						}]
 					;
+				} else {
+					ret = [];
+					$('source', elem).each(function(i){
+						ret.push({
+							src: $.attr(this, 'src'),
+							type: this.getAttribute('type'),
+							media: this.getAttribute('media')
+						});
+					});
+					// safari without quicktime ignores source-tags, initially
+					if(!ret.length){
+						$('a.source', elem).each(function(){
+							ret.push({
+								src: this.href,
+								type: this.getAttribute('type'),
+								media: this.getAttribute('data-media')
+							});
+						});
+					}
 				}
+				
 				return ret;
 			}
 		} else {
+			name = (name === 'src') ? 'srces' : name;
 			if(booleanNames[name]){
 				value = !!(value);
 				elem[name] = value;
@@ -99,19 +106,16 @@
 				elem.setAttribute(name, value);
 			}
 			if (name === 'srces') {
-				$('source', elem).remove();
+				elemName = elem.nodeName.toLowerCase();
+				$('source, a.source', elem).remove();
 				elem.removeAttribute('src');
-				if(typeof value === 'string'){
-					elem.setAttribute('src', value);
-					return;
-				}
 				value = $.isArray(value) ? value : [value];
 				
 				$.each(value, function(i, src){
-					if(typeof src === 'string'){
-						src = {src: src};
-					}
+					//add type if missing and available, good to avoid bugs in webkit browser
+					src = $.multimediaSupport.addType(src, elemName);
 					ret = doc.createElement('source');
+					
 					ret.setAttribute('src', src.src);
 					if(src.type){
 						ret.setAttribute('type', src.type);
@@ -121,6 +125,120 @@
 					}
 					elem.appendChild(ret);
 				});
+			}
+		}
+	};
+	
+	function sourceError(){
+		$.event.special.mediaerror.handler.apply($(this).closest('video, audio')[0], arguments);
+	}
+	
+	function bindSource(){
+		$('source', this)
+			.unbind('error', sourceError)
+			.filter(':last')
+			.bind('error', sourceError)
+		;
+		
+	}
+	
+	$.event.special.mediaerror = {
+		setup: function(){
+			//ff always triggers an error on video/audio | webkit/opera triggers error event on source, if available
+			$(this)
+				.bind('error', $.event.special.mediaerror.handler)
+				.each(bindSource)
+				.bind('emtptied', bindSource)
+			;
+		},
+		teardown: function(){
+			$(this)
+				.unbind('error', $.event.special.mediaerror.handler)
+				.find('source')
+				.unbind('error', sourceError)
+			;
+		},
+		handler: function(e){
+			e = $.extend({}, e || {}, {type: 'mediaerror'});
+			return $.event.handle.apply(this, arguments);
+		}
+	};
+	
+	function getLastSrc(media){
+		var src = media.currentSrc || media.getAttribute('src');
+		if(!src){
+			media = media.getElementsByTagName('source');
+			if(media.length){
+				src =  media[media.length - 1].getAttribute('src');
+			}
+		}
+		return src;
+	}
+	
+	function isNotLoaded(media){
+		return (media.readyState === 0 || media.error || ($.nodeName(media, 'video') && !media.videoHeight));
+	}
+	
+	var errorDelay = 3000;
+	$(window).load(function(){
+		errorDelay = 1000;
+	});
+	
+	function assumeError(){
+		var media 	= this,
+			src 	= getLastSrc(this)
+		;
+		
+		if( src && isNotLoaded(media)){
+			var data = $.data(this, 'assumedError') || $.data(this, 'assumedError', {});
+			data.triggerError = false;
+			if(data.timer){
+				clearTimeout(data.timer);
+			}
+			data.timer = setTimeout(function(){
+				if(isNotLoaded(media)){
+					$.event.special.assumedMediaerror.handler.call(media, {type: 'assumedError'});
+				}
+			}, errorDelay);
+		}
+	}
+	
+	$.event.special.assumedMediaerror = {
+		setup: function(){
+			$(this)
+				.bind('mediaerror', $.event.special.assumedMediaerror.handler)
+				// safari/chrome have several problems
+				.each(function(){
+					
+					if('webkitPreservesPitch' in this){
+						
+						var jElm = $(this);
+						jElm
+							.bind('loadstart emptied', assumeError)
+							.attr('srces', jElm.attr('srces'))
+						;
+						if(this.load){
+							this.load();
+						}
+					}
+				})
+			;
+		},
+		teardown: function(){
+			$(this)
+				.unbind('mediaerror', $.event.special.assumedMediaerror.handler)
+				.unbind('emtptied', assumeError)
+			;
+		},
+		handler: function(e){
+			var data 	= $.data(this, 'assumedError') || $.data(this, 'assumedError', {}),
+				src 	= getLastSrc(this)
+			;
+			if(data.triggeredError !== src){
+				clearTimeout(data.timer);
+				data.triggerError = src;
+				e = $.extend({}, e || {}, {type: 'assumedMediaerror'});
+				return $.event.handle.apply(this, arguments);
 			}
 		}
 	};
@@ -135,11 +253,26 @@
 		return ext;
 	}
 	
-	$.multimediaSupport = {
+	
+	$.extend($.multimediaSupport, {
+		addType: function(src, name){
+			var type;
+			
+			if(typeof src === 'string'){
+				src = {src: src};
+			}
+			if(src && !src.type){
+				type = this.apis[name].nativ.ext2type[ getExt(src.src) ];
+				if(type){
+					src.type = type;
+				}
+			}
+			return src;
+		},
 		attrFns: {},
 		add: function(name, elemName, api, hard){
 			if(!this.apis[elemName][name] || hard){
-				this.apis[elemName][name] = $.extend({}, this.apiProto, api);
+				this.apis[elemName][name] = $.extend(this.apis[elemName][name] || {}, this.apiProto, api);
 			} else {
 				$.extend(true, this.apis[elemName][name], api);
 			}
@@ -147,7 +280,7 @@
 		apiProto: {
 			_init: function(){},
 			canPlayType: function(type){
-				var parts 	= helper.extractContainerCodecsFormType(type),
+				var parts 	= m.helper.extractContainerCodecsFormType(type),
 					that 	= this,
 					ret		= 'probably'
 				;
@@ -176,12 +309,28 @@
 		},
 		apis: {
 			audio: {
-				//empty and therefore invalid native implementation
-				nativ: $.extend({}, this.apiProto)
+				nativ: $.extend({}, {
+					ext2type: {
+						mp3: 'audio/mpeg',
+						mp4: 'audio/mp4',
+						ogg: 'audio/ogg',
+						oga: 'audio/ogg'
+					}
+				}, this.apiProto)
 			},
 			video: {
-				//empty and therefore invalid native implementation
-				nativ: $.extend({}, this.apiProto)
+				nativ: $.extend({}, {
+					ext2type: {
+						mov: 'video/quicktime',
+						qt: 'video/quicktime',
+						m4v: 'video/mp4',
+						mp4: 'video/mp4',
+						mpg: 'video/mpeg',
+						mpeg: 'video/mpeg',
+						ogg: 'video/ogg',
+						ogv: 'video/ogg'
+					}
+				}, this.apiProto)
 			}
 		},
 		
@@ -189,7 +338,6 @@
 			extractContainerCodecsFormType: function(type){
 				var types = type.split(/\s*;\s*/g);
 				if(types[1] && types[1].indexOf('codecs') !== -1){
-					//console.log()
 					types[1] = types[1].replace(/["|']$/, '').replace(/^\s*codecs=('|")/, '').split(/\s*,\s*/g);
 				}
 				return types;
@@ -202,12 +350,15 @@
 					return src;
 				};
 			})(),
+			beget: function(sup){
+				var F = function(){};
+				F.prototype = sup;
+				return new F();
+			},
 			_create: function(elemName, supType, html5elem, opts){
 				var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
 				if(!data.apis[supType]){
-					var F = function(){};
-					F.prototype = $.multimediaSupport.apis[elemName][supType];
-					data.apis[supType] = new F();
+					data.apis[supType] = m.helper.beget( m.apis[elemName][supType]);
 					data.apis[supType].html5elem = html5elem;
 					data.apis[supType].nodeName = elemName;
 					data.apis[supType].name = supType;
@@ -216,20 +367,34 @@
 				}
 				return data;
 			},
+			/**
+			 * switches from one api to another
+			 * @return {boolean} true if api could been switched false the new api isn´t created
+			 * @param {Object} html5elem
+			 * @param {String} supType
+			 */
 			_setAPIActive: function(html5elem, supType){
-				var data = $.data(html5elem, 'mediaElemSupport');
-				if(data.name === supType){return;}
+				var data 		= $.data(html5elem, 'mediaElemSupport'),
+					oldActive 	= data.name
+				;
+				if(oldActive === supType){return true;}
 				var hideElem = data.apis[data.name].apiElem,
-					showElem = data.apis[data.supType] && data.apis[data.supType].apiElem,
-					apiReady
+					showElem = data.apis[supType] && data.apis[supType].apiElem,
+					apiReady = false
 				;
 				if(hideElem && hideElem.nodeName){
 					hideElem.style.display = 'none';
+					setTimeout(function(){
+						try {
+							data.apis[oldActive].pause();
+						} catch(e){}
+					}, 0);
 					data.apis[data.name]._setInactive();
 				}
+				
 				if(showElem && showElem.nodeName){
 					showElem.style.display = 'block';
-					data.apis[data.name]._setActive();
+					data.apis[oldActive]._setActive();
 					apiReady = true;
 				}
 				data.name = supType;
@@ -247,14 +412,22 @@
 			//ToDo: Simplify
 			getDimensions: function(media){
 				var ret = {
-							height: ( $.nodeName(media, 'video') ) ? 150 : 28,
+							height: 150,
 							width: 300
 						},
 					isAuto,
 					curHeight
 				;
 				curHeight = $.curCSS(media, 'height');
-				
+				if($.nodeName(media, 'audio')){
+					ret.height = 28;
+					if(!$.attr(media, 'controls')){
+						return {
+							width: 0,
+							height: 0
+						};
+					}
+				}
 				//only testing height
 				//0px workaround for jQuery 1.4 + Opera, needs further testing
 				if( media.currentStyle ){
@@ -279,22 +452,21 @@
 				return  ret;
 			}
 		}
-	};
+	});
 	
-	var mmApis 	= $.multimediaSupport.apis,
-		helper 	= $.multimediaSupport.helper
-	;
+	
 		
-	function findInitFallback(mm, opts){
-		var elemName 	= mm.nodeName.toLowerCase(),
-			apis 		= mmApis[elemName]
+	function findInitFallback(elem, opts){
+		var elemName 	= elem.nodeName.toLowerCase(),
+			apis 		= m.apis[elemName]
 		;
 		
 		if(!apis){return;}
 		
-		var srces 	= $.attr(mm, 'srces'),
-			mmSrc, dims, id, fn, attrs, apiName, e,
-			apiData	= $.data(mm, 'mediaElemSupport')
+		//getSupportedSrc
+		var srces 	= $.attr(elem, 'srces'),
+			supportedSrc, dims, id, fn, attrs, apiName, e,
+			apiData	= $.data(elem, 'mediaElemSupport')
 		;
 		
 		$.each(apis, function(name, api){
@@ -306,17 +478,18 @@
 			$.each(srces, function(i, src){
 				//ToDo: Make a difference between maybe and probably
 				if(api._canPlaySrc(src)){
-					mmSrc = src.src;
+					supportedSrc = src.src;
 					apiName = name;
-					helper._create(elemName, name, mm, opts);
+					m.helper._create(elemName, name, elem, opts);
 					return false;
 				}
 				
 			});
-			if(mmSrc){return false;}
+			if(supportedSrc){return false;}
 		});
 		
-		if(!mmSrc){
+		// important total fail error event
+		if(!supportedSrc){
 			e = {
 				type: 'totalerror',
 				srces: srces
@@ -324,21 +497,24 @@
 			apiData.apis.nativ._trigger(e);
 			return;
 		}
-		if(helper._setAPIActive(mm, apiName)){return;}
-		id = mm.id;
+		
+		//returns true if apiWasAlread_setAPIActive
+		if(m.helper._setAPIActive(elem, apiName)){return;}
+		id = elem.id;
 		if(!id){
 			vID++;
 			id = elemName +'-'+vID;
-			mm.id = id;
+			elem.id = id;
 		}
-		attrs = helper.getAttrs(mm);
-		dims = helper.getDimensions(mm);
+		attrs = m.helper.getAttrs(elem);
+		dims = m.helper.getDimensions(elem);
+		
 		fn = function(apiElem){
 			apiData.apis[apiName].apiElem = apiElem;
 			$(apiElem).addClass(elemName);
 			apiData.apis[apiName]._init();
 		};
-		apiData.apis[apiName]._embed(mmSrc, apiData.name +'-'+ id, apiData.apis[apiName], dims, attrs, fn);
+		apiData.apis[apiName]._embed(supportedSrc, apiData.name +'-'+ id, apiData.apis[apiName], dims, attrs, fn);
 	}
 	
 	
@@ -350,13 +526,6 @@
 	$.fn.mediaElementEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.mediaElementEmbed.defaults, opts);
 		
-		function findInitFallbackOnError(e){
-			if(this.error !== null){ // or > 2
-				findInitFallback(this, opts);
-			}
-			e.stopImmediatePropagation();
-		}
-				
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase();
 			
@@ -367,16 +536,20 @@
 				$(this).removeAttr('controls');
 			}
 			
-			var apiData = helper._create(elemName, 'nativ', this, opts);
+			var apiData = m.helper._create(elemName, 'nativ', this, opts);
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
-			if(opts.debug || !enhancedSupport || this.error !== null){
+			if(opts.debug || !$.support.mediaElements || this.error !== null){
 				 findInitFallback(this, opts);
 			} else {
 				apiData.apis[apiData.name]._init();
 			}
 			$(this)
-				.bind('error', findInitFallbackOnError)
+				.bind(opts.errorEvent, function findInitFallbackOnError(e){
+					if(apiData.name === 'nativ'){
+						findInitFallback(this, opts);
+					}
+				})
 				.bind('loadedmetadata', loadedmetadata)
 			;
 		});
@@ -384,7 +557,8 @@
 	
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
-		removeControls: true
+		errorEvent: 'assumedMediaerror', // mediaerror
+		removeControls: false
 	};
 	
 	

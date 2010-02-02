@@ -62,6 +62,7 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._load(canPlaySrc, poster, extras);
 			} else {
+				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ.loadSrc(srces, poster, extras);
 			}
 		}

@@ -14,17 +14,6 @@
 		
 		<!-- END:  ui-components -->
 		
-		<!-- jQuery UI theme switcher -->
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7/themes/blitzer/jquery-ui.css"/>
-		
-		
-		<script src="http://ui.jquery.com/applications/themeroller/themeswitchertool/"></script>
-		<script> $(function(){ $('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({height: 150}); });</script>
-		
-		<!-- END: jQuery UI theme switcher -->
-		
-		
-		
 		<script src="../src/mm.base-embed.js"></script>
 		<script src="../src/mm.base-api.js"></script>
 		<script src="../src/mm.base-controls.js"></script>
@@ -58,6 +47,25 @@
 			});
 			
 		</script>
+		
+		<!-- lazy load themeswitcher -->
+		<script> 
+			(function($){
+				var script;
+				function startThemeswitcher(){
+					if(!this.readyState || this.readyState == "loaded" || this.readyState == "complete"){
+						$('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({height: 150});
+						script.unbind('load readystatechange');
+					}
+				}
+				setTimeout(function(){
+					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
+						.bind('load readystatechange', startThemeswitcher)
+						.appendTo('head')
+					;
+				}, 9);
+			})(jQuery);
+		</script>
 	</head>
 	<body>
 		
@@ -66,7 +74,9 @@
 			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
 				<source src="media/bbb_trailer_400p.ogg" type="video/ogg"></source>
+				<a class="source" href="media/bbb_trailer_400p.ogg" type="video/ogg">title</a>
 				<source src="media/bbb_trailer_mobile.m4v"></source>
+				<a class="source" href="media/bbb_trailer_mobile.m4v" type="video/m4p">title</a>
 			</video>
 			
 			<div class="media-controls ui-widget ui-widget-header ui-corner-all">

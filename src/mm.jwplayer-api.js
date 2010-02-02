@@ -20,6 +20,7 @@
 				if(obj.type === 'metadata'){
 					var api = getAPI(obj.id);
 					if(!api){return;}
+					
 					api._trigger({
 						type: 'loadedmeta',
 						height: obj.height,
@@ -37,6 +38,16 @@
 						}
 				;
 				if(!api){return;}
+				
+				//workaround: meta isn´t triggered on audio
+				if(!api.loadedmeta){
+					api._trigger({
+						type: 'loadedmeta',
+						duration: obj.duration
+					});
+				}
+				
+				
 				api.currentPos = obj.position;
 				if(obj.duration){
 					e.duration = obj.duration;

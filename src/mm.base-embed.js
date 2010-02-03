@@ -220,6 +220,7 @@
 						if(this.load){
 							this.load();
 						}
+						assumeError.call(this, {type: 'manually'});
 					}
 				})
 			;

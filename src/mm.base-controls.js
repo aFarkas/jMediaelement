@@ -179,7 +179,7 @@
 	});
 	controlSel = controlSel.join(', ');
 	
-	function getElems(elem){
+	function getElems(elem, o){
 		var jElm 	= $(elem),
 			ret 	= {
 							wrapper: $(elem).closest('[data-controls], [data-controlwrapper]')
@@ -188,7 +188,7 @@
 		;
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', ret.wrapper).filter(':first');
 		ret.controls = ( jElm.is(controlSel) ) ? jElm : $(controlSel, ret.wrapper);
-		ret.api = ret.mm.getMMAPI(true);
+		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o).getMMAPI(true);
 		return ret;
 	}
 	
@@ -196,7 +196,7 @@
 		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
 		
 		function registerControl(){
-			var elems = getElems(this);
+			var elems = getElems(this, o.embed);
 			if(!elems.api){return;}
 			elems.controls.each(function(){
 				var jElm = $(this);
@@ -214,6 +214,7 @@
 	
 	$.fn.registerMMControl.defaults = {
 		//controls: false
+		embed: $.fn.mediaElementEmbed.defaults,
 		addThemeRoller: true,
 		mmProgressbar: {},
 		volumeSlider: {},

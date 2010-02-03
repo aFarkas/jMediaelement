@@ -192,8 +192,8 @@
 	//public-methods
 	$.fn.getMMAPI = function(full){
 		if(!this[0]){return;}
-		var api = ($.data(this[0], 'mediaElemSupport') || {});
-		return ( full || !api.name || !api.apis ) ? api : api.apis[api.name];
+		var api = $.data(this[0], 'mediaElemSupport');
+		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
 	var attrFns = ['muted', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];

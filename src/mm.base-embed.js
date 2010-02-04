@@ -188,7 +188,6 @@
 		var media 	= this,
 			src 	= getLastSrc(this)
 		;
-		
 		if( src && isNotLoaded(media)){
 			var data = $.data(this, 'assumedError') || $.data(this, 'assumedError', {});
 			data.triggerError = false;
@@ -368,12 +367,6 @@
 				}
 				return data;
 			},
-			/**
-			 * switches from one api to another
-			 * @return {boolean} true if api could been switched false the new api isn´t created
-			 * @param {Object} html5elem
-			 * @param {String} supType
-			 */
 			_setAPIActive: function(html5elem, supType){
 				var data 		= $.data(html5elem, 'mediaElemSupport'),
 					oldActive 	= data.name

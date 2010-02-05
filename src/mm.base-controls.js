@@ -99,8 +99,8 @@
 					control.slider('value', api.apis[api.name].volume());
 				}, 'one');
 			},
-			'mm-progressbar': function(control, mm, api, o){
-				control.progressbar(o.mmProgressbar).progressbar('option', 'disabled', true);
+			'progressbar': function(control, mm, api, o){
+				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
 				
 				function changeProgressUI(e, ui){
 					if (ui.lengthComputable) {
@@ -121,10 +121,20 @@
 					;
 					
 				}, 'one');
+			},
+			duration: function(control, mm, api, o){
+				mm.bind('loadedmeta emptied', function(e, evt){
+					control.html(api.apis[api.name].getFormattedDuration());
+				});
+				control.html(api.apis[api.name].getFormattedDuration());
+			},
+			'current-time': function(control, mm, api, o){
+				mm.bind('timechange', function(e, evt){
+					control.html(api.apis[api.name]._format(evt.time));
+				});
+				control.html(api.apis[api.name].getFormattedTime());
 			}
-		},
-		
-		controlSel = []
+		}
 	;
 	
 	//create Toggle Button UI
@@ -173,11 +183,7 @@
 		};
 	});
 	
-	//create Controls-Selektors
-	$.each(controls, function(name){
-		controlSel.push('.'+ name);
-	});
-	controlSel = controlSel.join(', ');
+	
 	
 	function getElems(elem, o){
 		var jElm 	= $(elem),
@@ -187,21 +193,26 @@
 			mmID 	= ret.wrapper.attr('data-controls')
 		;
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', ret.wrapper).filter(':first');
-		ret.controls = ( jElm.is(controlSel) ) ? jElm : $(controlSel, ret.wrapper);
-		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o).getMMAPI(true);
+		ret.controls = ( jElm.is(o.controlSel) ) ? jElm : $(o.controlSel, ret.wrapper);
+		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
 		return ret;
 	}
 	
 	$.fn.registerMMControl = function(o){
 		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
-		
+		o.controlSel = [];
+		$.each(controls, function(name){
+			o.controlSel.push('.'+ o.classPrefix + name);
+		});
+		o.controlSel = o.controlSel.join(', ');
 		function registerControl(){
-			var elems = getElems(this, o.embed);
+			var elems = getElems(this, o);
+			
 			if(!elems.api){return;}
 			elems.controls.each(function(){
 				var jElm = $(this);
 				$.each(controls, function(name, ui){
-					if( jElm.hasClass(name) ){
+					if( jElm.hasClass(o.classPrefix+name) ){
 						ui(jElm, elems.mm, elems.api, o);
 						return false;
 					}
@@ -215,9 +226,14 @@
 	$.fn.registerMMControl.defaults = {
 		//controls: false
 		embed: $.fn.mediaElementEmbed.defaults,
+		classPrefix: '',
 		addThemeRoller: true,
-		mmProgressbar: {},
+		progressbar: {},
 		volumeSlider: {},
 		timeSlider: {}
+	};
+	
+	$.fn.registerMMControl.addControl = function(name, fn){
+		controls[name] = fn;
 	};
 })(jQuery);

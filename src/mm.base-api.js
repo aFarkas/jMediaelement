@@ -34,7 +34,7 @@
 		isAPIReady: false,
 		relCurrentTime: function(rel){
 			var dur = this.getDuration();
-			if(arguments.length){
+			if(rel && isFinite(rel)){
 				this.currentTime(dur * rel / 100);
 			}
 			return this.currentTime() / dur * 100; 
@@ -44,6 +44,23 @@
 		},
 		toggleMuted: function(){
 			this.muted(!(this.muted()));
+		},
+		_format: function(sec, base){
+			var ret = [
+				parseInt(sec/3600, 10),
+				parseInt(sec/60%60, 10) < 10 ? "0"+parseInt(sec/60%60, 10) : ""+parseInt(sec/60%60, 10),
+				parseInt(sec%60, 10) < 10 ? "0"+parseInt(sec%60, 10) : ""+parseInt(sec%60, 10)
+			];
+			if(!ret[0]){
+				ret.shift();
+			}
+			return ret.join(':');
+		},
+		getFormattedDuration: function(){
+			return this._format(this.getDuration());
+		},
+		getFormattedTime: function(){
+			return this._format(this.currentTime());
 		},
 		loadSrc: function(srces, poster, extras){
 			srces = srces || $.attr(this.html5elem, 'srces');
@@ -146,13 +163,13 @@
 			return this.html5elem.muted;
 		},
 		volume: function(vol){
-			if(arguments.length){
+			if(isFinite(vol)){
 				this.html5elem.volume = vol / 100;
 			}
 			return this.html5elem.volume * 100;
 		},
 		currentTime: function(sec){
-			if(arguments.length){
+			if(isFinite(sec)){
 				try {
 					this.html5elem.currentTime = sec;
 				} catch(e){}
@@ -196,7 +213,7 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
+	var attrFns = ['muted', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
 	
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
 		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {

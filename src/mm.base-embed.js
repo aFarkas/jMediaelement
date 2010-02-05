@@ -38,12 +38,14 @@
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
+		
 		if($.multimediaSupport.attrFns[name]){
-			api = ($.data(this[0], 'mediaElemSupport') || {});
-			if( !api.name || !api.apis ) {
+			
+			api = $.data(elem, 'mediaElemSupport');
+			if( !api ) {
 				return oldAttr(elem, name, value, pass);
 			} else {
-				ret = api.apis[api.name](name, value, pass);
+				ret = api.apis[api.name][name](value, pass);
 				if(!set){
 					return ret;
 				}

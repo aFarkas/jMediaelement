@@ -1,0 +1,20 @@
+1
+00:00:1,000 --> 00:00:5,951
+At <i>the</i> left we can see...
+
+2
+00:00:7,166 --> 00:00:10,083
+At the right we can see the...
+
+3
+00:00:10,119 --> 00:00:18,962
+...the head-snarlers
+
+4
+00:00:21,999 --> 00:00:24,368
+Everything is safe.
+Perfectly safe.
+
+4
+00:00:24,999 --> 00:00:31,368
+hello world ich bin eine caption

@@ -1,192 +1,228 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>Controls Demo</title>
+    <head>
+        <meta charset="utf-8">
+        <title>Controls Demo</title>
+        <link rel="stylesheet" href="../../css/styles.css" />
+        <link rel="stylesheet" href="../../demos/player-style.css" />
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js">
+        </script>
+        <!-- ui-components -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js">
+        </script>
+        <!-- END:  ui-components --><!-- jQuery UI theme switcher -->
+        <link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/blitzer/jquery-ui.css"/>
+        <!-- END: jQuery UI theme switcher -->
+        <script src="../../src/mm.base-embed.js">
+        </script>
+        <script src="../../src/mm.base-api.js">
+        </script>
+        <script src="../../src/mm.base-controls.js">
+        </script>
 		
-		<link rel="stylesheet" href="../../css/styles.css" />
-		<link rel="stylesheet" href="../../demos/player-style.css" />
-		
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
-		
-		<!-- ui-components -->
-		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"></script>
-		
-		<!-- END:  ui-components -->
-		
-		<!-- jQuery UI theme switcher -->
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/blitzer/jquery-ui.css"/>
-		
-		
-		
-		
-		<!-- END: jQuery UI theme switcher -->
-		
-		
-		
-		<script src="../../src/mm.base-embed.js"></script>
-		<script src="../../src/mm.base-api.js"></script>
-		<script src="../../src/mm.base-controls.js"></script>
-		
-		
-		<!-- for jw-player (mp4, flv, mp3) support -->
-		<script src="../../swfobject/swfobject.js"></script>
-		<script src="../../src/mm.jwplayer-embed.js"></script>
-		
-		<script src="../../src/mm.jwplayer-api.js"></script> 
-		<!-- END: for jw-player (mp4, flv, mp3) support -->
-		
-		<script src="../../src/dev/timerange.js"></script>
 		<script>
-			$('html').addClass('js-on');
-			
-			
-			$(function(){
-				if(!window.console){
-					if(window.opera){
-						window.console = {
-							log: opera.postError
-						};
-					} else {
-						window.console = {
-							log: function(message){
-								setTimeout(function(){
-									throw message;
-								}, 0);
-							}
-						};
-					}
-				}
-				$('video, audio').mediaElementEmbed(
-					{
-						//debug: true,
-						//removeControls: true,
-						jwPlayer: {
-							path: '../../mediaplayers/jw-player/player.swf'
-						}
-					}
-				);
-				
-				$('div[data-controlwrapper]').registerMMControl();
-				
-				
-				$('a.load-video').click(function(e){
-					e.preventDefault();
-					$(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
-					return;
+			(function(){
+				window.params = {};
+				var paramArray 	= (location.search || '').replace('?', '').split('&');
+				var includeJS = {
+					jwplayer: ['../../swfobject/swfobject.js', '../../src/mm.jwplayer-embed.js', '../../src/mm.jwplayer-api.js'],
+					vlc: ['../../src/dev/mm.vlc-embed.js', '../../src/dev/mm.vlc-api.js']
+				};
+				$.each(paramArray, function(i, param){
+					param = param.split('=');
+					params[param[0]] = param[1];
 				});
-				
-				$('a.type').click(function(e){
-					e.preventDefault();
-					$(this).closest('div.test-wrapper').find('source')[0].type = 'video/x-flv';
-					$(this).closest('div.test-wrapper').find('video, audio').load();
-					return;
+				$.each(includeJS, function(name, files){
+					if(!params.mmAPI || params.mmAPI === name ){
+						$.each(files, function(i, file){
+							document.write('<script src="'+ file +'"><\/script>');
+						});
+					}
 				});
-				$('video').addTimeRange({enter: 1, leave: 9, callback: function(){
-					console.log(arguments)
-				}});
-				//$('video').attr('srces',  $('video').attr('srces'));
+			})();
+		</script>
+        
+        <script>
+        $('html').addClass('js-on');
+        
+        
+        $(function(){
+            if (!window.console) {
+                if (window.opera) {
+                    window.console = {
+                        log: opera.postError
+                    };
+                }
+                else {
+                    window.console = {
+                        log: function(message){
+                            setTimeout(function(){
+                                throw message;
+                            }, 0);
+                        }
+                    };
+                }
+            }
+            $('video, audio').mediaElementEmbed({
+                debug: !!(params.mmAPI),
+                //removeControls: true,
+                jwPlayer: {
+                    path: '../../mediaplayers/jw-player/player.swf'
+                }
+            });
+			
+			$('a.pause').click(function(){
+//				$('#vlc')[0].addEventListener('PositionChanged', function(e){console.log(e)}, false);
+//				$('#vlc')[0].playlist.togglePause();
+				$('audio').pause();
+			})
+			$('a.pause2').click(function(){
+				
+				$('audio').pause();
 			});
-			
-		</script>
-		<!-- lazy load themeswitcher -->
-		<script> 
-			(function($){
-				var script;
-				function startThemeswitcher(){
-					if(!this.readyState || this.readyState == "loaded" || this.readyState == "complete"){
-						$('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({height: 150});
-						script.unbind('load readystatechange');
-					}
-				}
-				setTimeout(function(){
-					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
-						.bind('load readystatechange', startThemeswitcher)
-						.appendTo('head')
-					;
-				}, 9);
-			})(jQuery);
-		</script>	
-	</head>
-	<body>
-		<script>
-			//alert($('<audio><source src="somfile.mp3" type="aduio/mp3"></source></audio>')[0].innerHTML);
-		</script>
-		<div class="test-wrapper">
-			<div class="ui-media-player" data-controlwrapper="controlwrapper">
-				<audio controls="controls" src="http://technikwuerze.de/blogmin/podpress_trac/feed/735/0/tw159.mp3"></audio>
-				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-					<div class="timeline-slider">
-						<span class="ui-slider-handle" tabindex="0"></span>
-						<div class="progressbar"></div>
-					</div>
-					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
-					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
-				</div>
-				<div class="duration"></div>
-				<div class="current-time"></div>
-			</div>
-		</div>
-		
-		<div class="test-wrapper">
-			<div class="ui-media-player" data-controlwrapper="controlwrapper">
-				
-				
-				<video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-					<source src="../../demos/media/bbb_trailer_400p.ogg"></source>
-					<a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a>
-					<source src="../../demos/media/bbb_trailer_mobile.m4v"></source>
-					<a class="source" href="../../demos/media/bbb_trailer_mobile.m4v">title</a>
-				</video>
-				
-				
-				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-					<div class="timeline-slider">
-						<span class="ui-slider-handle" tabindex="0"></span>
-						<div class="progressbar"></div>
-					</div>
-					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
-					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
-				</div>
-			</div>
-			<a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
-			<a href="media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
-			<a href="media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
-			<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
-		</div>
-		
-		<div class="test-wrapper">
-			<div class="ui-media-player" data-controlwrapper="controlwrapper">
-				
-				<video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-2">
-					<source src="http://blip.tv/file/get/N8inpasadena-Flowers457.flv"></source>
-					<a class="source" href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">title</a>
-				</video>
-				
-				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-					<div class="timeline-slider">
-						<span class="ui-slider-handle" tabindex="0"></span>
-						<div class="progressbar"></div>
-					</div>
-					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
-					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
-					
-				</div>
-			</div>
-			<a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
-			<a href="media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
-			<a href="media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
-			<a href="#" class="type">type</a>
-			<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
-		</div>
-		<!--
-		<button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-		-->
-		
-		
-		
-	</body>
+            
+             $('div[data-controlwrapper]').registerMMControl();
+             /*
+             
+             $('a.load-video').click(function(e){
+             e.preventDefault();
+             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
+             return;
+             });
+             
+             $('a.type').click(function(e){
+             e.preventDefault();
+             $(this).closest('div.test-wrapper').find('source')[0].type = 'video/x-flv';
+             $(this).closest('div.test-wrapper').find('video, audio').load();
+             return;
+             });
+             */
+            //$('video').attr('srces',  $('video').attr('srces'));
+        });
+        </script>
+        <!-- lazy load themeswitcher -->
+        <script>
+            (function($){
+                var script;
+                function startThemeswitcher(){
+                    if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") {
+                        $('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({
+                            height: 150
+                        });
+                        script.unbind('load readystatechange');
+                    }
+                }
+                setTimeout(function(){
+                    script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>").bind('load readystatechange', startThemeswitcher).appendTo('head');
+                }, 9);
+            })(jQuery);
+        </script>
+    </head>
+    <body>
+        
+        <a class="pause">sdsadsadsa</a>
+        
+
+
+        <div class="test-wrapper">
+            <div class="ui-media-player" data-controlwrapper="controlwrapper">
+                <audio controls="controls" src="http://technikwuerze.de/blogmin/podpress_trac/feed/735/0/tw159.mp3"></audio>
+                <div class="media-controls ui-widget ui-widget-header ui-corner-all">
+                    <button class="play-pause">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">play / pause</span>
+                    </button>
+                    <div class="timeline-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                        <div class="progressbar">
+                        </div>
+                    </div>
+                    <button class="mute-unmute">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">mute / unmute</span>
+                    </button>
+                    <div class="volume-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                    </div>
+                </div>
+                <div class="duration">
+                </div>
+                <div class="current-time">
+                </div>
+            </div>
+        </div>
+        <div class="test-wrapper">
+            <div class="ui-media-player" data-controlwrapper="controlwrapper">
+                <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
+                    <source src="../../demos/media/bbb_trailer_400p.ogg">
+                    </source>
+                    <a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a>
+                    <source src="../../demos/media/bbb_trailer_mobile.m4v">
+                    </source>
+                    <a class="source" href="../../demos/media/bbb_trailer_mobile.m4v">title</a>
+                </video>
+                <div class="media-controls ui-widget ui-widget-header ui-corner-all">
+                    <button class="play-pause">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">play / pause</span>
+                    </button>
+                    <div class="timeline-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                        <div class="progressbar">
+                        </div>
+                    </div>
+                    <button class="mute-unmute">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">mute / unmute</span>
+                    </button>
+                    <div class="volume-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                    </div>
+                </div>
+            </div>
+            <a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
+            <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
+            <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
+            <p>
+                (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
+            </p>
+        </div>
+        <div class="test-wrapper">
+            <div class="ui-media-player" data-controlwrapper="controlwrapper">
+                <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-2">
+                    <source src="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">
+                    </source>
+                    <a class="source" href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">title</a>
+                </video>
+                <div class="media-controls ui-widget ui-widget-header ui-corner-all">
+                    <button class="play-pause">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">play / pause</span>
+                    </button>
+                    <div class="timeline-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                        <div class="progressbar">
+                        </div>
+                    </div>
+                    <button class="mute-unmute">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">mute / unmute</span>
+                    </button>
+                    <div class="volume-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                    </div>
+                </div>
+            </div>
+            <a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
+            <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
+            <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
+            <a href="#" class="type">type</a>
+            <p>
+                (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
+            </p>
+        </div>
+        <!--
+        <button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
+        -->
+    </body>
 </html>

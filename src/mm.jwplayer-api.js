@@ -171,7 +171,6 @@
 		if(api){
 			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
 			//add events
-			api.apiElem.addControllerListener('PLAY', 'jwTest');
 			$.each(jwEvents[apiVersion], function(mvcName, evts){
 				$.each(evts, function(evtName){
 					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
@@ -199,14 +198,14 @@
 			this.apiElem.sendEvent('LOAD', src);
 		},
 		muted: function(state){
-			if(!arguments.length){
+			if(typeof state !== 'boolean'){
 				var cfg = this.apiElem.getConfig();
-				return (cfg) ? cfg.mute : undefined;
+				return (cfg || {}).mute;
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
 		currentTime: function(t){
-			if(!arguments.length){
+			if(!isFinite(t)){
 				return this.currentPos;
 			}
 			var isPlaying = (this.apiElem.getConfig().state === 'PLAYING');
@@ -223,7 +222,7 @@
 			return this.apiElem.getPlaylist()[0].duration || 0;
 		},
 		volume: function(v){
-			if(!arguments.length){
+			if(!isFinite(v)){
 				return parseInt(this.apiElem.getConfig().volume, 10);
 			}
 			this.apiElem.sendEvent('VOLUME', ''+v);

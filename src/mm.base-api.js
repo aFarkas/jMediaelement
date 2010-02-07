@@ -77,7 +77,7 @@
 			});
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				this._load(canPlaySrc, poster, extras);
+				this._mmload(canPlaySrc, poster, extras);
 			} else {
 				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ.loadSrc(srces, poster, extras);
@@ -200,7 +200,7 @@
 		}
 	};
 	
-	nativ._load = nativ.loadSrc;
+	nativ._mmload = nativ.loadSrc;
 	
 	$.multimediaSupport.add('nativ', 'video', nativ, true);
 	$.multimediaSupport.add('nativ', 'audio', nativ, true);

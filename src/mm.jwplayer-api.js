@@ -195,7 +195,7 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_load: function(src, poster, extras){
+		_mmload: function(src, poster, extras){
 			this.apiElem.sendEvent('LOAD', src);
 		},
 		muted: function(state){

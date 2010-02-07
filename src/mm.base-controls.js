@@ -126,13 +126,17 @@
 				mm.bind('loadedmeta emptied', function(e, evt){
 					control.html(api.apis[api.name].getFormattedDuration());
 				});
-				control.html(api.apis[api.name].getFormattedDuration());
+				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+					control.html(api.apis[api.name].getFormattedDuration());
+				}, 'one');
 			},
 			'current-time': function(control, mm, api, o){
 				mm.bind('timechange', function(e, evt){
 					control.html(api.apis[api.name]._format(evt.time));
 				});
-				control.html(api.apis[api.name].getFormattedTime());
+				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+					control.html(api.apis[api.name].getFormattedTime());
+				}, 'one');
 			}
 		}
 	;

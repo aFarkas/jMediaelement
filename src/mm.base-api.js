@@ -148,16 +148,13 @@
 			;
 		},
 		play: function(src){
-			if(arguments.length){
-				this.loadSrc(src);
-			}
 			this.html5elem.play();
 		},
 		pause: function(){
 			this.html5elem.pause();
 		},
 		muted: function(bool){
-			if(arguments.length){
+			if(typeof bool === 'boolean'){
 				this.html5elem.muted = bool;
 			}
 			return this.html5elem.muted;

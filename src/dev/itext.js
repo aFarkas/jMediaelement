@@ -1,5 +1,8 @@
-/**
- * @author alexander.farkas
+/**!
+ * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
+ * @author Alexander Farkas
+ * Copyright 2010, Alexander Farkas
+ * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function(){
 	function isBetweenRange(elem, api, time){

@@ -387,10 +387,11 @@
 					}, 0);
 					data.apis[data.name]._setInactive();
 				}
-				
 				if(showElem && showElem.nodeName){
-					showElem.style.display = 'block';
-					data.apis[oldActive]._setActive();
+					if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
+						showElem.style.display = 'block';
+					}
+					data.apis[supType]._setActive();
 					apiReady = true;
 				}
 				data.name = supType;
@@ -506,6 +507,9 @@
 		dims = m.helper.getDimensions(elem);
 		
 		fn = function(apiElem){
+			if(elemName === 'audio' && !attrs.controls){
+				apiElem.style.display = 'none';
+			}
 			apiData.apis[apiName].apiElem = apiElem;
 			$(apiElem).addClass(elemName);
 			apiData.apis[apiName]._init();

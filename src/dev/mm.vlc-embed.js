@@ -44,7 +44,7 @@
 					vlcAttr = $.extend({}, dims, {src: src}),
 					params 	= {
 						src: src,
-						ShowDisplay: 'false',
+						ShowDisplay: 'true',
 						AutoPlay: ''+ attrs.autoplay,//
 						AutoLoop: ''+attrs.loop
 					},

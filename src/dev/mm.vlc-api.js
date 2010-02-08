@@ -70,14 +70,12 @@
 				api 	= this,
 				meta 	= {
 					type: 'loadedmeta',
-					duration: vlc.input.length / 1000,
-					width: vlc.input.width,
-					height: vlc.input.height
+					duration: vlc.input.length / 1000
 				},
 				evt
 			;
-			
-			if(!this.data.metaLoaded){
+						
+			if((state && state > 1 && !this.data.metaLoaded) || (this.data.metaLoaded && this.data.metaLoaded.duration !== meta.duration)){
 				queueEvent(meta, api);
 				this.data.metaLoaded = meta;
 			}
@@ -87,10 +85,10 @@
 				time: vlc.input.time / 1000
 			};
 			
-			if(this.data.time !== evt.time){
+			if(state && state > 1 && this.data.time !== evt.time){
 				if(meta.duration){
 					evt.duration = meta.duration;
-					evt.timeProgress = vlc.input.position;
+					evt.timeProgress = vlc.input.position * 100;
 				}
 				this.data.time = evt.time;
 				queueEvent(evt, api);
@@ -121,6 +119,9 @@
 				this.data.state = state;
 				if(states[state]){
 					queueEvent(states[state], api);
+				}
+				if(states[state] === 'ended'){
+					vlc.playlist.stop();
 				}
 				if(state === 3){
 					interval.start(api);

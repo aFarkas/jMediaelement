@@ -315,7 +315,7 @@
 					ext2type: {
 						mp3: 'audio/mpeg',
 						mp4: 'audio/mp4',
-						ogg: 'audio/ogg',
+						ogg: 'application/ogg',
 						oga: 'audio/ogg'
 					}
 				}, this.apiProto)
@@ -329,7 +329,7 @@
 						mp4: 'video/mp4',
 						mpg: 'video/mpeg',
 						mpeg: 'video/mpeg',
-						ogg: 'video/ogg',
+						ogg: 'application/ogg',
 						ogv: 'video/ogg'
 					}
 				}, this.apiProto)
@@ -468,7 +468,7 @@
 		
 		$.each(apis, function(name, api){
 			
-			if(!api.isTechAvailable || name === 'nativ'){
+			if( (!api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable()) ) || name === 'nativ'){
 				return;
 			}
 			

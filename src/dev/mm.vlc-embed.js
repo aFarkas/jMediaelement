@@ -12,28 +12,51 @@
 		)
 	;
 	
-	var defaultAttrs = {
+	var doc	 			= document,
+		defaultAttrs 	= {
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
-			//codebase: 'http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab',//todo
 			events: 'true',
-			//classid: 'clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921',//todo
 			type: 'application/x-vlc-plugin'
+		},
+		activeXAttrs 	= {
+			classid: 'clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921'
 		}
 	;
-	function embedVlc(id, attrs, params){
-		var vlc = document.createElement('object');
-		$.each($.extend({}, defaultAttrs, attrs), function(name, val){
-			vlc.setAttribute(name, val);
-		});
-		$.each(params, function(name, val){
-			var param = document.createElement('param');
-			param.setAttribute(name, val);
-			vlc.appendChild(param);
-		});
-		vlc.setAttribute('id', id);
-		vlc.setAttribute('name', id);
+	function embedVlc(elem, id, attrs, params){
+		var vlc;
+		attrs = $.extend({}, defaultAttrs, attrs);
+		if(!window.ActiveXObject){
+			vlc = doc.createElement('object');
+			$.each(attrs, function(name, val){
+				vlc.setAttribute(name, val);
+			});
+			
+			$.each(params, function(name, val){
+				var param = doc.createElement('param');
+				param.setAttribute('name', name);
+				param.setAttribute('value', val);
+				vlc.appendChild(param);
+			});
+			vlc.setAttribute('id', id);
+			vlc.setAttribute('name', id);
+			elem.parentNode.replaceChild(vlc, elem);
+		} else if(elem.outerHTML){
+			vlc = '<object';
+			$.each($.extend({}, attrs, activeXAttrs), function(name, val){
+				vlc += ' '+ name +'="'+ val +'"';
+			});
+			vlc += ' name="'+ id +'"';
+			vlc += ' id="'+ id +'"';
+			vlc += '>';
+			$.each(params, function(name, val){
+				vlc += ' <param name="'+ name +'" value="'+ val +'" />';
+			});
+			vlc += '</object>';
+			elem.outerHTML = vlc;
+			vlc = doc.getElementById(id);
+		}
 		return vlc;
 	}
 	var vlcMM = {
@@ -71,7 +94,8 @@
 					vlc
 				;
 				$.extend(vlcAttr, params);
-				vlc = $(embedVlc(id, vlcAttr, params)).css(dims).insertBefore(api.html5elem);
+				vlc = $('<div />').css(dims).insertBefore(api.html5elem)
+				vlc = $(embedVlc(vlc[0], id, vlcAttr, params)).css(dims);
 				fn(vlc[0]);
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'dirac', 'speex', 'theora', 'vorbis'],

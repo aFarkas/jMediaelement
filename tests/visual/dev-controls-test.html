@@ -19,29 +19,27 @@
         </script>
         <script src="../../src/mm.base-controls.js">
         </script>
-		
-		<script>
-			(function(){
-				window.params = {};
-				var paramArray 	= (location.search || '').replace('?', '').split('&');
-				var includeJS = {
-					jwplayer: ['../../swfobject/swfobject.js', '../../src/mm.jwplayer-embed.js', '../../src/mm.jwplayer-api.js'],
-					vlc: ['../../src/dev/mm.vlc-embed.js', '../../src/dev/mm.vlc-api.js']
-				};
-				$.each(paramArray, function(i, param){
-					param = param.split('=');
-					params[param[0]] = param[1];
-				});
-				$.each(includeJS, function(name, files){
-					if(!params.mmAPI || params.mmAPI === name ){
-						$.each(files, function(i, file){
-							document.write('<script src="'+ file +'"><\/script>');
-						});
-					}
-				});
-			})();
-		</script>
-        
+        <script>
+            (function(){
+                window.params = {};
+                var paramArray = (location.search || '').replace('?', '').split('&');
+                var includeJS = {
+                    jwplayer: ['../../swfobject/swfobject.js', '../../src/mm.jwplayer-embed.js', '../../src/mm.jwplayer-api.js'],
+                    vlc: ['../../src/dev/mm.vlc-embed.js', '../../src/dev/mm.vlc-api.js']
+                };
+                $.each(paramArray, function(i, param){
+                    param = param.split('=');
+                    params[param[0]] = param[1];
+                });
+                $.each(includeJS, function(name, files){
+                    if (!params.mmAPI || params.mmAPI === name) {
+                        $.each(files, function(i, file){
+                            document.write('<script src="' + file + '"><\/script>');
+                        });
+                    }
+                });
+            })();
+        </script>
         <script>
         $('html').addClass('js-on');
         
@@ -70,19 +68,19 @@
                     path: '../../mediaplayers/jw-player/player.swf'
                 }
             });
-			
-			$('a.pause').click(function(){
-//				$('#vlc')[0].addEventListener('PositionChanged', function(e){console.log(e)}, false);
-//				$('#vlc')[0].playlist.togglePause();
-				$('audio').pause();
-			})
-			$('a.pause2').click(function(){
-				
-				$('audio').pause();
-			});
             
-             $('div[data-controlwrapper]').registerMMControl();
-             /*
+            $('a.pause').click(function(){
+                //				$('#vlc')[0].addEventListener('PositionChanged', function(e){console.log(e)}, false);
+                //				$('#vlc')[0].playlist.togglePause();
+                $('audio').pause();
+            })
+            $('a.pause2').click(function(){
+            
+                $('audio').pause();
+            });
+            
+            $('div[data-controlwrapper]').registerMMControl();
+            /*
              
              $('a.load-video').click(function(e){
              e.preventDefault();
@@ -119,14 +117,13 @@
         </script>
     </head>
     <body>
-        
         <a class="pause">sdsadsadsa</a>
         
-
-
+		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
-                <audio controls="controls" src="http://technikwuerze.de/blogmin/podpress_trac/feed/735/0/tw159.mp3"></audio>
+                <audio controls="controls" src="http://technikwuerze.de/blogmin/podpress_trac/feed/735/0/tw159.mp3">
+                </audio>
                 <div class="media-controls ui-widget ui-widget-header ui-corner-all">
                     <button class="play-pause">
                         <span class="ui-icon ui-icon-play"></span>
@@ -153,7 +150,7 @@
         </div>
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
-                <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
+                <video autoplay="autoplay" poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
                     <source src="../../demos/media/bbb_trailer_400p.ogg">
                     </source>
                     <a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a>
@@ -189,7 +186,7 @@
         </div>
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
-                <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-2">
+                <video autoplay="autoplay" poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-2">
                     <source src="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">
                     </source>
                     <a class="source" href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">title</a>

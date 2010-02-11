@@ -27,9 +27,11 @@
 			
 			e.target = this.html5elem;
 			$(this.html5elem).triggerHandler(e, e);
+			
 			if(e.type !== 'load' && e.type !== 'error'){
 				$(this.html5elem.ownerDocument || document).triggerHandler(e, e);
 			}
+			
 		},
 		isAPIReady: false,
 		relCurrentTime: function(rel){
@@ -121,8 +123,6 @@
 						that._trigger('mmAPIReady');
 						that._trigger({
 							type: 'loadedmeta',
-							height: this.videoHeight,
-							width: this.videoWidth,
 							duration: this.duration
 						});
 					}

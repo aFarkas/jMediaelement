@@ -23,8 +23,6 @@
 					
 					api._trigger({
 						type: 'loadedmeta',
-						height: obj.height,
-						width: obj.width,
 						duration: obj.duration
 					});
 				}

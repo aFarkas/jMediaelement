@@ -210,5 +210,28 @@
 	};
 	
 	$.multimediaSupport.add('vlc', 'video', vlcAPI);
-	$.multimediaSupport.add('vlc', 'audio', vlcAPI);
+	$.multimediaSupport.add('vlc', 'audio', $.extend({}, vlcAPI, {
+		currentTime: function(t){
+			var ret;
+			try {
+				ret = vlcAPI.call(this, t);
+			} catch(e){
+				if(!isFinite(t)){
+					return 0;
+				}
+			}
+			return ret;
+		},
+		getDuration: function(){
+			var dur = 0;
+			try {
+				dur = vlcAPI.call(this);
+			} catch(e){
+				dur = 0;
+			}
+			
+			
+			return dur;
+		}
+	}));
 })(jQuery);

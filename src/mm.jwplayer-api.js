@@ -204,6 +204,12 @@
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
+		enterFullscreen: function(){
+			
+		},
+		exitFullscreen: function(){
+			
+		},
 		currentTime: function(t){
 			if(!isFinite(t)){
 				return this.currentPos;

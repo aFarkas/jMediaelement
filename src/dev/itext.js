@@ -42,6 +42,7 @@
 		}	
 		
 	}
+	
 	$.fn.addTimeRange = function(name, o){
 		if(typeof o !== 'string'){
 			o = $.extend({}, $.fn.addTimeRange.defaults, o);
@@ -109,7 +110,7 @@
 				dataType: 'text',
 				success: function(srt){
 					data.captions = $.parseSrt(srt);
-					
+					console.log(data.captions)
 					function captionChange(e){
 						e.target = jElm[0];
 						e = $.extend({}, e, {

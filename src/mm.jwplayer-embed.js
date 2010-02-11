@@ -45,14 +45,18 @@
 					vars.autostart = 'true';
 				}
 				
-				div = $('<div id="'+id+'"></div>').css(dims).insertBefore(api.html5elem);
+				$('<div class="screen-box"><div id="'+id+'" /></div>').css($.extend({position: 'relative'}, dims)).insertBefore(api.html5elem);
+				
+				
 				
 				swfobject.embedSWF(opts.path, id, ''+dims.width, ''+dims.height, '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
+					
 					if(swf.ref){
+						var style = swf.ref.style;
+						style.position = 'absolute';
+						style.top = '0px';
+						style.left = '0px';
 						fn(swf.ref);
-						//swfobject bug in chorme
-						div.remove();
-						div = null;
 					}
 				});
 			},

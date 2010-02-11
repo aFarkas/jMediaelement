@@ -134,7 +134,7 @@
 		},
 		play: function(){
 			this.apiElem.playlist.play();
-			this.trigger('play');
+			this._trigger('play');
 			interval.start(this);
 			queueCheck(this);
 		},

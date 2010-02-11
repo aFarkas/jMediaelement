@@ -11,7 +11,7 @@
 		clearInterval(timer);
 		function testReady(){
 			try{
-				if(api.apiElem.input.state !== undefined){
+				if(api.apiElem.input){
 					queueEvent('mmAPIReady', api);
 				} else {
 					return;
@@ -21,6 +21,7 @@
 					interval.start(api);
 				}
 			} catch(e){}
+			
 		}
 		timer = setInterval(testReady, 333);
 		testReady();
@@ -133,6 +134,7 @@
 		},
 		play: function(){
 			this.apiElem.playlist.play();
+			this.trigger('play');
 			interval.start(this);
 			queueCheck(this);
 		},
@@ -144,7 +146,11 @@
 			}
 		},
 		isPlaying: function(){
-			return states[this.apiElem.input.state] === 'playing';
+			var ret = false;
+			try {
+				ret = states[this.apiElem.input.state] === 'playing';
+			} catch(e){}
+			return ret;
 		},
 		_mmload: function(src, poster, extras){
 			this.apiElem.playlist.items.clear();
@@ -153,14 +159,39 @@
 			queueCheck(this);
 		},
 		currentTime: function(t){
-			if(!isFinite(t)){
-				return this.apiElem.input.time / 1000;
+			if(this.nodeName === 'audio'){
+				try {
+					if(!isFinite(t)){
+						return this.apiElem.input.time / 1000;
+					}
+					this.apiElem.input.time = t * 1000;
+					queueCheck(this);
+				} catch(e){
+					if(!isFinite(t)){
+						return 0;
+					}
+				}
+			} else {
+				if(!isFinite(t)){
+					return this.apiElem.input.time / 1000;
+				}
+				this.apiElem.input.time = t * 1000;
+				queueCheck(this);
 			}
-			this.apiElem.input.time = t * 1000;
-			queueCheck(this);
 		},
 		getDuration: function(){
-			return this.apiElem.input.length / 1000 || 0;
+			var dur = 0;
+			if(this.nodeName === 'audio'){
+				try {
+					dur = this.apiElem.input.length / 1000 || 0;
+				} catch(e){
+					dur = 0;
+				}
+			} else {
+				dur = this.apiElem.input.length / 1000 || 0;
+			}
+			
+			return dur;
 		},
 		volume: function(v){
 			if (!isFinite(v)) {

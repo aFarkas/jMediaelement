@@ -4,7 +4,7 @@
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
-(function(){
+(function($){
 	function isBetweenRange(elem, api, time){
 		
 		if(!api.active){return;}
@@ -246,4 +246,4 @@ $.parseSrt = function(data) {
 }
 
 	
-})();
+})(jQuery);

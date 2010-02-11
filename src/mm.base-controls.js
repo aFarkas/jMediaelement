@@ -67,6 +67,7 @@
 					
 					changeDisabledState();
 				}, 'one');
+				
 			},
 			'volume-slider': function(control, mm, api, o){
 				var stopSlide = false;
@@ -97,6 +98,7 @@
 					;
 					control.slider('option', 'disabled', false);
 					control.slider('value', api.apis[api.name].volume());
+					
 				}, 'one');
 			},
 			'progressbar': function(control, mm, api, o){
@@ -119,21 +121,24 @@
 						.bind('progresschange', changeProgressUI)
 						.bind('emptied', resetProgress)
 					;
-					
 				}, 'one');
+				
 			},
 			duration: function(control, mm, api, o){
 				mm.bind('loadedmeta emptied', function(e, evt){
-					control.html(api.apis[api.name].getFormattedDuration());
+					control.html(api.apis[api.name]._format(evt.duration));
 				});
 				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
 					control.html(api.apis[api.name].getFormattedDuration());
 				}, 'one');
+				
 			},
 			'current-time': function(control, mm, api, o){
 				mm.bind('timechange', function(e, evt){
 					control.html(api.apis[api.name]._format(evt.time));
 				});
+				
+				
 				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
 					control.html(api.apis[api.name].getFormattedTime());
 				}, 'one');

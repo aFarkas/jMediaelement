@@ -98,9 +98,8 @@
 				vlc = $(embedVlc(vlc[0], id, vlcAttr, params)).css(dims);
 				fn(vlc[0]);
 			},
-			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'dirac', 'speex', 'theora', 'vorbis'],
-			canPlayExts: ['avi',  'm4v', 'mp4', 'mov', 'flv', 'f4v', 'f4p', 'mp3', 'ogg', 'ogv', 'oga'],
-			canPlayContainer: ['video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'audio/mpeg', 'audio/mp3', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
+			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
+			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
 		}
 	;
 			

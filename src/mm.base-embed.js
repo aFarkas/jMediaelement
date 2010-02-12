@@ -56,7 +56,6 @@
 				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
 			}
 			if(srcNames[name]){
-				
 				return $.support.video && elem[name] || m.helper.makeAbsURI(elem.getAttribute(name));
 			}
 			if(name === 'srces'){
@@ -114,8 +113,7 @@
 				value = $.isArray(value) ? value : [value];
 				
 				$.each(value, function(i, src){
-					//add type if missing and available, good to avoid bugs in webkit browser
-					src = $.multimediaSupport.addType(src, elemName);
+					
 					ret = doc.createElement('source');
 					
 					ret.setAttribute('src', src.src);
@@ -135,7 +133,35 @@
 		$.event.special.mediaerror.handler.apply($(this).closest('video, audio')[0], arguments);
 	}
 	
-	function bindSource(){
+	function bindSource(e){
+		//webkit is really stupid with the error event, so fallback to canPlaytype
+		if ('webkitPreservesPitch' in this) {
+			var srces 	= $.attr(this, 'srces'),
+				elem 	= this,
+				name 	= elem.nodeName.toLowerCase(),
+				canplay = false
+			;
+			$.each(srces, function(i, src){
+				canplay = m.apiProto.canPlayType(src, elem, name);
+				if(canplay){
+					return false;
+				}
+			});
+			if(!canplay){
+				$(this).trigger('mediaerror');
+				//stop trying to play
+				try {
+					$.attr(this, 'autoplay', false);
+					this.pause();
+				} catch(er){}
+			}
+			// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
+			if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
+				$(this).unbind('loadstart', bindSource);
+			}
+		} //end webkit workaround
+		
+		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
 			.filter(':last')
@@ -152,6 +178,10 @@
 				.each(bindSource)
 				.bind('emtptied', bindSource)
 			;
+			//some webkit browsers doesn´t throw emptied event, so we use loadstart instead
+			if ('webkitPreservesPitch' in this) {
+				$(this).bind('loadstart', bindSource);
+			}
 		},
 		teardown: function(){
 			$(this)
@@ -166,85 +196,6 @@
 		}
 	};
 	
-	function getLastSrc(media){
-		var src = media.currentSrc || media.getAttribute('src');
-		if(!src){
-			media = media.getElementsByTagName('source');
-			if(media.length){
-				src =  media[media.length - 1].getAttribute('src');
-			}
-		}
-		return src;
-	}
-	
-	function isNotLoaded(media){
-		return (media.readyState === 0 || media.error || ($.nodeName(media, 'video') && !media.videoHeight));
-	}
-	
-	var errorDelay = 3000;
-	$(window).load(function(){
-		errorDelay = 1000;
-	});
-	
-	function assumeError(){
-		var media 	= this,
-			src 	= getLastSrc(this)
-		;
-		if( src && isNotLoaded(media)){
-			var data = $.data(this, 'assumedError') || $.data(this, 'assumedError', {});
-			data.triggerError = false;
-			if(data.timer){
-				clearTimeout(data.timer);
-			}
-			data.timer = setTimeout(function(){
-				if(isNotLoaded(media)){
-					$.event.special.assumedMediaerror.handler.call(media, {type: 'assumedError'});
-				}
-			}, errorDelay);
-		}
-	}
-	
-	$.event.special.assumedMediaerror = {
-		setup: function(){
-			$(this)
-				.bind('mediaerror', $.event.special.assumedMediaerror.handler)
-				// safari/chrome have several problems
-				.each(function(){
-					
-					if('webkitPreservesPitch' in this){
-						
-						var jElm = $(this);
-						jElm
-							.bind('loadstart emptied', assumeError)
-							.attr('srces', jElm.attr('srces'))
-						;
-						if(this.load){
-							this.load();
-						}
-						assumeError.call(this, {type: 'manually'});
-					}
-				})
-			;
-		},
-		teardown: function(){
-			$(this)
-				.unbind('mediaerror', $.event.special.assumedMediaerror.handler)
-				.unbind('emtptied', assumeError)
-			;
-		},
-		handler: function(e){
-			var data 	= $.data(this, 'assumedError') || $.data(this, 'assumedError', {}),
-				src 	= getLastSrc(this)
-			;
-			if(data.triggeredError !== src){
-				clearTimeout(data.timer);
-				data.triggerError = src;
-				e = $.extend({}, e || {}, {type: 'assumedMediaerror'});
-				return $.event.handle.apply(this, arguments);
-			}
-		}
-	};
-	
 	function getExt(src){
 		var pos = (src.indexOf('?') + 1),
 			ext = ''
@@ -255,21 +206,50 @@
 		return ext;
 	}
 	
+	var mimeTypes = {
+			audio: {
+				//oga shouldn´t be used!
+				'application/ogg': ['ogg','oga'],
+				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
+				'audio/mp4': ['mp4','mpg4'],
+				'audio/wav': ['wav'],
+				'audio/x-m4a': ['m4a'],
+				'audio/x-m4p': ['m4p']
+			},
+			video: {
+				//ogv shouldn´t be used!
+				'application/ogg': ['ogg','ogv'],
+				'video/mpeg': ['mpg','mpeg','mpe'],
+				'video/mp4': ['mp4','mpg4'],
+				'video/quicktime': ['mov','qt'],
+				'video/x-m4v': ['m4v'],
+				'video/x-msvideo': ['avi'],
+				'video/x-ms-asf': ['asf', 'asx'],
+				'video/flv': ['flv', 'f4v']
+			}
+		}
+	;
 	
 	$.extend($.multimediaSupport, {
-		addType: function(src, name){
-			var type;
-			
-			if(typeof src === 'string'){
-				src = {src: src};
+		registerMimetype: function(elemName, mimeObj){
+			if(arguments.length === 1){
+				$.each(mimeTypes, function(name){
+					m.registerMimetype(name, elemName);
+				});
+				return;
 			}
-			if(src && !src.type){
-				type = this.apis[name].nativ.ext2type[ getExt(src.src) ];
-				if(type){
-					src.type = type;
+			$.each(mimeObj, function(mime, exts){
+				if(mimeTypes[elemName][mime]){
+					mimeTypes[elemName][mime] = [];
 				}
+				mimeTypes[elemName][mime] = mimeTypes[elemName][mime].concat(exts);
+			});
+			
+		},
+		_showMimeTypes: function(){
+			if(window.console){
+				console.log(mimeTypes);
 			}
-			return src;
 		},
 		attrFns: {},
 		add: function(name, elemName, api, hard){
@@ -281,7 +261,11 @@
 		},
 		apiProto: {
 			_init: function(){},
-			canPlayType: function(type){
+			canPlayType: function(type, elem){
+				elem = elem || this.apiElem;
+				if(elem && elem.canPlayType){
+					return elem.canPlayType(type);
+				}
 				var parts 	= m.helper.extractContainerCodecsFormType(type),
 					that 	= this,
 					ret		= 'probably'
@@ -297,14 +281,27 @@
 				});
 				return ret;
 			},
-			_canPlaySrc: function(src){
+			_canPlaySrc: function(src, elem, name){
+				var that = this;
+				elem = elem || this.apiElem;
+				name = name || this.nodeName || ((elem || {}).nodeName || '').toLowerCase();
 				if(typeof src !== 'string'){
 					if(src.type){
 						return this.canPlayType(src.type);
 					}
 					src = src.src;
 				}
-				return ($.inArray(getExt(src), this.canPlayExts) !== -1) ? 'maybe' : '';
+				var ext = getExt(src), ret = '';
+				$.each(mimeTypes[name], function(mime, exts){
+					var index = $.inArray(ext, exts);
+					if(index !== -1){
+						ret = that.canPlayType(mime, elem);
+						if(ret){
+							return false;
+						}
+					}
+				});
+				return ret;
 			},
 			_setActive: function(){},
 			_setInactive: function(){}
@@ -406,7 +403,7 @@
 				});
 				return attrs;
 			},
-			//ToDo: Simplify
+			//ToDo: Simplify and move to $.fn.height/$.fn.width
 			getDimensions: function(media){
 				var ret = {
 							height: 150,
@@ -467,14 +464,12 @@
 		;
 		
 		$.each(apis, function(name, api){
-			
 			if( (!api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable()) ) || name === 'nativ'){
 				return;
 			}
-			
 			$.each(srces, function(i, src){
 				//ToDo: Make a difference between maybe and probably
-				if(api._canPlaySrc(src)){
+				if(api._canPlaySrc(src, false, elemName)){
 					supportedSrc = src.src;
 					apiName = name;
 					m.helper._create(elemName, name, elem, opts);
@@ -495,7 +490,7 @@
 			return;
 		}
 		
-		//returns true if apiWasAlread_setAPIActive
+		//returns true if api is already active
 		if(m.helper._setAPIActive(elem, apiName)){return;}
 		id = elem.id;
 		if(!id){
@@ -545,7 +540,7 @@
 				apiData.apis[apiData.name]._init();
 			}
 			$(this)
-				.bind(opts.errorEvent, function findInitFallbackOnError(e){
+				.bind('mediaerror', function findInitFallbackOnError(e){
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}
@@ -557,7 +552,6 @@
 	
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
-		errorEvent: 'assumedMediaerror', // mediaerror
 		removeControls: false
 	};
 	

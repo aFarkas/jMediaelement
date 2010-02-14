@@ -60,9 +60,7 @@
 			}
 			if(name === 'srces'){
 				ret = $.attr(elem, 'src');
-				
 				if( ret ){
-					
 					ret = [{
 							src: ret,
 							type: elem.getAttribute('type'),
@@ -89,7 +87,6 @@
 						});
 					}
 				}
-				
 				return ret;
 			}
 		} else {
@@ -102,11 +99,9 @@
 				} else {
 					elem.removeAttribute(name);
 				}
-			}
-			if(srcNames[name]){
+			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
-			}
-			if (name === 'srces') {
+			} else if (name === 'srces') {
 				elemName = elem.nodeName.toLowerCase();
 				$('source, a.source', elem).remove();
 				elem.removeAttribute('src');
@@ -134,21 +129,24 @@
 	}
 	
 	function bindSource(e){
+		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
-		if ('webkitPreservesPitch' in this) {
+		if ('webkitPreservesPitch' in this || window.opera) {
 			var srces 	= $.attr(this, 'srces'),
 				elem 	= this,
 				name 	= elem.nodeName.toLowerCase(),
 				canplay = false
 			;
+
 			$.each(srces, function(i, src){
-				canplay = m.apiProto.canPlayType(src, elem, name);
-				if(canplay){
-					return false;
-				}
+				canplay = m.apiProto._canPlaySrc(src, elem, name);
+				if(canplay){return false;}
 			});
+
 			if(!canplay){
-				$(this).trigger('mediaerror');
+				setTimeout(function(){
+					$(elem).triggerHandler('mediaerror');
+				}, 0);
 				//stop trying to play
 				try {
 					$.attr(this, 'autoplay', false);
@@ -160,14 +158,13 @@
 				$(this).unbind('loadstart', bindSource);
 			}
 		} //end webkit workaround
-		
+
 		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
 			.filter(':last')
 			.bind('error', sourceError)
 		;
-		
 	}
 	
 	$.event.special.mediaerror = {
@@ -220,9 +217,8 @@
 				//ogv shouldn´t be used!
 				'application/ogg': ['ogg','ogv'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
-				'video/mp4': ['mp4','mpg4'],
+				'video/mp4': ['mp4','mpg4', 'm4v'],
 				'video/quicktime': ['mov','qt'],
-				'video/x-m4v': ['m4v'],
 				'video/x-msvideo': ['avi'],
 				'video/x-ms-asf': ['asf', 'asx'],
 				'video/flv': ['flv', 'f4v']
@@ -283,14 +279,15 @@
 			},
 			_canPlaySrc: function(src, elem, name){
 				var that = this;
-				elem = elem || this.apiElem;
+				elem = elem || this;
 				name = name || this.nodeName || ((elem || {}).nodeName || '').toLowerCase();
 				if(typeof src !== 'string'){
 					if(src.type){
-						return this.canPlayType(src.type);
+						return elem.canPlayType(src.type);
 					}
 					src = src.src;
 				}
+				
 				var ext = getExt(src), ret = '';
 				$.each(mimeTypes[name], function(mime, exts){
 					var index = $.inArray(ext, exts);
@@ -308,28 +305,10 @@
 		},
 		apis: {
 			audio: {
-				nativ: $.extend({}, {
-					ext2type: {
-						mp3: 'audio/mpeg',
-						mp4: 'audio/mp4',
-						ogg: 'application/ogg',
-						oga: 'audio/ogg'
-					}
-				}, this.apiProto)
+				nativ: $.extend({}, this.apiProto)
 			},
 			video: {
-				nativ: $.extend({}, {
-					ext2type: {
-						mov: 'video/quicktime',
-						qt: 'video/quicktime',
-						m4v: 'video/mp4',
-						mp4: 'video/mp4',
-						mpg: 'video/mpeg',
-						mpeg: 'video/mpeg',
-						ogg: 'application/ogg',
-						ogv: 'video/ogg'
-					}
-				}, this.apiProto)
+				nativ: $.extend({}, this.apiProto)
 			}
 		},
 		
@@ -534,7 +513,7 @@
 			var apiData = m.helper._create(elemName, 'nativ', this, opts);
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
-			if(opts.debug || !$.support.mediaElements || this.error !== null){
+			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
 			} else {
 				apiData.apis[apiData.name]._init();

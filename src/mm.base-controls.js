@@ -125,6 +125,10 @@
 				
 			},
 			duration: function(control, mm, api, o){
+				if(o.addThemeRoller){
+					control.addClass('ui-widget-content ui-corner-all');
+				}
+				control.html('--:--');
 				mm.bind('loadedmeta emptied', function(e, evt){
 					control.html(api.apis[api.name]._format(evt.duration));
 				});
@@ -134,14 +138,46 @@
 				
 			},
 			'current-time': function(control, mm, api, o){
+				if(o.addThemeRoller){
+					control.addClass('ui-widget-content ui-corner-all');
+				}
+				control.html('--:--');
 				mm.bind('timechange', function(e, evt){
 					control.html(api.apis[api.name]._format(evt.time));
 				});
-				
-				
 				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
 					control.html(api.apis[api.name].getFormattedTime());
 				}, 'one');
+			},
+			'media-controls': function(control, mm, api, o){
+				if(o.addThemeRoller){
+					control.addClass('ui-widget ui-widget-header ui-corner-all');
+				}
+				
+				function calcSlider(){
+					var space 		= control.innerWidth(),
+						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
+					;
+					$('> *', control).each(function(){
+						if(timeSlider[0] !== this){
+							occupied += $(this).outerWidth(true);
+						}
+					});
+					timeSlider.css('width', space - occupied);
+				}
+				
+				if(o.mediaControls.dynamicTimeslider){
+					var timeSlider  = $('.'+ o.classPrefix +'timeline-slider', control),
+						calcTimer	= setTimeout(calcSlider, 0)
+					;
+					
+					bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+						clearInterval(calcTimer);
+						setTimeout(calcSlider, 0)
+					}, 'one');
+					$(window).bind('resize', calcSlider);
+					mm.bind('resize emchange', calcSlider);
+				}
 			}
 		}
 	;
@@ -233,10 +269,14 @@
 	};
 	
 	$.fn.registerMMControl.defaults = {
-		//controls: false
+		//common
 		embed: $.fn.mediaElementEmbed.defaults,
 		classPrefix: '',
 		addThemeRoller: true,
+		
+		mediaControls: {
+			dynamicTimeslider: true
+		},
 		progressbar: {},
 		volumeSlider: {},
 		timeSlider: {}

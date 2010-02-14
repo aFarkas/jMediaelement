@@ -5,7 +5,7 @@
 		<title>Simple Controls Demo</title>
 		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/blitzer/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
-		<link rel="stylesheet" href="oly-grail-player-style.css" />
+		<link rel="stylesheet" href="holy-grail-player-style.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
 		
@@ -21,11 +21,15 @@
 		
 		<!-- for jw-player (mp4, flv, mp3) support -->
 		<script src="../swfobject/swfobject.js"></script>
-		<script src="../src/mm.jwplayer-embed.js"></script>
 		
+		<script src="../src/mm.jwplayer-embed.js"></script>
 		<script src="../src/mm.jwplayer-api.js"></script> 
 		<!-- END: for jw-player (mp4, flv, mp3) support -->
 		
+		<!-- for vlc-player (ogg, mp4, flv, mp3) support -->
+		<script src="../src/mm.vlc-embed.js"></script>
+		<script src="../src/mm.vlc-api.js"></script> 
+		<!-- END: for vlc-player (ogg, mp4, flv, mp3) support -->
 		
 		<script>
 			$('html').addClass('js-on');
@@ -38,6 +42,11 @@
 						jwPlayer: {
 							path: '../mediaplayers/jw-player/player.swf'
 						}
+					},
+					
+					// we use holy grail css
+					mediaControls: {
+						dynamicTimeslider: false
 					}
 				});
 				

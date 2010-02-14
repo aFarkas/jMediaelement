@@ -21,6 +21,7 @@
 			}
 		)
 	;
+	
 	var m 		= $.multimediaSupport,
 		jwMM 	= {
 			isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
@@ -50,7 +51,7 @@
 				
 				
 				
-				swfobject.embedSWF(opts.path, id, ''+dims.width, ''+dims.height, '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
+				swfobject.embedSWF(opts.path, id, '100%', '100%', '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
 					
 					if(swf.ref){
 						var style = swf.ref.style;

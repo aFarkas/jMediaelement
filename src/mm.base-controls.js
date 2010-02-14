@@ -173,7 +173,7 @@
 					
 					bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
 						clearInterval(calcTimer);
-						setTimeout(calcSlider, 0)
+						setTimeout(calcSlider, 0);
 					}, 'one');
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);

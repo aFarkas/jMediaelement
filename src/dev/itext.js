@@ -110,7 +110,6 @@
 				dataType: 'text',
 				success: function(srt){
 					data.captions = $.parseSrt(srt);
-					console.log(data.captions)
 					function captionChange(e){
 						e.target = jElm[0];
 						e = $.extend({}, e, {
@@ -244,6 +243,5 @@ $.parseSrt = function(data) {
 
     return captions;
 }
-
-	
 })(jQuery);
+

@@ -229,9 +229,8 @@
 			} catch(e){
 				dur = 0;
 			}
-			
-			
 			return dur;
 		}
 	}));
 })(jQuery);
+

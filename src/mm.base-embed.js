@@ -155,7 +155,7 @@
 					this.pause();
 				} catch(er){}
 			}
-			// we donÂ´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
+			// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
 			if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
 				$(this).unbind('loadstart', bindSource);
 			}
@@ -178,7 +178,7 @@
 				.each(bindSource)
 				.bind('emtptied', bindSource)
 			;
-			//some webkit browsers doesnÂ´t throw emptied event, so we use loadstart instead
+			//some webkit browsers doesn´t throw emptied event, so we use loadstart instead
 			if ('webkitPreservesPitch' in this) {
 				$(this).bind('loadstart', bindSource);
 			}
@@ -208,7 +208,7 @@
 	
 	var mimeTypes = {
 			audio: {
-				//oga shouldnÂ´t be used!
+				//oga shouldn´t be used!
 				'application/ogg': ['ogg','oga'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
@@ -217,7 +217,7 @@
 				'audio/x-m4p': ['m4p']
 			},
 			video: {
-				//ogv shouldnÂ´t be used!
+				//ogv shouldn´t be used!
 				'application/ogg': ['ogg','ogv'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4'],

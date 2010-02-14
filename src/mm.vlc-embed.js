@@ -94,7 +94,7 @@
 					vlc
 				;
 				$.extend(vlcAttr, params);
-				vlc = $('<div />').css(dims).insertBefore(api.html5elem)
+				vlc = $('<div />').css(dims).insertBefore(api.html5elem);
 				vlc = $(embedVlc(vlc[0], id, vlcAttr, params)).css(dims);
 				fn(vlc[0]);
 			},

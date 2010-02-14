@@ -37,7 +37,7 @@
 				;
 				if(!api){return;}
 				
-				//workaround: meta isnÂ´t triggered on audio
+				//workaround: meta isn´t triggered on audio
 				if(!api.loadedmeta){
 					api._trigger({
 						type: 'loadedmeta',
@@ -103,7 +103,7 @@
 	window.jwEvents = {
 		four: $.extend(true, {}, privJwEvents, {
 			View: {
-				//doesnÂ´t work in 5.x
+				//doesn´t work in 5.x
 				PLAY: function(obj){
 					var api = obj.state && getAPI(obj.id);
 					if(!api){return;}
@@ -210,7 +210,7 @@
 		},
 		currentTime: function(t){
 			if(!isFinite(t)){
-				return this.currentPos;
+				return this.currentPos || 0;
 			}
 			var isPlaying = (this.apiElem.getConfig().state === 'PLAYING');
 			if(!isPlaying){
@@ -223,7 +223,8 @@
 			}
 		},
 		getDuration: function(){
-			return this.apiElem.getPlaylist()[0].duration || 0;
+			var t = this.apiElem.getPlaylist()[0].duration || 0;
+			return t < 0 ? 0 : t;
 		},
 		volume: function(v){
 			if(!isFinite(v)){

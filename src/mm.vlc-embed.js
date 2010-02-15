@@ -75,8 +75,9 @@
 					
 				} else if(window.ActiveXObject){
 					try {
-						new ActiveXObject('VideoLAN.VLCPlugin.2');
-						$.support.vlc = true;
+						if(new ActiveXObject('VideoLAN.VLCPlugin.2')){
+							$.support.vlc = true;
+						}
 					} catch(e){}
 				}
 				return $.support.vlc;

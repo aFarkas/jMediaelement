@@ -153,44 +153,34 @@
 			return ret;
 		},
 		_mmload: function(src, poster, extras){
-			this.apiElem.playlist.items.clear();
+			this.apiElem.playlist.stop();
 			this.data = {};
-			this.apiElem.playlist.add(src);
-			queueCheck(this);
+			interval.end(this);
+			var item = this.apiElem.playlist.add(src);
+			this.apiElem.playlist.playItem(item);
+			this.apiElem.playlist.items.clear();
+			this.apiElem.playlist.stop();
 		},
 		currentTime: function(t){
-			if(this.nodeName === 'audio'){
-				try {
-					if(!isFinite(t)){
-						return this.apiElem.input.time / 1000;
-					}
-					this.apiElem.input.time = t * 1000;
-					queueCheck(this);
-				} catch(e){
-					if(!isFinite(t)){
-						return 0;
-					}
-				}
-			} else {
+			try {
 				if(!isFinite(t)){
 					return this.apiElem.input.time / 1000;
 				}
 				this.apiElem.input.time = t * 1000;
 				queueCheck(this);
+			} catch(e){
+				if(!isFinite(t)){
+					return 0;
+				}
 			}
 		},
 		getDuration: function(){
-			var dur = 0;
-			if(this.nodeName === 'audio'){
-				try {
-					dur = this.apiElem.input.length / 1000 || 0;
-				} catch(e){
-					dur = 0;
-				}
-			} else {
+			var dur;
+			try {
 				dur = this.apiElem.input.length / 1000 || 0;
+			} catch(e){
+				dur = 0;
 			}
-			
 			return dur;
 		},
 		volume: function(v){
@@ -210,27 +200,6 @@
 	};
 	
 	$.multimediaSupport.add('vlc', 'video', vlcAPI);
-	$.multimediaSupport.add('vlc', 'audio', $.extend({}, vlcAPI, {
-		currentTime: function(t){
-			var ret;
-			try {
-				ret = vlcAPI.call(this, t);
-			} catch(e){
-				if(!isFinite(t)){
-					return 0;
-				}
-			}
-			return ret;
-		},
-		getDuration: function(){
-			var dur = 0;
-			try {
-				dur = vlcAPI.call(this);
-			} catch(e){
-				dur = 0;
-			}
-			return dur;
-		}
-	}));
+	$.multimediaSupport.add('vlc', 'audio', vlcAPI);
 })(jQuery);
 

@@ -69,33 +69,17 @@
                 }
             });
             
-            $('a.pause').click(function(){
-                //				$('#vlc')[0].addEventListener('PositionChanged', function(e){console.log(e)}, false);
-                //				$('#vlc')[0].playlist.togglePause();
-                $('audio').pause();
-            })
-            $('a.pause2').click(function(){
-            
-                $('audio').pause();
-            });
-            
+                       
             $('div[data-controlwrapper]').registerMMControl();
-            /*
+            
              
              $('a.load-video').click(function(e){
-             e.preventDefault();
-             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
-             return;
+	             e.preventDefault();
+	             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
              });
              
-             $('a.type').click(function(e){
-             e.preventDefault();
-             $(this).closest('div.test-wrapper').find('source')[0].type = 'video/x-flv';
-             $(this).closest('div.test-wrapper').find('video, audio').load();
-             return;
-             });
-             */
-            //$('video').attr('srces',  $('video').attr('srces'));
+             
+             
         });
         </script>
         <!-- lazy load themeswitcher -->

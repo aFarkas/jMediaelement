@@ -90,7 +90,6 @@
 				return ret;
 			}
 		} else {
-			name = (name === 'src') ? 'srces' : name;
 			if(booleanNames[name]){
 				value = !!(value);
 				elem[name] = value;
@@ -102,7 +101,6 @@
 			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
 			} else if (name === 'srces') {
-				elemName = elem.nodeName.toLowerCase();
 				$('source, a.source', elem).remove();
 				elem.removeAttribute('src');
 				value = $.isArray(value) ? value : [value];
@@ -110,7 +108,9 @@
 				$.each(value, function(i, src){
 					
 					ret = doc.createElement('source');
-					
+					if(typeof src === 'string'){
+						src = {src: src};
+					}
 					ret.setAttribute('src', src.src);
 					if(src.type){
 						ret.setAttribute('type', src.type);
@@ -153,7 +153,7 @@
 					this.pause();
 				} catch(er){}
 			}
-			// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
+			// we donÂ´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
 			if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
 				$(this).unbind('loadstart', bindSource);
 			}
@@ -175,7 +175,7 @@
 				.each(bindSource)
 				.bind('emtptied', bindSource)
 			;
-			//some webkit browsers doesn´t throw emptied event, so we use loadstart instead
+			//some webkit browsers doesnï¿½t throw emptied event, so we use loadstart instead
 			if ('webkitPreservesPitch' in this) {
 				$(this).bind('loadstart', bindSource);
 			}
@@ -205,7 +205,7 @@
 	
 	var mimeTypes = {
 			audio: {
-				//oga shouldn´t be used!
+				//oga shouldnï¿½t be used!
 				'application/ogg': ['ogg','oga'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
@@ -214,7 +214,7 @@
 				'audio/x-m4p': ['m4p']
 			},
 			video: {
-				//ogv shouldn´t be used!
+				//ogv shouldnï¿½t be used!
 				'application/ogg': ['ogg','ogv'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4', 'm4v'],
@@ -458,7 +458,6 @@
 			});
 			if(supportedSrc){return false;}
 		});
-		
 		// important total fail error event
 		if(!supportedSrc){
 			e = {
@@ -514,6 +513,7 @@
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			if(opts.debug || !$.support.mediaElements){
+				 
 				 findInitFallback(this, opts);
 			} else {
 				apiData.apis[apiData.name]._init();

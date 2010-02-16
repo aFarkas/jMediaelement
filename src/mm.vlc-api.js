@@ -19,6 +19,11 @@
 				clearInterval(timer);
 				if($.attr(api.html5elem, 'autoplay')){
 					interval.start(api);
+				} else {
+					api.apiElem.playlist.stop();
+					setTimeout(function(){
+						api.apiElem.playlist.stop();
+					}, 0);
 				}
 			} catch(e){}
 			

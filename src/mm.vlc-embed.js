@@ -66,7 +66,7 @@
 				}
 				$.support.vlc = false;
 				var navVLC = (navigator.plugins && navigator.plugins['VLC Multimedia Plug-in']);
-				if(navVLC && parseFloat(((navVLC.version || '').match(/(\d+\.\d+)/) || '0.1'), 10) >= 0.9){
+				if(navVLC && parseFloat(((navVLC.description || '').match(/(\d+\.\d+)/) || '0.1'), 10) >= 0.9){
 					$.support.vlc = true;
 				} else if(window.ActiveXObject){
 					try {
@@ -78,7 +78,6 @@
 				return $.support.vlc;
 			},
 			_embed: function(src, id, api, dims, attrs, fn){
-				
 				var opts 	= api.embedOpts.vlc,
 					vlcAttr = $.extend({}, dims, {src: src}),
 					params 	= {

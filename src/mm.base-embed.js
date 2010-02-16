@@ -512,8 +512,7 @@
 			var apiData = m.helper._create(elemName, 'nativ', this, opts);
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
-			if(opts.debug || !$.support.mediaElements){
-				 
+			if(opts.debug || !$.support.mediaElements || this.error){
 				 findInitFallback(this, opts);
 			} else {
 				apiData.apis[apiData.name]._init();

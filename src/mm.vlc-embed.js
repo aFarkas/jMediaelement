@@ -65,14 +65,9 @@
 					return $.support.vlc;
 				}
 				$.support.vlc = false;
-				if(navigator.plugins && navigator.plugins.length){
-					$.each(navigator.plugins, function(i, plugin){
-						if((plugin.name || '').toLowerCase() === 'vlc multimedia plug-in'){
-							$.support.vlc = true;
-							return false;
-						}
-					});
-					
+				var navVLC = (navigator.plugins && navigator.plugins['VLC Multimedia Plug-in']);
+				if(navVLC && parseFloat(((navVLC.version || '').match(/(\d+\.\d+)/) || '0.1'), 10) >= 0.9){
+					$.support.vlc = true;
 				} else if(window.ActiveXObject){
 					try {
 						if(new ActiveXObject('VideoLAN.VLCPlugin.2')){

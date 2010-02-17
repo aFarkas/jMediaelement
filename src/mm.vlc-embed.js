@@ -82,9 +82,9 @@
 					vlcAttr = $.extend({}, dims, {src: src}),
 					params 	= {
 						src: src,
-						ShowDisplay: 'true',
-						AutoPlay: ''+ attrs.autoplay,//
-						AutoLoop: ''+attrs.loop
+						showdisplay: 'true',
+						autoplay: ''+ attrs.autoplay,//
+						autoloop: ''+attrs.loop
 					},
 					vlc
 				;

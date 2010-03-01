@@ -32,8 +32,63 @@
 	
 		<!-- this will install flowplayer inside previous A- tag. -->
 		<script>
-			flowplayer("player", "../flowplayer-3.1.5.swf");
+			flowplayer("player", "../flowplayer-3.1.5.swf", { 
+			    clip:  { 
+			        autoPlay: false, 
+			        autoBuffering: true 
+			    } ,
+				 onLoad: function(){
+				 	console.log(this, arguments)
+				 }
+			});
 		</script>
+		
+		<!-- this A tag is where your Flowplayer will be placed. it can be anywhere -->
+		<a  style="display:block;width:520px;height:330px"  
+			 id="player1"> 
+			 
+		</a> 
+	
+		<!-- this will install flowplayer inside previous A- tag. -->
+		<script>
+			flowplayer("player1", "../flowplayer-3.1.5.swf", { 
+				 playlist: [
+					 {
+					 	url: '../../../demos/media/bbb_watchtrailer.gif'
+					 },
+					 {
+					 	url: 'http://e1h13.simplecdn.net/flowplayer/flowplayer.flv',
+						autoPlay: false,  
+			            // video will be buffered when splash screen is visible 
+			            autoBuffering: true
+					 }
+				 ],
+				 onLoad: function(){
+				 	console.log(this, arguments)
+				 }
+			});
+		</script>
+		
+		<!-- setup player container  --> 
+		<div id="player3" style="display:block;width:600px;height:453px;"></div> 
+		 
+		<!-- install flowplayer into container --> 
+		<script> 
+		flowplayer("player3", "../flowplayer-3.1.5.swf", { 
+	 		clip: { 
+		        autoPlay: false, 
+		        autoBuffering: false 
+		    },
+		    // first entry in the playlist works as splash and second entry is the audio file 
+		    playlist: ['../../../demos/media/swazzrokk_v1.mp3'],
+			 onLoad: function(){
+			 	console.log(this, arguments)
+			 }
+		 
+		}); 
+		</script>
+
+
 	
 		
 		

@@ -23,24 +23,24 @@
 		'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
 		'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
 	};
-	
+	var sliderMethod = ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
 	var split = /\s*\/\s*|\s*\|\s*/,
 		controls = {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
-				control.slider(o.timeSlider).slider('option', 'disabled', true);
+				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
 				
 				function changeTimeState(e, ui){
 					if(ui.timeProgress !== undefined && !stopSlide){
-						control.slider('value', ui.timeProgress);
+						control[sliderMethod]('value', ui.timeProgress);
 					}
 				}
 				
 				function changeDisabledState(e){
 					if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
-						control.slider('option', 'disabled', false);
+						control[sliderMethod]('option', 'disabled', false);
 					} else {
-						control.slider('option', 'disabled', true);
+						control[sliderMethod]('option', 'disabled', true);
 					}
 				}
 				
@@ -71,11 +71,11 @@
 			},
 			'volume-slider': function(control, mm, api, o){
 				var stopSlide = false;
-				control.slider(o.volumeSlider).slider('option', 'disabled', true);
+				control[sliderMethod](o.volumeSlider)[sliderMethod]('option', 'disabled', true);
 				
 				function changeVolumeUI(e, ui){
 					if(!stopSlide){
-						control.slider('value', ui.volumelevel);
+						control[sliderMethod]('value', ui.volumelevel);
 					}
 				}
 				
@@ -96,8 +96,8 @@
 							}
 						})
 					;
-					control.slider('option', 'disabled', false);
-					control.slider('value', api.apis[api.name].volume());
+					control[sliderMethod]('option', 'disabled', false);
+					control[sliderMethod]('value', api.apis[api.name].volume());
 					
 				}, 'one');
 			},
@@ -159,7 +159,7 @@
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
 					$('> *', control).each(function(){
-						if(timeSlider[0] !== this){
+						if(timeSlider[0] !== this && this.offsetWidth){
 							occupied += $(this).outerWidth(true);
 						}
 					});
@@ -232,13 +232,18 @@
 	
 	function getElems(elem, o){
 		var jElm 	= $(elem),
-			ret 	= {
-							wrapper: $(elem).closest('[data-controls], [data-controlwrapper]')
-						},
-			mmID 	= ret.wrapper.attr('data-controls')
+			ret 	= {},
+			mmID 	= jElm.attr('data-controls')
 		;
-		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', ret.wrapper).filter(':first');
-		ret.controls = ( jElm.is(o.controlSel) ) ? jElm : $(o.controlSel, ret.wrapper);
+		
+		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
+		if(jElm.is(o.controlSel)){
+			ret.controls = jElm;
+		} else {
+			ret.controlsgroup = jElm;
+			ret.controls = $(o.controlSel, jElm);
+		}
+		
 		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
 		return ret;
 	}
@@ -247,8 +252,11 @@
 		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
 		o.controlSel = [];
 		$.each(controls, function(name){
-			o.controlSel.push('.'+ o.classPrefix + name);
+			if(name !== 'media-controls'){
+				o.controlSel.push('.'+ o.classPrefix + name);
+			}
 		});
+		o.controlSel.push('.'+ o.classPrefix + 'media-controls');
 		o.controlSel = o.controlSel.join(', ');
 		function registerControl(){
 			var elems = getElems(this, o);

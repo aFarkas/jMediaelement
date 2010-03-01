@@ -28,12 +28,16 @@
 					autoplay: true,
 					controls: true,
 					autobuffer: true
-				}
+				},
+		mixedNames 		= {
+			srces: true,
+			getConfig: true
+		}
 	;
 	
 	$.attr = function(elem, name, value, pass){
 		
-		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (name === 'srces' || $.multimediaSupport.attrFns[name] || booleanNames[name] || srcNames[name])) ){
+		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || $.multimediaSupport.attrFns[name] || booleanNames[name] || srcNames[name])) ){
 			return oldAttr(elem, name, value, pass);
 		}
 		
@@ -88,6 +92,13 @@
 					}
 				}
 				return ret;
+			} 
+			if(name === 'getConfig'){
+				ret = {};
+				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
+					ret[name] = $.attr(elem, name);
+				});
+				return ret;
 			}
 		} else {
 			if(booleanNames[name]){
@@ -95,8 +106,10 @@
 				elem[name] = value;
 				if(value){
 					elem.setAttribute(name, name);
+					elem[name] = value;
 				} else {
 					elem.removeAttribute(name);
+					elem[name] = value;
 				}
 			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
@@ -120,6 +133,11 @@
 					}
 					elem.appendChild(ret);
 				});
+			} else if(name === 'getConfig'){
+				//works, but you shouldn´t use as a setter
+				$.each(value, function(n, v){
+					$.attr(elem, n, v);
+				});
 			}
 		}
 	};
@@ -129,36 +147,33 @@
 	}
 	
 	function bindSource(e){
-		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
-		if ('webkitPreservesPitch' in this || window.opera) {
-			var srces 	= $.attr(this, 'srces'),
-				elem 	= this,
-				name 	= elem.nodeName.toLowerCase(),
-				canplay = false
-			;
+		var srces 	= $.attr(this, 'srces'),
+			elem 	= this,
+			name 	= elem.nodeName.toLowerCase(),
+			canplay = false
+		;
 
-			$.each(srces, function(i, src){
-				canplay = m.apiProto._canPlaySrc(src, elem, name);
-				if(canplay){return false;}
-			});
-
-			if(!canplay){
-				setTimeout(function(){
-					$(elem).triggerHandler('mediaerror');
-				}, 0);
-				//stop trying to play
-				try {
-					$.attr(this, 'autoplay', false);
-					this.pause();
-				} catch(er){}
-			}
-			// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
-			if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
-				$(this).unbind('loadstart', bindSource);
-			}
-		} //end webkit workaround
-
+		$.each(srces, function(i, src){
+			canplay = m.apiProto._canPlaySrc(src, elem, name);
+			if(canplay){return false;}
+		});
+		if(!canplay){
+			setTimeout(function(){
+				$(elem).triggerHandler('mediaerror');
+			}, 0);
+			//stop trying to play
+			try {
+				$.attr(this, 'autoplay', false);
+				this.pause();
+			} catch(er){}
+		}
+		// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
+		if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
+			$(this).unbind('loadstart', bindSource);
+		}
+		//END: webkit workaround
+		
 		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
@@ -205,7 +220,7 @@
 	
 	var mimeTypes = {
 			audio: {
-				//oga shouldn�t be used!
+				//oga shouldn´t be used!
 				'application/ogg': ['ogg','oga'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
@@ -214,7 +229,7 @@
 				'audio/x-m4p': ['m4p']
 			},
 			video: {
-				//ogv shouldn�t be used!
+				//ogv shouldn´t be used!
 				'application/ogg': ['ogg','ogv'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4', 'm4v'],
@@ -251,6 +266,9 @@
 		add: function(name, elemName, api, hard){
 			if(!this.apis[elemName][name] || hard){
 				this.apis[elemName][name] = $.extend(this.apis[elemName][name] || {}, this.apiProto, api);
+				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
+					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
+				}
 			} else {
 				$.extend(true, this.apis[elemName][name], api);
 			}
@@ -267,10 +285,10 @@
 					ret		= 'probably'
 				;
 				if(!parts[1]){
-					return ($.inArray(parts[0], this.canPlayContainer) !== -1) ? 'maybe' : '';
+					return (this.canPlayContainer && $.inArray(parts[0], this.canPlayContainer) !== -1) ? 'maybe' : '';
 				}
 				$.each(parts[1], function(i, part){
-					if($.inArray(part, that.canPlayCodecs) === -1){
+					if(!that.canPlayCodecs || $.inArray(part, that.canPlayCodecs) === -1){
 						ret = '';
 						return false;
 					}
@@ -293,15 +311,13 @@
 					var index = $.inArray(ext, exts);
 					if(index !== -1){
 						ret = that.canPlayType(mime, elem);
-						if(ret){
-							return false;
-						}
+						return false;
 					}
 				});
 				return ret;
 			},
-			_setActive: function(){},
-			_setInactive: function(){}
+			_setActive: function(fromAPI){},
+			_setInactive: function(fromAPI){}
 		},
 		apis: {
 			audio: {
@@ -350,10 +366,13 @@
 					oldActive 	= data.name
 				;
 				if(oldActive === supType){return true;}
-				var hideElem = data.apis[data.name].apiElem,
+				
+				var hideElem = data.apis[oldActive].apiElem,
 					showElem = data.apis[supType] && data.apis[supType].apiElem,
 					apiReady = false
 				;
+				
+				
 				if(hideElem && hideElem.nodeName){
 					hideElem.style.display = 'none';
 					setTimeout(function(){
@@ -361,74 +380,82 @@
 							data.apis[oldActive].pause();
 						} catch(e){}
 					}, 0);
-					data.apis[data.name]._setInactive();
+					data.apis[oldActive]._setInactive(supType);
 				}
+				
 				if(showElem && showElem.nodeName){
 					if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
 						showElem.style.display = 'block';
 					}
-					data.apis[supType]._setActive();
+					data.apis[supType]._setActive(oldActive);
 					apiReady = true;
 				}
 				data.name = supType;
 				
 				return apiReady;
-			},
-			getAttrs: function(media){
-				media = media;
-				var attrs 	= {};
-				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
-					attrs[name] = $.attr(media, name);
-				});
-				return attrs;
-			},
-			//ToDo: Simplify and move to $.fn.height/$.fn.width
-			getDimensions: function(media){
-				var ret = {
-							height: 150,
-							width: 300
-						},
-					isAuto,
-					curHeight
-				;
-				curHeight = $.curCSS(media, 'height');
-				if($.nodeName(media, 'audio')){
-					ret.height = 28;
-					if(!$.attr(media, 'controls')){
-						return {
-							width: 0,
-							height: 0
-						};
-					}
-				}
-				//only testing height
-				//0px workaround for jQuery 1.4 + Opera, needs further testing
-				if( media.currentStyle ){
-					isAuto = (media.currentStyle.height === 'auto');
-				} else if( curHeight !== '0px' ) {
-					$.swap(media, {height: 'auto'}, function(){
-						isAuto = ( curHeight === $.curCSS(media, 'height') );
-					});
-				}
-				
-				if(isAuto){
-					curHeight = media.getAttribute('height');
-					if(curHeight){
-						ret.height = parseInt( curHeight, 10);
-						ret.width = parseInt( media.getAttribute('width'), 10) || ret.width;
-					}
-				} else {
-					ret.height = $(media).height();
-					ret.width = $(media).width();
-				}
-				
-				return  ret;
 			}
+		},
+		getCanPlayPlayers: function(elem, opts/*, elemName*/){
+			var elemName 	= arguments[2] || elem.nodeName.toLowerCase(),
+				srces 		= $.attr(elem, 'srces'),
+				apis 		= m.apis[elemName],
+				supported 	= false,
+				getSupported = function(name, api){
+					if( (!api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable()) ) || name === 'nativ'){
+						return;
+					}
+					$.each(srces, function(i, src){
+						if(api._canPlaySrc(src, false, elemName)){
+							supported = {
+								src: src.src,
+								name: name
+							};
+							m.helper._create(elemName, name, elem, opts);
+							return false;
+						}
+						
+					});
+					return supported;
+				}
+			;
+			if(opts.apiOrder){
+				$.each(opts.apiOrder, function(i, name){
+					return !(getSupported(name, apis[name]));
+				});
+			} else {
+				$.each(apis, function(name, api){
+					return !(getSupported(name, api));
+				});
+			}
+			return supported;
+		},
+		_embedApi: function(elem, supported, apiData){
+			var config 	= $.attr(elem, 'getConfig'),
+				dims 	= {
+							width: $(elem).width(),
+							height: $(elem).height()
+						},
+				id 		= elem.id,
+				fn 		= function(apiElem){
+							if(apiData.nodeName === 'audio' && !config.controls){
+								apiElem.style.display = 'none';
+							}
+							apiData.apis[supported.name].apiElem = apiElem;
+							$(apiElem).addClass(apiData.nodeName);
+							apiData.apis[supported.name]._init();
+						}
+			;
+			
+			if(!id){
+				vID++;
+				id = apiData.nodeName +'-'+vID;
+				elem.id = id;
+			}
+			
+			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, apiData.apis[supported.name], dims, config, fn);
 		}
 	});
 	
-	
-		
 	function findInitFallback(elem, opts){
 		var elemName 	= elem.nodeName.toLowerCase(),
 			apis 		= m.apis[elemName]
@@ -436,58 +463,21 @@
 		
 		if(!apis){return;}
 		
-		//getSupportedSrc
-		var srces 	= $.attr(elem, 'srces'),
-			supportedSrc, dims, id, fn, attrs, apiName, e,
+		//getSupportedSrc and Player
+		var supported = m.getCanPlayPlayers(elem, opts, elemName),
 			apiData	= $.data(elem, 'mediaElemSupport')
 		;
 		
-		$.each(apis, function(name, api){
-			if( (!api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable()) ) || name === 'nativ'){
-				return;
-			}
-			$.each(srces, function(i, src){
-				//ToDo: Make a difference between maybe and probably
-				if(api._canPlaySrc(src, false, elemName)){
-					supportedSrc = src.src;
-					apiName = name;
-					m.helper._create(elemName, name, elem, opts);
-					return false;
-				}
-				
-			});
-			if(supportedSrc){return false;}
-		});
 		// important total fail error event
-		if(!supportedSrc){
-			e = {
-				type: 'totalerror',
-				srces: srces
-			};
-			apiData.apis.nativ._trigger(e);
+		if(!supported){
+			apiData.apis.nativ._trigger({type: 'totalerror'});
 			return;
 		}
 		
-		//returns true if api is already active
-		if(m.helper._setAPIActive(elem, apiName)){return;}
-		id = elem.id;
-		if(!id){
-			vID++;
-			id = elemName +'-'+vID;
-			elem.id = id;
+		//returns false if player isn´t embeded
+		if(!m.helper._setAPIActive(elem, supported.name)){
+			m._embedApi(elem, supported, apiData, elemName);
 		}
-		attrs = m.helper.getAttrs(elem);
-		dims = m.helper.getDimensions(elem);
-		
-		fn = function(apiElem){
-			if(elemName === 'audio' && !attrs.controls){
-				apiElem.style.display = 'none';
-			}
-			apiData.apis[apiName].apiElem = apiElem;
-			$(apiElem).addClass(elemName);
-			apiData.apis[apiName]._init();
-		};
-		apiData.apis[apiName]._embed(supportedSrc, apiData.name +'-'+ id, apiData.apis[apiName], dims, attrs, fn);
 	}
 	
 	
@@ -530,7 +520,8 @@
 	
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
-		removeControls: false
+		removeControls: false,
+		apiOrder: []
 	};
 	
 	

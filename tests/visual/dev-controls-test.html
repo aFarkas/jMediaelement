@@ -5,7 +5,7 @@
         <title>Controls Demo</title>
         <link rel="stylesheet" href="../../css/styles.css" />
         <link rel="stylesheet" href="../../demos/player-style.css" />
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js">
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js">
         </script>
         <!-- ui-components -->
         <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js">
@@ -19,25 +19,29 @@
         </script>
         <script src="../../src/mm.base-controls.js">
         </script>
+		
+		<script src="../../swfobject/swfobject.js"></script>
+		<script src="../../src/mm.jwplayer-embed.js"></script>
+		<script src="../../src/mm.jwplayer-api.js"></script>
+		
+		<script src="../../src/mm.vlc-embed.js"></script>
+		<script src="../../src/mm.vlc-api.js"></script>
+		
+		<script src="../../mediaplayers/flowplayer/example/flowplayer-3.1.4.js"></script>
+		<script src="../../src/dev/mm.flowplayer-embed.js"></script>
+		<script src="../../src/dev/mm.flowplayer-api.js"></script>
         <script>
             (function(){
                 window.params = {};
                 var paramArray = (location.search || '').replace('?', '').split('&');
-                var includeJS = {
-                    jwplayer: ['../../swfobject/swfobject.js', '../../src/mm.jwplayer-embed.js', '../../src/mm.jwplayer-api.js'],
-                    vlc: ['../../src/mm.vlc-embed.js', '../../src/mm.vlc-api.js']
-                };
+                
                 $.each(paramArray, function(i, param){
                     param = param.split('=');
                     params[param[0]] = param[1];
                 });
-                $.each(includeJS, function(name, files){
-                    if (!params.mmAPI || params.mmAPI === name) {
-                        $.each(files, function(i, file){
-                            document.write('<script src="' + file + '"><\/script>');
-                        });
-                    }
-                });
+				if(params.apiOrder){
+					$.fn.mediaElementEmbed.defaults.apiOrder = params.apiOrder.split(',');
+				}
             })();
         </script>
         <script>
@@ -62,10 +66,13 @@
                 }
             }
             $('video, audio').mediaElementEmbed({
-                debug: !!(params.mmAPI),
+                debug: ('debug' in params),
                 //removeControls: true,
                 jwPlayer: {
                     path: '../../mediaplayers/jw-player/player.swf'
+                },
+				flowplayer: {
+                    path: 'http://127.0.0.1/jMediaelement/jMediaelement/mediaplayers/flowplayer/flowplayer-3.1.5.swf'
                 }
             });
             
@@ -76,6 +83,16 @@
              $('a.load-video').click(function(e){
 	             e.preventDefault();
 	             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
+             });
+			 
+			 $('a.enter-fs').click(function(e){
+	             e.preventDefault();
+	             var media = $(this).closest('div.test-wrapper').find('video, audio');
+				 if(media.attr('supportsFullScreen')){
+				 	media.enterFullScreen();
+				 } else {
+				 	alert('not supported, try right click/doubble-click on video');
+				 }
              });
              
              
@@ -104,7 +121,9 @@
 		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
-                <audio controls="controls" src="http://technikwuerze.de/blogmin/podpress_trac/feed/735/0/tw159.mp3">
+                <audio controls="controls">
+                	<source src="../../demos/media/swazzrokk_v1.ogg"></source>
+					<source src="../../demos/media/swazzrokk_v1.mp3"></source>
                 </audio>
                 <div class="media-controls ui-widget ui-widget-header ui-corner-all">
                     <button class="play-pause">
@@ -167,6 +186,7 @@
             <a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
             <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
             <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
+			<a href="#" class="enter-fs">enter fullscreen</a>
             <p>
                 (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
             </p>
@@ -200,7 +220,42 @@
             <a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
             <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
             <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
-            <a href="#" class="type">type</a>
+            <a href="#" class="enter-fs">enter fullscreen</a>
+            <p>
+                (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
+            </p>
+        </div>
+		
+		<div class="test-wrapper">
+            <div class="ui-media-player" data-controlwrapper="controlwrapper">
+                <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls">
+                    <source src="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">
+                    </source>
+                    <a class="source" href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv">title</a>
+                </video>
+                <div class="media-controls ui-widget ui-widget-header ui-corner-all">
+                    <button class="play-pause">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">play / pause</span>
+                    </button>
+                    <div class="timeline-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                        <div class="progressbar">
+                        </div>
+                    </div>
+                    <button class="mute-unmute">
+                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="button-text">mute / unmute</span>
+                    </button>
+                    <div class="volume-slider">
+                        <span class="ui-slider-handle" tabindex="0"></span>
+                    </div>
+                </div>
+            </div>
+            <a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
+            <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
+            <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
+            <a href="#" class="enter-fs">enter fullscreen</a>
             <p>
                 (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
             </p>

@@ -8,7 +8,6 @@
 (function($){
 	function isReady(api){
 		var timer;
-		clearInterval(timer);
 		function testReady(){
 			try{
 				if(api.apiElem.input){
@@ -28,6 +27,7 @@
 			} catch(e){}
 			
 		}
+		clearInterval(timer);
 		timer = setInterval(testReady, 333);
 		testReady();
 	}
@@ -158,13 +158,16 @@
 			return ret;
 		},
 		_mmload: function(src, poster, extras){
+			$(this.html5elem).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
-			interval.end(this);
 			var item = this.apiElem.playlist.add(src);
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
-			this.apiElem.playlist.stop();
+			if(!$.attr(this.html5elem, 'autoplay')){
+				interval.end(this);
+				this.apiElem.playlist.stop();
+			}
 		},
 		currentTime: function(t){
 			try {
@@ -204,7 +207,25 @@
 		}
 	};
 	
-	$.multimediaSupport.add('vlc', 'video', vlcAPI);
+	$.multimediaSupport.add('vlc', 'video', $.extend({ 
+			_videoFullscreen: true,
+			enterFullScreen: function(){
+				if(!this.isPlaying()){
+					var that = this;
+					$(that.html5elem).one('playing.enterFullscreen', function(){
+						that.apiElem.video.fullscreen = true;
+					});
+					this.play();
+				} else {
+					this.apiElem.video.fullscreen = true;
+				}
+				
+			},
+			exitFullScreen: function(){
+				this.apiElem.video.fullscreen = false;
+			}
+		}, vlcAPI)
+	);
 	$.multimediaSupport.add('vlc', 'audio', vlcAPI);
 })(jQuery);
 

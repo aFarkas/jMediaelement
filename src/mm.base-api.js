@@ -5,6 +5,26 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function($){
+	var video 		= document.createElement('video'), 
+		fsMethods	= {}
+	;
+	
+	if('enterFullScreen' in video){
+		$.support.videoFullscreen = true;
+		fsMethods.enter = 'enterFullScreen';
+		fsMethods.exit = 'exitFullScreen';
+	} else {
+		$.each(['webkit', 'moz', 'o', 'ms'], function(i, name){
+			if(name+'EnterFullScreen' in video){
+				$.support.videoFullscreen = true;
+				fsMethods.enter = name+'EnterFullScreen';
+				fsMethods.exit = name+'ExitFullScreen';
+				return false;
+			}
+		});
+	}
+	
+	video = null;
 	
 	//extend apiPrototype
 	$.extend($.multimediaSupport.apiProto, {
@@ -33,6 +53,12 @@
 			}
 			
 		},
+		supportsFullScreen: function(){
+			return this._videoFullscreen || false;
+		},
+		
+		enterFullscreen: $.noop,
+		exitFullscreen: $.noop,
 		isAPIReady: false,
 		relCurrentTime: function(rel){
 			var dur = this.getDuration();
@@ -65,8 +91,18 @@
 			return this._format(this.currentTime());
 		},
 		loadSrc: function(srces, poster, extras){
-			srces = srces || $.attr(this.html5elem, 'srces');
-			srces = $.isArray(srces) ? srces : [srces];
+			if(srces){
+				$.attr(this.html5elem, 'srces', srces);
+				srces = $.isArray(srces) ? srces : [srces];
+			} else {
+				srces = $.attr(this.html5elem, 'srces');
+			}
+			if(poster !== undefined){
+				$.attr(this.html5elem, 'poster', poster);
+			} else {
+				poster = $.attr(this.html5elem, 'poster');
+			}
+			
 			var canPlaySrc,
 				that = this
 			;
@@ -82,7 +118,7 @@
 				this._mmload(canPlaySrc, poster, extras);
 			} else {
 				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
-				$(this.html5elem).data('mediaElemSupport').apis.nativ.loadSrc(srces, poster, extras);
+				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload(extras);
 			}
 		}
 	});
@@ -91,6 +127,7 @@
 	
 	//add API for native MM-Support
 	var nativ = {
+		isTechAvailable: $.support.mediaElements,
 		_init: function(){
 			var that 		= this,
 				curMuted 	= this.apiElem.muted
@@ -179,10 +216,7 @@
 			}
 			return this.html5elem.currentSrc;
 		},*/
-		
-		loadSrc: function(srces, poster, extras){
-			var jElm = $(this.html5elem);
-			$.attr(this.html5elem, 'srces', srces);
+		_mmload: function(extras){
 			if(this.html5elem.load){
 				this.html5elem.load();
 			} else {
@@ -197,9 +231,23 @@
 		}
 	};
 	
-	nativ._mmload = nativ.loadSrc;
 	
-	$.multimediaSupport.add('nativ', 'video', nativ, true);
+	
+	$.multimediaSupport.add('nativ', 'video', $.extend({
+		_videoFullscreen: $.support.videoFullscreen,
+		enterFullScreen: function(){
+			try {
+				this.html5elem[fsMethods.enter]();
+			} catch(e){}
+		},
+		exitFullScreen: function(){
+			try {
+				this.html5elem[fsMethods.exit]();
+			} catch(e){}
+		}
+	}, nativ), true);
+	
+	
 	$.multimediaSupport.add('nativ', 'audio', nativ, true);
 	
 	
@@ -210,7 +258,7 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
+	var attrFns = ['muted', 'supportsFullScreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
 	
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
 		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {
@@ -219,7 +267,7 @@
 	});
 	
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
-		if( name.indexOf('_') !== 0 && $.inArray(name, attrFns) === -1 && fn && $.isFunction(fn) && !$.fn[name] ){
+		if( name.indexOf('_') !== 0 && fn && $.isFunction(fn) && !$.fn[name] ){
 			$.fn[name] =  function(){
 				var args = arguments, ret;
 				this.each(function(){

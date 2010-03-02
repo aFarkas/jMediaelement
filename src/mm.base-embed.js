@@ -147,18 +147,14 @@
 	}
 	
 	function bindSource(e){
+		if(!$.support.mediaElements){return;}
+		var apis = $.data(this, 'mediaElemSupport');
+		if(!apis || !apis.apis){return;}
+		apis = apis.apis;
 		//webkit is really stupid with the error event, so fallback to canPlaytype
-		var srces 	= $.attr(this, 'srces'),
-			elem 	= this,
-			name 	= elem.nodeName.toLowerCase(),
-			canplay = false
-		;
-
-		$.each(srces, function(i, src){
-			canplay = m.apiProto._canPlaySrc(src, elem, name);
-			if(canplay){return false;}
-		});
-		if(!canplay){
+		var elem 	= this;
+		
+		if(!apis.nativ.canPlaySrces()){
 			setTimeout(function(){
 				$(elem).triggerHandler('mediaerror');
 			}, 0);
@@ -275,8 +271,8 @@
 		},
 		apiProto: {
 			_init: function(){},
-			canPlayType: function(type, elem){
-				elem = elem || this.apiElem;
+			canPlayType: function(type){
+				var elem = this.apiElem;
 				if(elem && elem.canPlayType){
 					return elem.canPlayType(type);
 				}
@@ -295,26 +291,42 @@
 				});
 				return ret;
 			},
-			_canPlaySrc: function(src, elem, name){
+			canPlaySrc: function(src){
 				var that = this;
-				elem = elem || this;
-				name = name || this.nodeName || ((elem || {}).nodeName || '').toLowerCase();
 				if(typeof src !== 'string'){
 					if(src.type){
-						return elem.canPlayType(src.type);
+						return this.canPlayType(src.type);
 					}
 					src = src.src;
 				}
 				
 				var ext = getExt(src), ret = '';
-				$.each(mimeTypes[name], function(mime, exts){
+				$.each(mimeTypes[this.nodeName], function(mime, exts){
 					var index = $.inArray(ext, exts);
 					if(index !== -1){
-						ret = that.canPlayType(mime, elem);
+						ret = that.canPlayType(mime);
 						return false;
 					}
 				});
 				return ret;
+			},
+			canPlaySrces: function(srces){
+				srces = srces || $.attr(this.html5elem, 'srces');
+				if(!$.isArray(srces)){
+					srces = [srces];
+				}
+				var that 	= this,
+					canplay = false,
+					src 	= ''
+				;
+				$.each(srces, function(i, curSrc){
+					canplay = that.canPlaySrc(curSrc);
+					if(canplay){
+						src = curSrc;
+						return false;
+					}
+				});
+				return src;
 			},
 			_setActive: function(fromAPI){},
 			_setInactive: function(fromAPI){}
@@ -395,31 +407,29 @@
 				return apiReady;
 			}
 		},
-		getCanPlayPlayers: function(elem, opts/*, elemName*/){
-			var elemName 	= arguments[2] || elem.nodeName.toLowerCase(),
-				srces 		= $.attr(elem, 'srces'),
-				apis 		= m.apis[elemName],
+		getSuitedPlayers: function(elem, apiOrder){
+			var apis = $.data(elem, 'mediaElemSupport');
+			if(!apis || !apis.apis){return;}
+			apis = apis.apis;
+			var srces 		= $.attr(elem, 'srces'),
 				supported 	= false,
 				getSupported = function(name, api){
-					if( (!api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable()) ) || name === 'nativ'){
+					if( !api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
 						return;
 					}
-					$.each(srces, function(i, src){
-						if(api._canPlaySrc(src, false, elemName)){
-							supported = {
-								src: src.src,
-								name: name
-							};
-							m.helper._create(elemName, name, elem, opts);
-							return false;
-						}
-						
-					});
+					var src = api.canPlaySrces(srces);
+					
+					if(src){
+						supported = {
+							src: src.src || src,
+							name: name
+						};
+					}
 					return supported;
 				}
 			;
-			if(opts.apiOrder){
-				$.each(opts.apiOrder, function(i, name){
+			if(apiOrder){
+				$.each(apiOrder, function(i, name){
 					return !(getSupported(name, apis[name]));
 				});
 			} else {
@@ -457,14 +467,10 @@
 	});
 	
 	function findInitFallback(elem, opts){
-		var elemName 	= elem.nodeName.toLowerCase(),
-			apis 		= m.apis[elemName]
-		;
-		
-		if(!apis){return;}
+		var elemName 	= elem.nodeName.toLowerCase();
 		
 		//getSupportedSrc and Player
-		var supported = m.getCanPlayPlayers(elem, opts, elemName),
+		var supported = m.getSuitedPlayers(elem, opts.apiOrder),
 			apiData	= $.data(elem, 'mediaElemSupport')
 		;
 		
@@ -493,15 +499,21 @@
 			var elemName 	= this.nodeName.toLowerCase();
 			
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
-			
+			var elem = this;
 			if(opts.removeControls){
 				this.controls = false;
 				$(this).removeAttr('controls');
 			}
 			
 			var apiData = m.helper._create(elemName, 'nativ', this, opts);
+			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
+			$.each(m.apis[elemName], function(name){
+				if(name !== 'nativ'){
+					m.helper._create(elemName, name, elem, opts);
+				}
+			});
 			if(opts.debug || !$.support.mediaElements || this.error){
 				 findInitFallback(this, opts);
 			} else {
@@ -509,6 +521,7 @@
 			}
 			$(this)
 				.bind('mediaerror', function findInitFallbackOnError(e){
+					
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}

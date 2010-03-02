@@ -103,16 +103,8 @@
 				poster = $.attr(this.html5elem, 'poster');
 			}
 			
-			var canPlaySrc,
-				that = this
-			;
+			var canPlaySrc = this.canPlaySrces(srces);
 			
-			$.each(srces, function(i, src){
-				if( that._canPlaySrc(src) ){
-					canPlaySrc = src;
-					return false;
-				}
-			});
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster, extras);
@@ -220,7 +212,7 @@
 			if(this.html5elem.load){
 				this.html5elem.load();
 			} else {
-				jElm.triggerHanlder('error');
+				$(this.html5elem).triggerHandler('error');
 			}
 		},
 		isPlaying: function(){

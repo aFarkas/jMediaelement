@@ -5,7 +5,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 
-(function(){
+(function($){
 	jQuery.multimediaSupport = {};
 	var $ 	= jQuery, 
 		m 	= $.multimediaSupport,
@@ -538,4 +538,4 @@
 	};
 	
 	
-})();
+})(jQuery);

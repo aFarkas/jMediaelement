@@ -237,14 +237,15 @@
 		;
 		
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
+		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
 		} else {
 			ret.controlsgroup = jElm;
 			ret.controls = $(o.controlSel, jElm);
+			ret.api.controlWrapper = jElm;
 		}
-		
-		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
+		ret.api.controls = (ret.api.controls) ? ret.api.controls.add(ret.controls) : ret.controls;
 		return ret;
 	}
 	

@@ -155,7 +155,7 @@
 				}
 				
 				function calcSlider(){
-					var space 		= control.innerWidth(),
+					var space 		= control.innerWidth() + o.mediaControls.timeSliderAdjust,
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
 					$('> *', control).each(function(){
@@ -284,7 +284,8 @@
 		addThemeRoller: true,
 		
 		mediaControls: {
-			dynamicTimeslider: true
+			dynamicTimeslider: true,
+			timeSliderAdjust: 0
 		},
 		progressbar: {},
 		volumeSlider: {},

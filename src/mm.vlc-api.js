@@ -157,7 +157,7 @@
 			} catch(e){}
 			return ret;
 		},
-		_mmload: function(src, poster, extras){
+		_mmload: function(src){
 			$(this.html5elem).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};

@@ -29,7 +29,9 @@
 	//extend apiPrototype
 	$.extend($.multimediaSupport.apiProto, {
 		_trigger: function(e){
-			var type = e.type || e;
+			var type = e.type || e,
+				evt  = e
+			;
 			switch(type){
 				case 'mmAPIReady':
 					this.isAPIReady = true;
@@ -46,12 +48,12 @@
 			}
 			
 			e.target = this.html5elem;
-			$(this.html5elem).triggerHandler(e, e);
-			
-			if(e.type !== 'load' && e.type !== 'error'){
-				$(this.html5elem.ownerDocument || document).triggerHandler(e, e);
+			e = $.Event(e);
+			e.preventDefault();
+			if(e.type === 'timechange' || e.type === 'load' || e.type === 'error'){
+				e.stopPropagation();
 			}
-			
+			$.event.trigger( e, evt, this.html5elem );
 		},
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
@@ -90,7 +92,7 @@
 		getFormattedTime: function(){
 			return this._format(this.currentTime());
 		},
-		loadSrc: function(srces, poster, extras){
+		loadSrc: function(srces, poster){
 			if(srces){
 				$.attr(this.html5elem, 'srces', srces);
 				srces = $.isArray(srces) ? srces : [srces];
@@ -98,7 +100,11 @@
 				srces = $.attr(this.html5elem, 'srces');
 			}
 			if(poster !== undefined){
-				$.attr(this.html5elem, 'poster', poster);
+				if(poster){
+					$.attr(this.html5elem, 'poster', poster);
+				} else {
+					$(this.html5elem).removeAttr('poster');
+				}
 			} else {
 				poster = $.attr(this.html5elem, 'poster');
 			}
@@ -107,10 +113,10 @@
 			
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				this._mmload(canPlaySrc, poster, extras);
+				this._mmload(canPlaySrc, poster);
 			} else {
 				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
-				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload(extras);
+				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
 		}
 	});
@@ -201,13 +207,7 @@
 				} catch(e){}
 			}
 			return this.html5elem.currentTime;
-		},/*
-		currentSrc: function(src){
-			if(arguments.length){
-				this.html5elem.load(src);
-			}
-			return this.html5elem.currentSrc;
-		},*/
+		},
 		_mmload: function(extras){
 			if(this.html5elem.load){
 				this.html5elem.load();

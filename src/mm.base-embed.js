@@ -7,8 +7,7 @@
 
 (function($){
 	jQuery.multimediaSupport = {};
-	var $ 	= jQuery, 
-		m 	= $.multimediaSupport,
+	var m 	= $.multimediaSupport,
 		vID = new Date().getTime(),
 		doc	= document
 	;
@@ -152,16 +151,17 @@
 		if(!apis || !apis.apis){return;}
 		apis = apis.apis;
 		//webkit is really stupid with the error event, so fallback to canPlaytype
-		var elem 	= this;
+		var elem 	= this,
+			srces 	= $.attr(this, 'srces')
+		;
 		
-		if(!apis.nativ.canPlaySrces()){
+		if(srces.length && !apis.nativ.canPlaySrces(srces)){
 			setTimeout(function(){
 				$(elem).triggerHandler('mediaerror');
 			}, 0);
 			//stop trying to play
 			try {
-				$.attr(this, 'autoplay', false);
-				this.pause();
+				elem.pause();
 			} catch(er){}
 		}
 		// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
@@ -217,7 +217,7 @@
 	var mimeTypes = {
 			audio: {
 				//oga shouldn´t be used!
-				'application/ogg': ['ogg','oga'],
+				'application/ogg': ['ogg','oga', 'ogm'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
 				'audio/wav': ['wav'],
@@ -226,7 +226,7 @@
 			},
 			video: {
 				//ogv shouldn´t be used!
-				'application/ogg': ['ogg','ogv'],
+				'application/ogg': ['ogg','ogv', 'ogm'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4', 'm4v'],
 				'video/quicktime': ['mov','qt'],
@@ -384,24 +384,35 @@
 					apiReady = false
 				;
 				
-				
-				if(hideElem && hideElem.nodeName){
-					hideElem.style.display = 'none';
-					setTimeout(function(){
-						try {
-							data.apis[oldActive].pause();
-						} catch(e){}
-					}, 0);
-					data.apis[oldActive]._setInactive(supType);
-				}
-				
 				if(showElem && showElem.nodeName){
 					if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
-						showElem.style.display = 'block';
+						showElem.style.display = '';
+						if(supType !== 'nativ'){
+							data.apis[supType].visualElem.css({
+								width: $(data.apis[supType].html5elem).width(),
+								height: $(data.apis[supType].html5elem).height(),
+								visibility: ''
+							});
+						}
 					}
 					data.apis[supType]._setActive(oldActive);
 					apiReady = true;
 				}
+				
+				if(hideElem && hideElem.nodeName){
+					if(oldActive === 'nativ'){
+						hideElem.style.display = 'none';
+					} else {
+						data.apis[oldActive].visualElem.css({
+							height: 0,
+							width: 0,
+							overflow: 'hidden',
+							visibility: 'hidden'
+						});
+					}
+					data.apis[oldActive]._setInactive(supType);
+				}
+				
 				data.name = supType;
 				
 				return apiReady;
@@ -428,6 +439,7 @@
 					return supported;
 				}
 			;
+			if(!srces.length){return 'noSource';}
 			if(apiOrder){
 				$.each(apiOrder, function(i, name){
 					return !(getSupported(name, apis[name]));
@@ -441,15 +453,10 @@
 		},
 		_embedApi: function(elem, supported, apiData){
 			var config 	= $.attr(elem, 'getConfig'),
-				dims 	= {
-							width: $(elem).width(),
-							height: $(elem).height()
-						},
+				jElm 	= $(elem),
+				dims 	= {},
 				id 		= elem.id,
 				fn 		= function(apiElem){
-							if(apiData.nodeName === 'audio' && !config.controls){
-								apiElem.style.display = 'none';
-							}
 							apiData.apis[supported.name].apiElem = apiElem;
 							$(apiElem).addClass(apiData.nodeName);
 							apiData.apis[supported.name]._init();
@@ -461,8 +468,24 @@
 				id = apiData.nodeName +'-'+vID;
 				elem.id = id;
 			}
-			
-			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, apiData.apis[supported.name], dims, config, fn);
+			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" />').insertAfter(elem);
+			if(apiData.nodeName === 'audio' && !config.controls){
+				apiData.apis[supported.name].visualElem
+					.css({
+						height: 0,
+						width: 0,
+						overflow: 'hidden'
+					})
+				;
+			} else {
+				apiData.apis[supported.name].visualElem
+					.css({
+							width: jElm.width(),
+							height: jElm.height()
+					})
+				;
+			}
+			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		}
 	});
 	
@@ -477,9 +500,12 @@
 		// important total fail error event
 		if(!supported){
 			apiData.apis.nativ._trigger({type: 'totalerror'});
+			try {
+				elem.pause();
+			} catch(e){}
 			return;
 		}
-		
+		if(supported === 'noSource'){return;}
 		//returns false if player isn´t embeded
 		if(!m.helper._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);

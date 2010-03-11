@@ -25,39 +25,32 @@
 	var m 		= $.multimediaSupport,
 		jwMM 	= {
 			isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
-			_embed: function(src, id, api, dims, attrs, fn){
-				
-				var opts 		= api.embedOpts.jwPlayer,
+			_embed: function(src, id, cfg, fn){
+				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					swfAttrs 	= $.extend({}, opts.attrs, {name: id}),
 					div
 				;
 				
-				if(attrs.poster){
-					vars.image = attrs.poster;
+				if(cfg.poster){
+					vars.image = cfg.poster;
 				}
 				
 				
-				vars.autostart = ''+ attrs.autoplay;
-				vars.repeat = (attrs.loop) ? 'single' : 'false';
-				vars.controlbar = (attrs.controls) ? 'bottom' : 'none';
+				vars.autostart = ''+ cfg.autoplay;
+				vars.repeat = (cfg.loop) ? 'single' : 'false';
+				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( (opts.playFirstFrame || attrs.autobuffer) && !attrs.poster && !vars.autoplay ){
-					api.data.playFirstFrame = true;
+				if( (opts.playFirstFrame || cfg.autobuffer) && !cfg.poster && !cfg.autoplay ){
+					this.data.playFirstFrame = true;
 					vars.autostart = 'true';
 				}
 				
-				$('<div class="screen-box"><div id="'+id+'" /></div>').css($.extend({position: 'relative'}, dims)).insertBefore(api.html5elem);
-				
-				
+				this.visualElem.html('<div id="'+id+'" />');
 				
 				swfobject.embedSWF(opts.path, id, '100%', '100%', '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
-					
 					if(swf.ref){
-						var style = swf.ref.style;
-						style.position = 'absolute';
-						style.top = '0px';
-						style.left = '0px';
+						swf.ref.style.visibility = 'inherit';
 						fn(swf.ref);
 					}
 				});

@@ -77,21 +77,18 @@
 				}
 				return $.support.vlc;
 			},
-			_embed: function(src, id, api, dims, attrs, fn){
-				var opts 	= api.embedOpts.vlc,
-					vlcAttr = $.extend({}, dims, {src: src}),
+			_embed: function(src, id, attrs, fn){
+				var opts 	= this.embedOpts.vlc,
+					vlcAttr = $.extend({}, {width: '100%', height: '100%'}, {src: src}),
 					params 	= {
 						src: src,
 						showdisplay: 'true',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop
-					},
-					vlc
+					}
 				;
 				$.extend(vlcAttr, params);
-				vlc = $('<div />').css(dims).insertBefore(api.html5elem);
-				vlc = $(embedVlc(vlc[0], id, vlcAttr, params)).css(dims);
-				fn(vlc[0]);
+				fn( embedVlc( $('<div />').appendTo(this.visualElem[0])[0], id, vlcAttr, params ) );
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
 			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']

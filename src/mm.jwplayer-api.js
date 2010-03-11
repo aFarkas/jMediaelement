@@ -15,12 +15,18 @@
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
 	var privJwEvents = {
+		View: {
+			PLAY: function(obj){
+				var api = obj.state && getAPI(obj.id);
+				if(!api){return;}
+				api._trigger('play');
+			}
+		},
 		Model: {
 			META: function(obj){
 				if(obj.type === 'metadata'){
 					var api = getAPI(obj.id);
 					if(!api){return;}
-					
 					api._trigger({
 						type: 'loadedmeta',
 						duration: obj.duration
@@ -102,14 +108,6 @@
 	};
 	window.jwEvents = {
 		four: $.extend(true, {}, privJwEvents, {
-			View: {
-				//doesnï¿½t work in 5.x
-				PLAY: function(obj){
-					var api = obj.state && getAPI(obj.id);
-					if(!api){return;}
-					api._trigger('play');
-				}
-			},
 			Model: {
 				LOADED: function(obj){
 					var api = getAPI(obj.id);
@@ -140,16 +138,6 @@
 						type: 'progresschange',
 						lengthComputable: !!(isFinite(obj.percentage)),
 						relLoaded: obj.percentage
-					};
-					api._trigger(evt);
-				},
-				LOADED: function(obj){
-					var api = getAPI(obj.id);
-					if (!api) {return;}
-					var evt = {
-						type: 'progresschange',
-						lengthComputable: true,
-						relLoaded: 100
 					};
 					api._trigger(evt);
 				},
@@ -184,12 +172,10 @@
 		play: function(){
 			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
+			this._trigger('play');
 		},
 		pause: function(){
 			this.apiElem.sendEvent('PLAY', 'false');
-		},
-		_setInactive: function(){
-			this.apiElem.parentNode.style.display = 'none';
 		},
 		_setActive: function(){
 			this.apiElem.parentNode.style.display = 'block';

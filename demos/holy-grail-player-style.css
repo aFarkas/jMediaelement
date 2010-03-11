@@ -47,3 +47,29 @@ div.volume-slider {
 .media-controls .ui-progressbar {
 	height: 0.8em;
 }
+
+.js-on .player-errors {
+	display: none;
+}
+/*
+ * playlist
+ */
+.playlist {
+	margin: 5px 0 0;
+	padding: 5px;
+}
+.playlist ul {
+	list-style: none;
+}
+.playlist .src {
+	display: none;
+}
+.playlist li {
+	margin: 2px 0;
+	padding: 2px 5px;
+	cursor: pointer;
+}
+.playlist a:focus,
+.playlist a:active {
+	text-decoration: underline !important;
+}

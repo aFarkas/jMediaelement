@@ -250,7 +250,7 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'supportsFullScreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
+	var attrFns = ['muted', 'supportsFullScreen', 'enterFullscreen', 'exitFullscreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
 	
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
 		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {
@@ -272,4 +272,5 @@
 			};
 		}
 	});
+	
 })(jQuery);

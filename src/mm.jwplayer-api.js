@@ -177,9 +177,6 @@
 		pause: function(){
 			this.apiElem.sendEvent('PLAY', 'false');
 		},
-		_setActive: function(){
-			this.apiElem.parentNode.style.display = 'block';
-		},
 		isPlaying: function(){
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;

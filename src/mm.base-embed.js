@@ -150,6 +150,7 @@
 		var apis = $.data(this, 'mediaElemSupport');
 		if(!apis || !apis.apis){return;}
 		apis = apis.apis;
+		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
 		var elem 	= this,
 			srces 	= $.attr(this, 'srces')
@@ -164,7 +165,8 @@
 				elem.pause();
 			} catch(er){}
 		}
-		// we don´t need loadstart workaround, because this webkit has implemented emptied event, oh yeah
+		
+		// we don´t need loadstart workaround
 		if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
 			$(this).unbind('loadstart', bindSource);
 		}
@@ -180,16 +182,14 @@
 	
 	$.event.special.mediaerror = {
 		setup: function(){
-			//ff always triggers an error on video/audio | webkit/opera triggers error event on source, if available
+			//ff always triggers an error on video/audio | w3c/webkit/opera triggers error event on source, if available
 			$(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				.each(bindSource)
 				.bind('emtptied', bindSource)
 			;
-			//some webkit browsers doesn�t throw emptied event, so we use loadstart instead
-			if ('webkitPreservesPitch' in this) {
-				$(this).bind('loadstart', bindSource);
-			}
+			//some webkit do not support emptied
+			$(this).bind('loadstart', bindSource);
 		},
 		teardown: function(){
 			$(this)
@@ -563,5 +563,21 @@
 		apiOrder: []
 	};
 	
+	
+	if($.cleanData){
+		var _cleanData = $.cleanData;
+		$.cleanData = function(elems){
+			_cleanData(elems);
+			for(var i = 0, len = elems.length; i < len; i++){
+				if(elems[i].nodeName === 'OBJECT' && (!('readyState' in elems[i]) || elems[i].readyState === 4)){
+					for (var j in elems[i]) {
+						if (typeof elems[i][j] === "function") {
+							elems[i][j] = null;
+						}
+					}
+				}
+			}
+		};
+	}
 	
 })(jQuery);

@@ -33,8 +33,11 @@
 		
 		<script>
 			$('html').addClass('js-on');
-			var audioPlaylist = {
-				init: function(wrapper){
+			function MMPlaylist(wrapper, opts){
+				this.init(wrapper, opts);
+			}
+			MMPlaylist.prototype = {
+				init: function(wrapper, opts){
 					var that = this;
 					this.wrapper = wrapper;
 					$('div.player-errors', wrapper).empty();
@@ -60,21 +63,7 @@
 					;
 					
 					//init mediaelement api
-					wrapper
-						.registerMMControl({
-							embed: {
-								//debug: true,
-								removeControls: true,
-								jwPlayer: {
-									path: '../mediaplayers/jw-player/player.swf'
-								}
-							},
-							// we use holy grail css
-							mediaControls: {
-								dynamicTimeslider: false
-							}
-						})
-					;
+					wrapper.registerMMControl(opts);
 					//and load the first item
 					this.loadIndex(0);
 				},
@@ -99,7 +88,20 @@
 				}
 			};
 			$(function(){
-				audioPlaylist.init($('div[data-controlwrapper]'));
+				new MMPlaylist($('div[data-controlwrapper]'), {
+							embed: {
+								//debug: true,
+								removeControls: true,
+								jwPlayer: {
+									path: '../mediaplayers/jw-player/player.swf'
+								}
+							},
+							// we use holy grail css
+							mediaControls: {
+								dynamicTimeslider: false
+							}
+						})
+					;
 			});
 			
 		</script>

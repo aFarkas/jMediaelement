@@ -85,10 +85,17 @@
 						showdisplay: 'true',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop
-					}
+					},
+					elem = embedVlc( $('<div />').appendTo(this.visualElem[0])[0], id, vlcAttr, params )
 				;
-				$.extend(vlcAttr, params);
-				fn( embedVlc( $('<div />').appendTo(this.visualElem[0])[0], id, vlcAttr, params ) );
+
+				fn( elem );
+				$(window).unload(function(){
+					if(window.ActiveXObject){
+						jQuery.cleanData( [ elem ] );
+					}
+					elem = null;
+				});
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
 			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']

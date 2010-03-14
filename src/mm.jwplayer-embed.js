@@ -6,7 +6,6 @@
  */
 
 (function($){
-	
 	$.extend($.fn.mediaElementEmbed.defaults, 
 			{
 				jwPlayer: {
@@ -22,21 +21,43 @@
 		)
 	;
 	
-	var m 		= $.multimediaSupport,
+	var swfAttr = {type: 'application/x-shockwave-flash'},
+		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
+		m 		= $.multimediaSupport,
 		jwMM 	= {
-			isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
+			//isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
+			isTechAvailable: function(){
+				if($.support.flash9 !== undefined){
+					return $.support.flash9;
+				}
+				$.support.flash9 = false;
+				var swf = m.getPluginVersion('Shockwave Flash');
+				if(swf >= 9){
+					$.support.flash9 = true;
+				} else if(window.ActiveXObject){
+					try {
+						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+						if(!swf){return;}
+						swf = swf.GetVariable("$version").match(/(\d+\,\d+)/);
+						if(swf && swf[0]){
+							if( parseFloat( swf[0].replace(',', '.' ), 10) >= 9){
+								$.support.flash9 = true;
+							}
+						}
+					} catch(e){}
+				}
+				return $.support.flash9;
+			},
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
-					swfAttrs 	= $.extend({}, opts.attrs, {name: id}),
-					div
+					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
+					params 		= $.extend({movie: opts.path}, opts.params)
 				;
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
 				}
-				
-				
 				vars.autostart = ''+ cfg.autoplay;
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
@@ -45,15 +66,12 @@
 					this.data.playFirstFrame = true;
 					vars.autostart = 'true';
 				}
-				
-				this.visualElem.html('<div id="'+id+'" />');
-				
-				swfobject.embedSWF(opts.path, id, '100%', '100%', '9.0.124', null, vars, opts.params, swfAttrs, function(swf){
-					if(swf.ref){
-						swf.ref.style.visibility = 'inherit';
-						fn(swf.ref);
-					}
+				params.flashvars = [];
+				$.each(vars, function(name, val){
+					params.flashvars.push(name+'='+val);
 				});
+				params.flashvars = params.flashvars.join('&');
+				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs ));
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E'],
 			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']

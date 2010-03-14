@@ -486,6 +486,65 @@
 				;
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
+		},
+		getPluginVersion: function(name){
+			var plugin 	= (navigator.plugins && navigator.plugins[name]),
+				version = -1,
+				description
+			;
+			if(plugin){
+				description = (plugin.description || '').match(/(\d+\.\d+)/) || ['0'];
+				if(description && description[0]){
+					version = parseFloat(description[0], 10);
+				}
+			}
+			return version;
+		},
+		embedObject: function(elem, id, attrs, params, activeXAttrs){
+			elem = $('<div />').appendTo(elem)[0];
+			var obj;
+			
+			if(!window.ActiveXObject || !elem.outerHTML){
+				obj = doc.createElement('object');
+				$.each(attrs, function(name, val){
+					obj.setAttribute(name, val);
+				});
+				
+				$.each(params, function(name, val){
+					var param = doc.createElement('param');
+					param.setAttribute('name', name);
+					param.setAttribute('value', val);
+					obj.appendChild(param);
+				});
+				obj.setAttribute('id', id);
+				obj.setAttribute('name', id);
+				elem.parentNode.replaceChild(obj, elem);
+			} else {
+				obj = '<object';
+				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
+					obj += ' '+ name +'="'+ val +'"';
+				});
+				obj += ' name="'+ id +'"';
+				obj += ' id="'+ id +'"';
+				obj += '>';
+				$.each(params, function(name, val){
+					obj += ' <param name="'+ name +'" value="'+ val +'" />';
+				});
+				obj += '</object>';
+				elem.outerHTML = obj;
+				obj = doc.getElementById(id);
+			}
+			if(obj){
+				obj.setAttribute('width', '100%');
+				obj.setAttribute('height', '100%');
+				obj.style.display.width = '100%';
+				obj.style.display.height = '100%';
+			}
+			$(window).unload(function(){
+				jQuery.cleanData( [ obj ] );
+				obj = null;
+			});
+			return obj;
 		}
 	});
 	
@@ -569,12 +628,14 @@
 		$.cleanData = function(elems){
 			_cleanData(elems);
 			for(var i = 0, len = elems.length; i < len; i++){
-				if(elems[i].nodeName === 'OBJECT' && (!('readyState' in elems[i]) || elems[i].readyState === 4)){
-					for (var j in elems[i]) {
-						if (typeof elems[i][j] === "function") {
-							elems[i][j] = null;
+				if(elems[i].nodeName === 'OBJECT'){
+					try {
+						for (var j in elems[i]) {
+							if (typeof elems[i][j] === "function") {
+								elems[i][j] = null;
+							}
 						}
-					}
+					} catch(e){}
 				}
 			}
 		};

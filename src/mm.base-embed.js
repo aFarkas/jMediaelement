@@ -259,15 +259,14 @@
 			}
 		},
 		attrFns: {},
-		add: function(name, elemName, api, hard){
-			if(!this.apis[elemName][name] || hard){
-				this.apis[elemName][name] = $.extend(this.apis[elemName][name] || {}, this.apiProto, api);
+		add: function(name, elemName, api){
+			if(!this.apis[elemName][name]){
+				this.apis[elemName][name] = m.helper.beget(this.apiProto);
 				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
 					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
 				}
-			} else {
-				$.extend(true, this.apis[elemName][name], api);
-			}
+			} 
+			$.extend(true, this.apis[elemName][name], api);
 		},
 		apiProto: {
 			_init: function(){},
@@ -332,12 +331,8 @@
 			_setInactive: function(fromAPI){}
 		},
 		apis: {
-			audio: {
-				nativ: $.extend({}, this.apiProto)
-			},
-			video: {
-				nativ: $.extend({}, this.apiProto)
-			}
+			audio: {},
+			video: {}
 		},
 		
 		helper: {
@@ -547,6 +542,9 @@
 			return obj;
 		}
 	});
+	
+	m.add('nativ', 'video', {});
+	m.add('nativ', 'audio', {});
 	
 	function findInitFallback(elem, opts){
 		var elemName 	= elem.nodeName.toLowerCase();

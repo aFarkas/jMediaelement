@@ -228,19 +228,21 @@
 	$.multimediaSupport.add('nativ', 'video', $.extend({
 		_videoFullscreen: $.support.videoFullscreen,
 		enterFullScreen: function(){
+			if(!this._videoFullscreen){return false;}
 			try {
 				this.html5elem[fsMethods.enter]();
 			} catch(e){}
 		},
 		exitFullScreen: function(){
+			if(!this._videoFullscreen){return false;}
 			try {
 				this.html5elem[fsMethods.exit]();
 			} catch(e){}
 		}
-	}, nativ), true);
+	}, nativ));
 	
 	
-	$.multimediaSupport.add('nativ', 'audio', nativ, true);
+	$.multimediaSupport.add('nativ', 'audio', nativ);
 	
 	
 	//public-methods

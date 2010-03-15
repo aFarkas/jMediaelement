@@ -15,8 +15,7 @@
 		)
 	;
 	
-	var doc	 			= document,
-		$m 				= $.multimediaSupport,
+	var $m 				= $.multimediaSupport,
 		defaultAttrs 	= {
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',

@@ -584,14 +584,14 @@
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
 			if(opts.removeControls){
-				this.controls = false;
-				$(this).removeAttr('controls');
+				$.attr(this, 'controls', false);
 			}
 			
 			var apiData = m.helper._create(elemName, 'nativ', this, opts);
 			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
+			apiData.apis.nativ.visualElem = $(this);
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m.helper._create(elemName, name, elem, opts);
@@ -648,18 +648,6 @@
 
 (function($){
 	
-	function bindState(jElm, con, evt, fn, bindStyle){
-		bindStyle = bindStyle || 'bind';
-		if(con){
-			fn();
-		} else if(bindStyle === 'one'){
-			jElm.one(evt, fn);
-		}
-		if(!con || bindStyle !== 'one'){
-			jElm.bind(evt, fn);
-		}
-	}
-	
 	var toggleModells = {
 		'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
 		'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
@@ -670,6 +658,7 @@
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
+				
 				
 				function changeTimeState(e, ui){
 					if(ui.timeProgress !== undefined && !stopSlide){
@@ -684,8 +673,7 @@
 						control[sliderMethod]('option', 'disabled', true);
 					}
 				}
-				
-				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+				api.apis[api.name].onMediaReady(function(){
 					mm
 						.bind('emptied loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
@@ -705,9 +693,8 @@
 							}
 						})
 					;
-					
 					changeDisabledState();
-				}, 'one');
+				});
 				
 			},
 			'volume-slider': function(control, mm, api, o){
@@ -720,7 +707,7 @@
 					}
 				}
 				
-				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+				api.apis[api.name].onMediaReady(function(){
 					mm.bind('volumelevelchange', changeVolumeUI);
 					control
 						.bind('slidestart', function(e, ui){
@@ -740,7 +727,7 @@
 					control[sliderMethod]('option', 'disabled', false);
 					control[sliderMethod]('value', api.apis[api.name].volume());
 					
-				}, 'one');
+				});
 			},
 			'progressbar': function(control, mm, api, o){
 				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
@@ -757,7 +744,7 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+				api.apis[api.name].onMediaReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
 						.bind('emptied', resetProgress)
@@ -773,9 +760,9 @@
 				mm.bind('loadedmeta emptied', function(e, evt){
 					control.html(api.apis[api.name]._format(evt.duration));
 				});
-				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+				api.apis[api.name].onMediaReady(function(){
 					control.html(api.apis[api.name].getFormattedDuration());
-				}, 'one');
+				});
 				
 			},
 			'current-time': function(control, mm, api, o){
@@ -784,11 +771,13 @@
 				}
 				control.html('--:--');
 				mm.bind('timechange', function(e, evt){
-					control.html(api.apis[api.name]._format(evt.time));
+					setTimeout(function(){
+						control.html(api.apis[api.name]._format(evt.time));
+					}, 0);
 				});
-				bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+				api.apis[api.name].onMediaReady(function(){
 					control.html(api.apis[api.name].getFormattedTime());
-				}, 'one');
+				});
 			},
 			'media-controls': function(control, mm, api, o){
 				if(o.addThemeRoller){
@@ -812,7 +801,7 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+					api.apis[api.name].onMediaReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
 					}, 'one');
@@ -858,10 +847,10 @@
 				}
 			}
 			
-			bindState(mm, api.apis[api.name].isAPIReady, 'mmAPIReady', function(){
+			api.apis[api.name].onMediaReady(function(){
 				mm.bind(opts.evts, changeState);
 				changeState();
-			}, 'one');
+			});
 			control.bind('click', function(e){
 				api.apis[api.name][opts.actionMethod]();
 				e.preventDefault();
@@ -1239,6 +1228,9 @@
 				return parseInt(this.apiElem.getConfig().volume, 10);
 			}
 			this.apiElem.sendEvent('VOLUME', ''+v);
+		},
+		getCurrentSrc: function(){
+			return (this.apiElem.getConfig() || {}).file;
 		}
 	};
 	
@@ -1304,7 +1296,7 @@
 					}),
 					elem 	= $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs )
 				;
-
+				this._currentSrc = src;
 				fn( elem );
 				elem = null;
 			},
@@ -1398,6 +1390,7 @@
 				},
 				evt
 			;
+			
 			if((state && state > 1 && !this.data.metaLoaded) || (this.data.metaLoaded && this.data.metaLoaded.duration !== meta.duration)){
 				queueEvent(meta, api);
 				this.data.metaLoaded = meta;
@@ -1479,12 +1472,16 @@
 			this.apiElem.playlist.stop();
 			this.data = {};
 			var item = this.apiElem.playlist.add(src);
+			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
 			if(!$.attr(this.html5elem, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
+		},
+		getCurrentSrc: function(){
+			return this._currentSrc;
 		},
 		currentTime: function(t){
 			try {

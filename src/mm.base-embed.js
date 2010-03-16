@@ -584,14 +584,14 @@
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
 			if(opts.removeControls){
-				this.controls = false;
-				$(this).removeAttr('controls');
+				$.attr(this, 'controls', false);
 			}
 			
 			var apiData = m.helper._create(elemName, 'nativ', this, opts);
 			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
+			apiData.apis.nativ.visualElem = $(this);
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m.helper._create(elemName, name, elem, opts);

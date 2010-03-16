@@ -60,9 +60,12 @@
 								onSelect: function(){
 									setTimeout(function(){
 										$('video, audio').triggerHandler('resize');
-									}, 200);
+									}, 500);
 								}
 							});
+						setTimeout(function(){
+							$('video, audio').triggerHandler('resize');
+						}, 500);
 						script.unbind('load readystatechange');
 					}
 				}

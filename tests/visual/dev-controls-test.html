@@ -111,7 +111,12 @@
                 function startThemeswitcher(){
                     if (!this.readyState || this.readyState == "loaded" || this.readyState == "complete") {
                         $('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({
-                            height: 150
+                            height: 150,
+							onSelect: function(){
+								setTimeout(function(){
+									$('video, audio').triggerHandler('resize');
+								}, 300);
+							}
                         });
                         script.unbind('load readystatechange');
                     }

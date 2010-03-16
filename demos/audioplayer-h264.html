@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Audioplayer Demo</title>
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/themes/blitzer/jquery-ui.css"/>
+		<link rel="stylesheet" href="../css/styles.css" />
+		<link rel="stylesheet" href="holy-grail-player-style.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- ui-components -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"></script>
+		
+		<!-- END:  ui-components -->
+		
+		<script src="../src/mm.base-embed.js"></script>
+		<script src="../src/mm.base-api.js"></script>
+		<script src="../src/mm.base-controls.js"></script>
+		
+		
+		<!-- for jw-player (mp4, flv, mp3) support -->
+		<script src="../src/mm.jwplayer-embed.js"></script>
+		<script src="../src/mm.jwplayer-api.js"></script> 
+		<!-- END: for jw-player (mp4, flv, mp3) support -->
+		
+		<!-- for vlc-player (ogg, mp4, flv, mp3) support -->
+		<script src="../src/mm.vlc-embed.js"></script>
+		<script src="../src/mm.vlc-api.js"></script> 
+		<!-- END: for vlc-player (ogg, mp4, flv, mp3) support -->
+		
+		<script>
+			$('html').addClass('js-on');
+			function MMPlaylist(wrapper, opts){
+				this.init(wrapper, opts);
+			}
+			MMPlaylist.prototype = {
+				init: function(wrapper, opts){
+					var that = this;
+					this.wrapper = wrapper;
+					$('div.player-errors', wrapper).empty();
+					//autoplay, loop, src, poster autobuffer are normalized + there are two special attributes 'srces' and 'getConfig'
+					this.player = $('audio', wrapper).attr({autoplay: true});
+					this.playList = $('div.playlist', wrapper).sortable({ items: 'li.playlist-item' });
+					
+					this.playList
+						.delegate('li.playlist-item', 'click', function(){
+							that.loadItem(this);
+							return false;
+						})
+					;
+					this.player
+						// the totalerror event is fired if no element can play the source
+						.bind('totalerror', function(){
+							$('div.player-errors', wrapper).html('an media error has occured').show();
+						})
+						.bind('ended', function(){
+							var list = $('li.playlist-item', that.playList);
+							that.loadIndex( (list.length <= that.curIndex + 1) ? 0 : that.curIndex + 1);
+						})
+					;
+					
+					//init mediaelement api
+					wrapper.registerMMControl(opts);
+					//and load the first item
+					this.loadIndex(0);
+				},
+				loadItem: function(item){
+					this.loadIndex($('li.playlist-item', this.playList).index(item));
+				},
+				loadIndex: function(index){
+					var item = $('li.playlist-item', this.playList)
+						.removeClass('ui-state-active')
+						.filter(':eq('+ index +')')
+						.addClass('ui-state-active')
+					;
+					this.player.loadSrc( this.getItemSrces( item )  );
+					this.curIndex = index;
+				},
+				getItemSrces: function(item){
+					var srces = [];
+					$('.src a', item).each(function(){
+						srces.push(this.href);
+					});
+					return srces;
+				}
+			};
+			$(function(){
+				new MMPlaylist($('div[data-controlwrapper]'), {
+							embed: {
+								//debug: true,
+								removeControls: true,
+								jwPlayer: {
+									path: '../mediaplayers/jw-player/player.swf'
+								}
+							},
+							// we use holy grail css
+							mediaControls: {
+								dynamicTimeslider: false
+							}
+						})
+					;
+			});
+			
+		</script>
+		
+		<!-- lazy load themeswitcher -->
+		<script> 
+			(function($){
+				var script;
+				function startThemeswitcher(){
+					if(!this.readyState || this.readyState == "loaded" || this.readyState == "complete"){
+						$('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({height: 150});
+						script.unbind('load readystatechange');
+					}
+				}
+				setTimeout(function(){
+					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
+						.bind('load readystatechange', startThemeswitcher)
+						.appendTo('head')
+					;
+				}, 9);
+			})(jQuery);
+		</script>
+	</head>
+	<body>
+		
+		
+		<div class="ui-media-player" data-controlwrapper="controlwrapper">
+			<div class="player-errors ui-state-error">
+				Turn on your JavaScript
+			</div>
+			<audio></audio>
+			
+			<div class="media-controls ui-widget ui-widget-header ui-corner-all">
+				<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
+				<div class="timeline-slider">
+					<span class="ui-slider-handle" tabindex="0"></span>
+					<div class="mm-progressbar"></div>
+				</div>
+				<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+				<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
+			</div>
+			
+			<div class="playlist ui-widget ui-widget-header ui-corner-all">
+				<ul>
+					<li class="playlist-item ui-state-default ui-widget-content ui-corner-all">
+						<a href="#">swazzrokk</a>
+						<ul class="src">
+							<li><a class="source" href="media/swazzrokk_v1.mp3">swazzrokk im mp3 format</a></li>
+						</ul>
+					</li>
+					<li class="playlist-item ui-state-default ui-widget-content ui-corner-all">
+						<a href="#">anc</a>
+						<ul class="src">
+							<li><a class="source" href="media/ANC_sketchV2n.mp3">anc im mp3 format</a></li>
+						</ul>
+					</li>
+					<li class="playlist-item ui-state-default ui-widget-content ui-corner-all">
+						<a href="#">chefsache</a>
+						<ul class="src">
+							<li><a class="source" href="media/chefsachesketch.mp3">anc im mp3 format</a></li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<p>(c) copyright BaszT | <a href="#">#</a></p>
+	</body>
+</html>

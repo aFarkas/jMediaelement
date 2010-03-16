@@ -31,6 +31,12 @@
 		getDuration: function(){
 			
 		},
+		/*
+		 * return current source
+		 */
+		getCurrentSrc: function(){
+			
+		},
 		/* 
 		 * return boolean
 		 */

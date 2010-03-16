@@ -217,6 +217,9 @@
 				return parseInt(this.apiElem.getConfig().volume, 10);
 			}
 			this.apiElem.sendEvent('VOLUME', ''+v);
+		},
+		getCurrentSrc: function(){
+			return (this.apiElem.getConfig() || {}).file;
 		}
 	};
 	

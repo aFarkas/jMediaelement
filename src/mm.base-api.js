@@ -75,6 +75,17 @@
 		toggleMuted: function(){
 			this.muted(!(this.muted()));
 		},
+		getMMVisual: function(){
+			return this.visualElem;
+		},
+		onMediaReady: function(fn){
+			var e = {type: 'mmAPIReady'};
+			if(this.isAPIReady){
+				fn.call(this.html5elem, e, e);
+			} else {
+				$(this.html5elem).one('mmAPIReady', fn);
+			}
+		},
 		_format: function(sec, base){
 			var ret = [
 				parseInt(sec/3600, 10),
@@ -220,6 +231,9 @@
 		},
 		getDuration: function(){
 			return this.html5elem.duration;
+		},
+		getCurrentSrc: function(){
+			return this.html5elem.currentSrc;
 		}
 	};
 	
@@ -252,7 +266,7 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'supportsFullScreen', 'enterFullscreen', 'exitFullscreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
+	var attrFns = ['muted', 'getCurrentSrc', 'supportsFullScreen', 'enterFullscreen', 'exitFullscreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
 	
 	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
 		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {

@@ -161,12 +161,16 @@
 			this.apiElem.playlist.stop();
 			this.data = {};
 			var item = this.apiElem.playlist.add(src);
+			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
 			if(!$.attr(this.html5elem, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
+		},
+		getCurrentSrc: function(){
+			return this._currentSrc;
 		},
 		currentTime: function(t){
 			try {

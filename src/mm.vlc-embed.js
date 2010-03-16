@@ -57,7 +57,7 @@
 					}),
 					elem 	= $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs )
 				;
-
+				this._currentSrc = src;
 				fn( elem );
 				elem = null;
 			},

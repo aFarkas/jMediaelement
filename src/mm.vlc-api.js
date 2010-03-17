@@ -80,6 +80,7 @@
 				},
 				evt
 			;
+			
 			if((state && state > 1 && !this.data.metaLoaded) || (this.data.metaLoaded && this.data.metaLoaded.duration !== meta.duration)){
 				queueEvent(meta, api);
 				this.data.metaLoaded = meta;

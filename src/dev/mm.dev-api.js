@@ -102,7 +102,7 @@
 	 * compley events:
 	 * 	required:
 	 * 		loadedmeta (with duration in secondes)
-	 * 		timechange (width time in secondes)
+	 * 		timechange (widh time in secondes)
 	 * 		mute (with isMuted as boolean)
 	 * 		
 	 * 	optional:

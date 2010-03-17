@@ -185,7 +185,7 @@
 						if(e.originalEvent.lengthComputable && e.originalEvent.total){
 							$.extend(evt, {
 								total: e.originalEvent.total,
-								relLoaded: e.originalEvent.total / e.originalEvent.loaded * 100
+								relLoaded: e.originalEvent.loaded / e.originalEvent.total * 100
 							});
 						}
 						that._trigger(evt);

@@ -10,7 +10,7 @@
         <mkdir dir="${dist}" />
         <concat destfile="${mediafull}">
             <fileset file="src/mm.base-embed.js" />
-            <fileset file="src/mm-base-api.js" />
+            <fileset file="src/mm.base-api.js" />
             <fileset file="src/mm.base-controls.js" />
             <fileset file="src/mm.jwplayer-embed.js" />
             <fileset file="src/mm.jwplayer-api.js" />

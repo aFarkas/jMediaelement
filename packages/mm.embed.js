@@ -381,14 +381,12 @@
 				
 				if(showElem && showElem.nodeName){
 					if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
-						showElem.style.display = '';
-						if(supType !== 'nativ'){
-							data.apis[supType].visualElem.css({
-								width: $(data.apis[supType].html5elem).width(),
-								height: $(data.apis[supType].html5elem).height(),
-								visibility: ''
-							});
-						}
+						data.apis[supType].visualElem.css({
+							width: data.apis[oldActive].visualElem.width(),
+							height: data.apis[oldActive].visualElem.height(),
+							visibility: '',
+							display: ''
+						});
 					}
 					data.apis[supType]._setActive(oldActive);
 					apiReady = true;
@@ -463,7 +461,7 @@
 				id = apiData.nodeName +'-'+vID;
 				elem.id = id;
 			}
-			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" />').insertAfter(elem);
+			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" />').insertBefore(elem);
 			if(apiData.nodeName === 'audio' && !config.controls){
 				apiData.apis[supported.name].visualElem
 					.css({

@@ -7,13 +7,9 @@
 
 (function($){
 	
-	var toggleModells = {
-		'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
-		'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
-	};
-	var sliderMethod = ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
-	var split = /\s*\/\s*|\s*\|\s*/,
-		controls = {
+	var split 			= /\s*\/\s*|\s*\|\s*/,
+		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
+		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
@@ -168,7 +164,11 @@
 					mm.bind('resize emchange', calcSlider);
 				}
 			}
-		}
+		},
+		toggleModells = {
+				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
+				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
+			}
 	;
 	
 	//create Toggle Button UI

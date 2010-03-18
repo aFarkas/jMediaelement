@@ -55,14 +55,17 @@
 						setTimeout(function(){
 							$('video, audio').triggerHandler('resize');
 						}, 1500);
-						script.unbind('load readystatechange');
+						script.onload = null;
+						script.onreadystatechange = null;
+						script = null;
 					}
 				}
 				$(window).load(function(){
-					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
-						.bind('load readystatechange', startThemeswitcher)
-						.appendTo('head')
-					;
+					script = document.createElement('script');
+					script.onload = startThemeswitcher;
+					script.onreadystatechange = startThemeswitcher;
+					script.src = 'http://ui.jquery.com/applications/themeroller/themeswitchertool/';
+					document.getElementsByTagName('head')[0].appendChild(script);
 				});
 				
 				// add emchange-event to adjust controlbar

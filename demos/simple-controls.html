@@ -44,15 +44,30 @@
 				var script;
 				function startThemeswitcher(){
 					if(!this.readyState || this.readyState == "loaded" || this.readyState == "complete"){
-						$('<div class="demo-themeswitcher" />').prependTo('body').themeswitcher({height: 150});
-						script.unbind('load readystatechange');
+						$('<div class="demo-themeswitcher" />')
+							.prependTo('body')
+							.themeswitcher({
+								height: 150,
+								onSelect: function(){
+									setTimeout(function(){
+										$('video, audio').triggerHandler('resize');
+									}, 1500);
+								}
+							});
+						setTimeout(function(){
+							$('video, audio').triggerHandler('resize');
+						}, 1500);
+						script.onload = null;
+						script.onreadystatechange = null;
+						script = null;
 					}
 				}
 				$(window).load(function(){
-					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
-						.bind('load readystatechange', startThemeswitcher)
-						.appendTo('head')
-					;
+					script = document.createElement('script');
+					script.onload = startThemeswitcher;
+					script.onreadystatechange = startThemeswitcher;
+					script.src = 'http://ui.jquery.com/applications/themeroller/themeswitchertool/';
+					document.getElementsByTagName('head')[0].appendChild(script);
 				});
 			})(jQuery);
 		</script>

@@ -11,23 +11,9 @@
 		
 		<!-- ui-components -->
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"></script>
-		
 		<!-- END:  ui-components -->
 		
-		<script src="../src/mm.base-embed.js"></script>
-		<script src="../src/mm.base-api.js"></script>
-		<script src="../src/mm.base-controls.js"></script>
-		
-		
-		<!-- for jw-player (mp4, flv, mp3) support -->
-		<script src="../src/mm.jwplayer-embed.js"></script>
-		<script src="../src/mm.jwplayer-api.js"></script> 
-		<!-- END: for jw-player (mp4, flv, mp3) support -->
-		
-		<!-- for vlc-player (ogg, mp4, flv, mp3) support -->
-		<script src="../src/mm.vlc-embed.js"></script>
-		<script src="../src/mm.vlc-api.js"></script> 
-		<!-- END: for vlc-player (ogg, mp4, flv, mp3) support -->
+		<script src="../packages/mm.full.min.js"></script>
 		
 		<script>
 			$('html').addClass('js-on');
@@ -39,6 +25,9 @@
 						jwPlayer: {
 							path: '../mediaplayers/jw-player/player.swf'
 						}
+					},
+					mediaControls: {
+						timeSliderAdjust: -5
 					}
 				});
 				
@@ -60,25 +49,25 @@
 								onSelect: function(){
 									setTimeout(function(){
 										$('video, audio').triggerHandler('resize');
-									}, 500);
+									}, 1500);
 								}
 							});
 						setTimeout(function(){
 							$('video, audio').triggerHandler('resize');
-						}, 500);
+						}, 1500);
 						script.unbind('load readystatechange');
 					}
 				}
-				setTimeout(function(){
+				$(window).load(function(){
 					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
 						.bind('load readystatechange', startThemeswitcher)
 						.appendTo('head')
 					;
-				}, 9);
+				});
 				
 				// add emchange-event to adjust controlbar
 				(function(){
-					var emsize = $('body').css('fontSize');
+					var emsize;
 					function detectEmChange(){
 						var curEmSize = $('body').css('fontSize');
 						if(curEmSize !== emsize){
@@ -86,7 +75,10 @@
 							$.event.trigger('emchange');
 						}
 					}
-					setInterval(detectEmChange, 2000);
+					$(function(){
+						emsize = $('body').css('fontSize');
+						setInterval(detectEmChange, 2000);
+					});
 				})();
 			})(jQuery);
 		</script>

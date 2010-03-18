@@ -11,23 +11,9 @@
 		
 		<!-- ui-components -->
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js"></script>
-		
 		<!-- END:  ui-components -->
 		
-		<script src="../src/mm.base-embed.js"></script>
-		<script src="../src/mm.base-api.js"></script>
-		<script src="../src/mm.base-controls.js"></script>
-		
-		
-		<!-- for jw-player (mp4, flv, mp3) support -->
-		<script src="../src/mm.jwplayer-embed.js"></script>
-		<script src="../src/mm.jwplayer-api.js"></script> 
-		<!-- END: for jw-player (mp4, flv, mp3) support -->
-		
-		<!-- for vlc-player (ogg, mp4, flv, mp3) support -->
-		<script src="../src/mm.vlc-embed.js"></script>
-		<script src="../src/mm.vlc-api.js"></script> 
-		<!-- END: for vlc-player (ogg, mp4, flv, mp3) support -->
+		<script src="../packages/mm.full.min.js"></script>
 		
 		<script>
 			$('html').addClass('js-on');
@@ -62,12 +48,12 @@
 						script.unbind('load readystatechange');
 					}
 				}
-				setTimeout(function(){
+				$(window).load(function(){
 					script = $("<script src='http://ui.jquery.com/applications/themeroller/themeswitchertool/'><\/script>")
 						.bind('load readystatechange', startThemeswitcher)
 						.appendTo('head')
 					;
-				}, 9);
+				});
 			})(jQuery);
 		</script>
 	</head>

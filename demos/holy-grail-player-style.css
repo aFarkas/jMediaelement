@@ -2,10 +2,20 @@ video {
 	display: block;
 	width: 432px;
 	height: 240px;
+	-moz-transition: opacity 0.5s;
+	-webkit-transition: opacity 0.5s;
+	-o-transition: opacity 0.5s;
+	transition: opacity 0.5s;
 }
 
 .ui-media-player {
 	width: 432px;
+}
+.ui-media-player.waiting:not(.jwPlayer) {
+	background: url(media/loader.gif) center no-repeat;
+}
+.ui-media-player.waiting:not(.jwPlayer) video {
+	opacity: 0.5;
 }
 .media-controls {
 	display: none;

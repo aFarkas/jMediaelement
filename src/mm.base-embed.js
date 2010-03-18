@@ -327,8 +327,9 @@
 				});
 				return src;
 			},
-			_setActive: function(fromAPI){},
-			_setInactive: function(fromAPI){}
+			_setActive: $.noop,
+			_setInactive: $.noop,
+			_trigger: $.noop
 		},
 		apis: {
 			audio: {},
@@ -390,6 +391,7 @@
 					}
 					data.apis[supType]._setActive(oldActive);
 					apiReady = true;
+					data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 				}
 				
 				if(hideElem && hideElem.nodeName){
@@ -404,6 +406,7 @@
 						});
 					}
 					data.apis[oldActive]._setInactive(supType);
+					data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
 				}
 				
 				data.name = supType;
@@ -453,6 +456,7 @@
 							apiData.apis[supported.name].apiElem = apiElem;
 							$(apiElem).addClass(apiData.nodeName);
 							apiData.apis[supported.name]._init();
+							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
 						}
 			;
 			

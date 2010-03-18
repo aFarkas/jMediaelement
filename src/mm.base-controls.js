@@ -21,7 +21,7 @@
 					}
 				}
 				
-				function changeDisabledState(e){
+				function changeDisabledState(){
 					if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
 						control[sliderMethod]('option', 'disabled', false);
 					} else {
@@ -30,8 +30,13 @@
 				}
 				api.apis[api.name].onMediaReady(function(){
 					mm
-						.bind('emptied loadedmeta', changeDisabledState)
+						.bind('loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
+						.bind('mediareset', function(){
+							control[sliderMethod]('value', 0);
+							changeDisabledState();
+						})
+						
 					;
 					control
 						.bind('slidestart', function(e, ui){
@@ -102,7 +107,7 @@
 				api.apis[api.name].onMediaReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
-						.bind('emptied', resetProgress)
+						.bind('mediareset', resetProgress)
 					;
 				}, 'one');
 				
@@ -112,9 +117,14 @@
 					control.addClass('ui-widget-content ui-corner-all');
 				}
 				control.html('--:--');
-				mm.bind('loadedmeta emptied', function(e, evt){
-					control.html(api.apis[api.name]._format(evt.duration));
-				});
+				mm
+					.bind('loadedmeta', function(e, evt){
+						control.html(api.apis[api.name]._format(evt.duration));
+					})
+					.bind('mediareset', function(){
+						control.html('--:--');
+					})
+				;
 				api.apis[api.name].onMediaReady(function(){
 					control.html(api.apis[api.name].getFormattedDuration());
 				});
@@ -125,11 +135,16 @@
 					control.addClass('ui-widget-content ui-corner-all');
 				}
 				control.html('--:--');
-				mm.bind('timechange', function(e, evt){
-					setTimeout(function(){
-						control.html(api.apis[api.name]._format(evt.time));
-					}, 0);
-				});
+				mm
+					.bind('timechange', function(e, evt){
+						setTimeout(function(){
+							control.html(api.apis[api.name]._format(evt.time));
+						}, 0);
+					})
+					.bind('mediareset', function(){
+						control.html('--:--');
+					})
+				;
 				api.apis[api.name].onMediaReady(function(){
 					control.html(api.apis[api.name].getFormattedTime());
 				});
@@ -166,7 +181,7 @@
 			}
 		},
 		toggleModells = {
-				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
+				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta mediareset', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
 				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
 			}
 	;
@@ -238,6 +253,37 @@
 		return ret;
 	}
 	
+	function addWrapperBindings(wrapper, mm, apiData, o){
+		//classPrefix
+		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting',
+			removeStateClasses 	= function(){
+				wrapper.removeClass(stateClasses);
+			}
+		;
+		wrapper
+			.addClass(o.classPrefix+apiData.name)
+			.bind({
+				apiActivated: function(e, d){
+					wrapper.addClass(o.classPrefix+d.api);
+				},
+				apiInActivated: function(e, d){
+					wrapper.removeClass(o.classPrefix+d.api);
+				}
+			})
+			.bind('playing totalerror waiting', function(e){
+				removeStateClasses();
+				wrapper.addClass(o.classPrefix+e.type);
+			})
+			.bind('paused ended mediareset', function(e){
+				removeStateClasses();
+			})
+			.bind('canplay canplaythrough', function(e){
+				wrapper.removeClass(o.classPrefix+'waiting');
+			})
+		;
+		
+	}
+	
 	$.fn.registerMMControl = function(o){
 		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
 		o.controlSel = [];
@@ -261,6 +307,9 @@
 					}
 				});
 			});
+			if(elems.controlsgroup && elems.controlsgroup[0]){
+				addWrapperBindings(elems.controlsgroup, elems.mm, elems.api, o);
+			}
 		}
 		
 		return this.each(registerControl);

@@ -119,7 +119,8 @@
 			} else {
 				poster = $.attr(this.html5elem, 'poster');
 			}
-			
+			this._isResetting = true;
+			this._trigger('mediareset');
 			var canPlaySrc = this.canPlaySrces(srces);
 			
 			if(canPlaySrc){
@@ -129,6 +130,10 @@
 				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
+			this._isResetting = false;
+		},
+		isPlaying: function(){
+			return (this._isResetting) ? false : this._isPlaying();
 		}
 	});
 	
@@ -226,7 +231,7 @@
 				$(this.html5elem).triggerHandler('error');
 			}
 		},
-		isPlaying: function(){
+		_isPlaying: function(){
 			return (!this.html5elem.paused && this.html5elem.readyState > 2 && !this.error && !this.ended);
 		},
 		getDuration: function(){

@@ -150,7 +150,7 @@
 				queueCheck(this);
 			}
 		},
-		isPlaying: function(){
+		_isPlaying: function(){
 			var ret = false;
 			try {
 				ret = states[this.apiElem.input.state] === 'playing';
@@ -214,7 +214,7 @@
 	$.multimediaSupport.add('vlc', 'video', $.extend({ 
 			_videoFullscreen: true,
 			enterFullScreen: function(){
-				if(!this.isPlaying()){
+				if(!this._isPlaying()){
 					var that = this;
 					$(that.html5elem).one('playing.enterFullscreen', function(){
 						that.apiElem.video.fullscreen = true;

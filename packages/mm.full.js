@@ -526,7 +526,6 @@
 				obj.setAttribute('name', id);
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){
-				alert('df')
 				obj = '<object';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';
@@ -1230,7 +1229,7 @@
 				removeStateClasses();
 				wrapper.addClass(o.classPrefix+e.type);
 			})
-			.bind('paused ended mediareset', function(e){
+			.bind('pause ended mediareset', function(e){
 				removeStateClasses();
 			})
 			.bind('canplay canplaythrough', function(e){

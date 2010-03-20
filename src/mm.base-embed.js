@@ -526,7 +526,6 @@
 				obj.setAttribute('name', id);
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){
-				alert('df')
 				obj = '<object';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';

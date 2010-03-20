@@ -12,6 +12,7 @@ video {
 	position: relative;
 	overflow: hidden;
 	width: 510px;
+	background: url(media/loader.gif) -9000px -9000px no-repeat;
 }
 .ui-media-player.waiting:not(.jwPlayer) {
 	background: url(media/loader.gif) center no-repeat;

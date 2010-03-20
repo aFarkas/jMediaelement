@@ -222,7 +222,8 @@
 				'audio/mp4': ['mp4','mpg4'],
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
-				'audio/x-m4p': ['m4p']
+				'audio/x-m4p': ['m4p'],
+				'audio/3gpp': ['3gp','3gpp']
 			},
 			video: {
 				//ogv shouldn´t be used!
@@ -232,7 +233,8 @@
 				'video/quicktime': ['mov','qt'],
 				'video/x-msvideo': ['avi'],
 				'video/x-ms-asf': ['asf', 'asx'],
-				'video/flv': ['flv', 'f4v']
+				'video/flv': ['flv', 'f4v'],
+				'video/3gpp': ['3gp','3gpp']
 			}
 		}
 	;
@@ -484,24 +486,31 @@
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},
-		getPluginVersion: function(name){
-			var plugin 	= (navigator.plugins && navigator.plugins[name]),
-				version = -1,
+		getPluginVersion: function(name, plugDesc){
+			var plugin 	= plugDesc || (navigator.plugins && navigator.plugins[name]),
+				version = [-1, 0],
 				description
 			;
 			if(plugin){
-				description = (plugin.description || '').match(/(\d+\.\d+)/) || ['0'];
-				if(description && description[0]){
-					version = parseFloat(description[0], 10);
+				desc = (plugin.description || '').replace(/,/g, '.').match(/(\d+)/g) || ['0'];
+				if(desc && desc[0]){
+				    version[0] = desc[0];
+					if(desc[1]){
+					    version[0] += '.'+desc[1];
+					}
+					version[0] = parseFloat(version[0], 10);
+					if(desc[2]){
+					    version[1] = parseInt(desc[2], 10);
+					}
 				}
 			}
 			return version;
 		},
-		embedObject: function(elem, id, attrs, params, activeXAttrs){
+		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
 			elem = $('<div />').appendTo(elem)[0];
 			var obj;
 			
-			if(!window.ActiveXObject || !elem.outerHTML){
+			if(navigator.plugins && navigator.plugins[pluginName]){
 				obj = doc.createElement('object');
 				$.each(attrs, function(name, val){
 					obj.setAttribute(name, val);
@@ -516,7 +525,8 @@
 				obj.setAttribute('id', id);
 				obj.setAttribute('name', id);
 				elem.parentNode.replaceChild(obj, elem);
-			} else {
+			} else if(window.ActiveXObject){
+				alert('df')
 				obj = '<object';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';
@@ -675,17 +685,17 @@
 				}
 				$.support.flash9 = false;
 				var swf = m.getPluginVersion('Shockwave Flash');
-				if(swf >= 9){
+				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 					$.support.flash9 = true;
 				} else if(window.ActiveXObject){
 					try {
 						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
 						if(!swf){return;}
-						swf = swf.GetVariable("$version").match(/(\d+\,\d+)/);
-						if(swf && swf[0]){
-							if( parseFloat( swf[0].replace(',', '.' ), 10) >= 9){
-								$.support.flash9 = true;
-							}
+						swf = m.getPluginVersion('', {
+							description: swf.GetVariable("$version")
+						});
+						if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
+							$.support.flash9 = true;
 						}
 					} catch(e){}
 				}
@@ -714,10 +724,10 @@
 					params.flashvars.push(name+'='+val);
 				});
 				params.flashvars = params.flashvars.join('&');
-				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs ));
+				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E'],
-			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
 		}
 	;
 	
@@ -744,6 +754,7 @@
 	
 	var $m 				= $.multimediaSupport,
 		defaultAttrs 	= {
+			
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
@@ -762,7 +773,7 @@
 				}
 				$.support.vlc = false;
 				var vlc = $m.getPluginVersion('VLC Multimedia Plug-in');
-				if(vlc >= 0.9){
+				if(vlc[0] >= 0.9){
 					$.support.vlc = true;
 				} else if(window.ActiveXObject){
 					try {
@@ -775,21 +786,21 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%', src: src}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%'}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
 						src: src,
-						showdisplay: 'true',
+						ShowDisplay: 'True',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop
 					}),
-					elem 	= $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs )
+					elem = $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs, 'VLC Multimedia Plug-in' )
 				;
 				this._currentSrc = src;
 				fn( elem );
 				elem = null;
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
-			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
 		}
 	;
 			

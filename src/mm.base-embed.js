@@ -222,7 +222,8 @@
 				'audio/mp4': ['mp4','mpg4'],
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
-				'audio/x-m4p': ['m4p']
+				'audio/x-m4p': ['m4p'],
+				'audio/3gpp': ['3gp','3gpp']
 			},
 			video: {
 				//ogv shouldn´t be used!
@@ -232,7 +233,8 @@
 				'video/quicktime': ['mov','qt'],
 				'video/x-msvideo': ['avi'],
 				'video/x-ms-asf': ['asf', 'asx'],
-				'video/flv': ['flv', 'f4v']
+				'video/flv': ['flv', 'f4v'],
+				'video/3gpp': ['3gp','3gpp']
 			}
 		}
 	;
@@ -484,24 +486,31 @@
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},
-		getPluginVersion: function(name){
-			var plugin 	= (navigator.plugins && navigator.plugins[name]),
-				version = -1,
+		getPluginVersion: function(name, plugDesc){
+			var plugin 	= plugDesc || (navigator.plugins && navigator.plugins[name]),
+				version = [-1, 0],
 				description
 			;
 			if(plugin){
-				description = (plugin.description || '').match(/(\d+\.\d+)/) || ['0'];
-				if(description && description[0]){
-					version = parseFloat(description[0], 10);
+				desc = (plugin.description || '').replace(/,/g, '.').match(/(\d+)/g) || ['0'];
+				if(desc && desc[0]){
+				    version[0] = desc[0];
+					if(desc[1]){
+					    version[0] += '.'+desc[1];
+					}
+					version[0] = parseFloat(version[0], 10);
+					if(desc[2]){
+					    version[1] = parseInt(desc[2], 10);
+					}
 				}
 			}
 			return version;
 		},
-		embedObject: function(elem, id, attrs, params, activeXAttrs){
+		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
 			elem = $('<div />').appendTo(elem)[0];
 			var obj;
 			
-			if(!window.ActiveXObject || !elem.outerHTML){
+			if(navigator.plugins && navigator.plugins[pluginName]){
 				obj = doc.createElement('object');
 				$.each(attrs, function(name, val){
 					obj.setAttribute(name, val);
@@ -516,7 +525,8 @@
 				obj.setAttribute('id', id);
 				obj.setAttribute('name', id);
 				elem.parentNode.replaceChild(obj, elem);
-			} else {
+			} else if(window.ActiveXObject){
+				alert('df')
 				obj = '<object';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';

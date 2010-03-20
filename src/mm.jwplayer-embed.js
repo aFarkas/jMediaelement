@@ -32,17 +32,17 @@
 				}
 				$.support.flash9 = false;
 				var swf = m.getPluginVersion('Shockwave Flash');
-				if(swf >= 9){
+				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 					$.support.flash9 = true;
 				} else if(window.ActiveXObject){
 					try {
 						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
 						if(!swf){return;}
-						swf = swf.GetVariable("$version").match(/(\d+\,\d+)/);
-						if(swf && swf[0]){
-							if( parseFloat( swf[0].replace(',', '.' ), 10) >= 9){
-								$.support.flash9 = true;
-							}
+						swf = m.getPluginVersion('', {
+							description: swf.GetVariable("$version")
+						});
+						if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
+							$.support.flash9 = true;
 						}
 					} catch(e){}
 				}
@@ -71,10 +71,10 @@
 					params.flashvars.push(name+'='+val);
 				});
 				params.flashvars = params.flashvars.join('&');
-				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs ));
+				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E'],
-			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
 		}
 	;
 	

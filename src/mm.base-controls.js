@@ -14,7 +14,6 @@
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
 				
-				
 				function changeTimeState(e, ui){
 					if(ui.timeProgress !== undefined && !stopSlide){
 						control[sliderMethod]('value', ui.timeProgress);
@@ -28,6 +27,7 @@
 						control[sliderMethod]('option', 'disabled', true);
 					}
 				}
+				
 				api.apis[api.name].onMediaReady(function(){
 					mm
 						.bind('loadedmeta', changeDisabledState)
@@ -159,7 +159,7 @@
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
 					$('> *', control).each(function(){
-						if(timeSlider[0] !== this && this.offsetWidth){
+						if(timeSlider[0] !== this && this.offsetWidth && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
 							occupied += $(this).outerWidth(true);
 						}
 					});
@@ -253,7 +253,14 @@
 		return ret;
 	}
 	
-	function addWrapperBindings(wrapper, mm, apiData, o){
+	var moveKeys = {
+		40: true,
+		37: true,
+		39: true,
+		38: true
+	};
+	
+	function addWrapperBindings(wrapper, mm, api, o){
 		//classPrefix
 		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting',
 			removeStateClasses 	= function(){
@@ -261,7 +268,7 @@
 			}
 		;
 		wrapper
-			.addClass(o.classPrefix+apiData.name)
+			.addClass(o.classPrefix+api.name)
 			.bind({
 				apiActivated: function(e, d){
 					wrapper.addClass(o.classPrefix+d.api);
@@ -274,7 +281,7 @@
 				removeStateClasses();
 				wrapper.addClass(o.classPrefix+e.type);
 			})
-			.bind('paused ended mediareset', function(e){
+			.bind('pause ended mediareset', function(e){
 				removeStateClasses();
 			})
 			.bind('canplay canplaythrough', function(e){
@@ -282,6 +289,45 @@
 			})
 		;
 		
+		if($.ui && $.ui.keyCode){
+			wrapper.bind('keydown', function(e){
+				if(moveKeys[e.keyCode]){
+					//user is interacting with the slider don´t do anything
+					if($(e.target).is('.ui-slider-handle')){return;}
+					var dif = 5;
+					switch(e.keyCode) {
+						case $.ui.keyCode.UP:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							api.apis[api.name].volume( Math.min(100, api.apis[api.name].volume() + dif ) );
+							break;
+						case $.ui.keyCode.DOWN:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							api.apis[api.name].volume( Math.max(0, api.apis[api.name].volume() - dif ) );
+							break;
+						case $.ui.keyCode.LEFT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							api.apis[api.name].currentTime( Math.max(0, api.apis[api.name].currentTime() - dif ) );
+							break;
+						case $.ui.keyCode.RIGHT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							api.apis[api.name].currentTime( Math.min( api.apis[api.name].getDuration(), api.apis[api.name].currentTime() + dif ) );
+							break;
+					}
+					e.preventDefault();
+				} else if(e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button')){
+					api.apis[api.name].togglePlay();
+					e.preventDefault();
+				}
+			});
+		}
 	}
 	
 	$.fn.registerMMControl = function(o){
@@ -323,7 +369,8 @@
 		
 		mediaControls: {
 			dynamicTimeslider: true,
-			timeSliderAdjust: 0
+			timeSliderAdjust: 0,
+			excludeSel: false
 		},
 		progressbar: {},
 		volumeSlider: {},

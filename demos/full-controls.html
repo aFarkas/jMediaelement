@@ -15,21 +15,51 @@
 		<!-- END:  ui-components -->
 		<script src="../packages/mm.full.min.js"></script>
 		
+		<!-- accessible hover -->
+		<script src="http://gist.github.com/raw/328632/6ba479b9763a8fa805431199b2eb3620f67c8ea7/hover+focus-blur%20events"></script>
+		
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-				$('div.ui-media-player').registerMMControl({
-					embed: {
-						//debug: true,
-						removeControls: true,
-						jwPlayer: {
-							path: '../mediaplayers/jw-player/player.swf'
+				$('html').addClass('js-ready');
+				$('div.ui-media-player')
+					.registerMMControl({
+						//embed options for the mediaElementEmbed-method
+						embed: {
+							debug: true,
+							removeControls: true,
+							//jwPlayer-Options
+							jwPlayer: {
+								path: '../mediaplayers/jw-player/player.swf',
+								params: {
+									wmode: 'transparent'
+								}
+							}
+						},
+						mediaControls: {
+							timeSliderAdjust: -5
+						},
+						timeSlider: {
+							range: 'min',
+							animate: true
+						},
+						volumeSlider: {
+							animate: true
 						}
-					},
-					mediaControls: {
-						timeSliderAdjust: -5
-					}
-				});
+					})
+					//inOut = hover + focusenter/focusleave
+					.inOut(function(){
+						$('div.media-controls-wrapper', this).stop().animate({bottom: 0, opacity: 1});
+						//prevent scrollIntoView:
+						this.scrollTop = 0;
+					}, function(){
+						$('div.media-controls-wrapper', this).stop().animate({bottom: -40, opacity: 0});
+					}, {
+						mouseDelay: 250
+					})
+					.find('div.media-controls-wrapper')
+					.css('opacity', 0)
+				;
 			});
 			
 		</script>
@@ -39,21 +69,23 @@
 			(function($){
 				//lazy load themeswitcher
 				var script;
+				function triggerLayoutChange(){
+					setTimeout(function(){
+						$('video, audio').triggerHandler('resize');
+					}, 500);
+					setTimeout(function(){
+						$('video, audio').triggerHandler('resize');
+					}, 1500);
+				}
 				function startThemeswitcher(){
 					if(!this.readyState || this.readyState == "loaded" || this.readyState == "complete"){
 						$('<div class="demo-themeswitcher" />')
 							.prependTo('body')
 							.themeswitcher({
 								height: 150,
-								onSelect: function(){
-									setTimeout(function(){
-										$('video, audio').triggerHandler('resize');
-									}, 1500);
-								}
+								onSelect: triggerLayoutChange
 							});
-						setTimeout(function(){
-							$('video, audio').triggerHandler('resize');
-						}, 1500);
+						triggerLayoutChange();
 						script.onload = null;
 						script.onreadystatechange = null;
 						script = null;
@@ -90,27 +122,28 @@
 		<div class="ui-media-player">
 			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-				<source src="media/bbb_trailer_400p.ogg"></source>
-				<a class="source" href="media/bbb_trailer_400p.ogg">title</a>
 				<source src="media/bbb_trailer_mobile.m4v"></source>
 				<a class="source" href="media/bbb_trailer_mobile.m4v">title</a>
+				<source src="media/bbb_trailer_400p.ogg"></source>
+				<a class="source" href="media/bbb_trailer_400p.ogg">title</a>
 			</video>
-			
-			<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-				<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-				
-				<span class="current-time player-display"></span>
-				
-				<div class="timeline-slider">
-					<span class="ui-slider-handle" tabindex="0"></span>
-					<div class="progressbar"></div>
+			<div class="media-controls-wrapper">
+				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
+					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
+					
+					<span class="current-time player-display"></span>
+					
+					<div class="timeline-slider">
+						<span class="ui-slider-handle" tabindex="0"></span>
+						<div class="progressbar"></div>
+					</div>
+					
+					<span class="duration player-display"></span>
+					
+					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
+					
 				</div>
-				
-				<span class="duration player-display"></span>
-				
-				<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
-				<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
-				
 			</div>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>

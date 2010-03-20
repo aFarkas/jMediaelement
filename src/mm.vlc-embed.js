@@ -17,6 +17,7 @@
 	
 	var $m 				= $.multimediaSupport,
 		defaultAttrs 	= {
+			
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
@@ -35,7 +36,7 @@
 				}
 				$.support.vlc = false;
 				var vlc = $m.getPluginVersion('VLC Multimedia Plug-in');
-				if(vlc >= 0.9){
+				if(vlc[0] >= 0.9){
 					$.support.vlc = true;
 				} else if(window.ActiveXObject){
 					try {
@@ -48,21 +49,21 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%', src: src}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%'}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
 						src: src,
-						showdisplay: 'true',
+						ShowDisplay: 'True',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop
 					}),
-					elem 	= $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs )
+					elem = $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs, 'VLC Multimedia Plug-in' )
 				;
 				this._currentSrc = src;
 				fn( elem );
 				elem = null;
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
-			canPlayContainer: ['video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
 		}
 	;
 			

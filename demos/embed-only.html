@@ -8,23 +8,11 @@
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		
-		
-		
-		<script src="../src/mm.base-embed.js"></script>
-		
-		
-		<!-- for jw-player (mp4, flv, mp3) support -->
-		<script src="../src/mm.jwplayer-embed.js"></script>
-		<!-- END: for jw-player (mp4, flv, mp3) support -->
-		
-		<!-- for vlc-player (ogg, mp4, flv, mp3) support -->
-		<script src="../src/mm.vlc-embed.js"></script>
-		<!-- END: for vlc-player (ogg, mp4, flv, mp3) support -->
+		<script src="../packages/mm.embed.min.js"></script>
 		
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-								
 				$('video, audio').mediaElementEmbed({
 					jwPlayer: {
 						path: '../mediaplayers/jw-player/player.swf'
@@ -41,10 +29,10 @@
 		<div class="ui-media-player">
 			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-				<source src="media/bbb_trailer_400p.ogg"></source>
-				<a class="source" href="media/bbb_trailer_400p.ogg">title</a>
 				<source src="media/bbb_trailer_mobile.m4v"></source>
 				<a class="source" href="media/bbb_trailer_mobile.m4v">title</a>
+				<source src="media/bbb_trailer_400p.ogg"></source>
+				<a class="source" href="media/bbb_trailer_400p.ogg">title</a>
 			</video>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>

@@ -55,6 +55,7 @@
         
         
         $(function(){
+			$('html').addClass('js-ready');
             if (!window.console) {
                 if (window.opera) {
                     window.console = {
@@ -128,7 +129,8 @@
         </script>
     </head>
     <body>       
-		
+	
+
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
                 <audio controls="controls">

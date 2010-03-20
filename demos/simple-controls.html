@@ -18,7 +18,7 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-								
+				$('html').addClass('js-ready');			
 				$('div[data-controlwrapper]').registerMMControl({
 					embed: {
 						//debug: true,
@@ -78,10 +78,10 @@
 		<div class="ui-media-player" data-controlwrapper="controlwrapper">
 			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-				<source src="media/bbb_trailer_400p.ogg" type="video/ogg"></source>
-				<a class="source" href="media/bbb_trailer_400p.ogg" type="video/ogg">title</a>
 				<source src="media/bbb_trailer_mobile.m4v"></source>
 				<a class="source" href="media/bbb_trailer_mobile.m4v" type="video/mp4">title</a>
+				<source src="media/bbb_trailer_400p.ogg" type="video/ogg"></source>
+				<a class="source" href="media/bbb_trailer_400p.ogg" type="video/ogg">title</a>
 			</video>
 			
 			<div class="media-controls ui-widget ui-widget-header ui-corner-all">

@@ -161,7 +161,7 @@
 			$(this.html5elem).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
-			var item = this.apiElem.playlist.add(src);
+			var item = this.apiElem.playlist.add(src, " ", ":no-video-title-show");
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();

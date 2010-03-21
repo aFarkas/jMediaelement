@@ -25,7 +25,6 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport,
 		jwMM 	= {
-			//isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
 			isTechAvailable: function(){
 				if($.support.flash9 !== undefined){
 					return $.support.flash9;

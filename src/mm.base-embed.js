@@ -543,13 +543,17 @@
 			if(obj){
 				obj.setAttribute('width', '100%');
 				obj.setAttribute('height', '100%');
-				obj.style.display.width = '100%';
-				obj.style.display.height = '100%';
 			}
 			$(window).unload(function(){
 				jQuery.cleanData( [ obj ] );
 				obj = null;
 			});
+			//vlc in ie is a little stupdi here
+			setTimeout(function(){
+				if(!obj || !obj.setAttribute){return;}
+				obj.setAttribute('width', '100%');
+				obj.setAttribute('height', '100%');
+			}, 0);
 			return obj;
 		}
 	});

@@ -21,7 +21,7 @@
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
-			events: 'true',
+			events: 'True',
 			type: 'application/x-vlc-plugin'
 		},
 		activeXAttrs 	= {
@@ -49,9 +49,9 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%'}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%', data: src}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
-						src: src,
+						Src: src,
 						ShowDisplay: 'True',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop

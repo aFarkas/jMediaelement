@@ -548,7 +548,8 @@
 				jQuery.cleanData( [ obj ] );
 				obj = null;
 			});
-			//vlc in ie is a little stupdi here
+//			vlc in ie is a little stupid here
+//			don´t use the style property!
 			setTimeout(function(){
 				if(!obj || !obj.setAttribute){return;}
 				obj.setAttribute('width', '100%');

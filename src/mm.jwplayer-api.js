@@ -180,8 +180,11 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_mmload: function(src, poster, extras){
-			this.apiElem.sendEvent('LOAD', src);
+		_mmload: function(src, poster){
+			this.apiElem.sendEvent('LOAD', {
+				file: src,
+				image: poster
+			});
 			if (!$.attr(this.html5elem, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

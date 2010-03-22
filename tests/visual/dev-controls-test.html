@@ -91,7 +91,7 @@
              
              $('a.load-video').click(function(e){
 	             e.preventDefault();
-	             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
+	             $(this).closest('div.test-wrapper').find('video, audio').attr('poster', $('a.poster')[0].href).loadSrc(this.href);
              });
 			 
 			 $('a.enter-fs').click(function(e){
@@ -129,7 +129,7 @@
         </script>
     </head>
     <body>       
-	
+		<a href="../../demos/media/loader.gif" class="poster"></a>
 		<div id="log"></div>
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">

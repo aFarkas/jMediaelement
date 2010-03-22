@@ -543,13 +543,18 @@
 			if(obj){
 				obj.setAttribute('width', '100%');
 				obj.setAttribute('height', '100%');
-				obj.style.display.width = '100%';
-				obj.style.display.height = '100%';
 			}
 			$(window).unload(function(){
 				jQuery.cleanData( [ obj ] );
 				obj = null;
 			});
+//			vlc in ie is a little stupid here
+//			don´t use the style property!
+			setTimeout(function(){
+				if(!obj || !obj.setAttribute){return;}
+				obj.setAttribute('width', '100%');
+				obj.setAttribute('height', '100%');
+			}, 0);
 			return obj;
 		}
 	});
@@ -661,13 +666,13 @@
 		fsMethods	= {}
 	;
 	
-	if('enterFullScreen' in video){
+	if('enterFullScreen' in video && video.supportsFullscreen){
 		$.support.videoFullscreen = true;
 		fsMethods.enter = 'enterFullScreen';
 		fsMethods.exit = 'exitFullScreen';
 	} else {
 		$.each(['webkit', 'moz', 'o', 'ms'], function(i, name){
-			if(name+'EnterFullScreen' in video){
+			if(name+'EnterFullScreen' in video && video[name+'SupportsFullscreen']){
 				$.support.videoFullscreen = true;
 				fsMethods.enter = name+'EnterFullScreen';
 				fsMethods.exit = name+'ExitFullScreen';
@@ -681,12 +686,14 @@
 	//extend apiPrototype
 	$.extend($.multimediaSupport.apiProto, {
 		_trigger: function(e){
-			var type = e.type || e,
+			var type = e.type || ({type: e}).type,
 				evt  = e
 			;
+			
 			switch(type){
 				case 'mmAPIReady':
 					this.isAPIReady = true;
+					e.api = this.name;
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = e;
@@ -702,7 +709,8 @@
 			e.target = this.html5elem;
 			e = $.Event(e);
 			e.preventDefault();
-			if(e.type === 'timechange' || e.type === 'load' || e.type === 'error'){
+			
+			if(e.type === 'timechange'){
 				e.stopPropagation();
 			}
 			$.event.trigger( e, evt, this.html5elem );
@@ -710,7 +718,6 @@
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
 		},
-		
 		enterFullscreen: $.noop,
 		exitFullscreen: $.noop,
 		isAPIReady: false,
@@ -738,16 +745,17 @@
 				$(this.html5elem).one('mmAPIReady', fn);
 			}
 		},
-		_format: function(sec, base){
-			var ret = [
-				parseInt(sec/3600, 10),
-				parseInt(sec/60%60, 10) < 10 ? "0"+parseInt(sec/60%60, 10) : ""+parseInt(sec/60%60, 10),
-				parseInt(sec%60, 10) < 10 ? "0"+parseInt(sec%60, 10) : ""+parseInt(sec%60, 10)
-			];
-			if(!ret[0]){
-				ret.shift();
-			}
-			return ret.join(':');
+		_format: function(sec){
+			return $.map(
+				[
+					parseInt(sec/60, 10),
+					parseInt(sec%60, 10)
+				], 
+				function(num){
+					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
+				})
+				.join(':')
+			;
 		},
 		getFormattedDuration: function(){
 			return this._format(this.getDuration());
@@ -823,7 +831,6 @@
 						that._trigger(e);
 					},
 					loadedmetadata: function(e){
-						that._trigger('mmAPIReady');
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -849,6 +856,7 @@
 					}
 				})
 			;
+			that._trigger('mmAPIReady');
 		},
 		play: function(src){
 			this.html5elem.play();
@@ -984,7 +992,9 @@
 							control[sliderMethod]('value', 0);
 							changeDisabledState();
 						})
-						
+						.bind('ended', function(){
+							control[sliderMethod]('value', 100);
+						})
 					;
 					control
 						.bind('slidestart', function(e, ui){
@@ -1355,7 +1365,6 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport,
 		jwMM 	= {
-			//isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
 			isTechAvailable: function(){
 				if($.support.flash9 !== undefined){
 					return $.support.flash9;
@@ -1485,7 +1494,6 @@
 					type
 				;
 				if(!api){return false;}
-				
 				switch(obj.newstate) {
 					case 'PLAYING':
 						type = 'playing';
@@ -1663,7 +1671,7 @@
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
-			events: 'true',
+			events: 'True',
 			type: 'application/x-vlc-plugin'
 		},
 		activeXAttrs 	= {
@@ -1691,9 +1699,9 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%'}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {data: src}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
-						src: src,
+						Src: src,
 						ShowDisplay: 'True',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop
@@ -1875,7 +1883,7 @@
 			$(this.html5elem).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
-			var item = this.apiElem.playlist.add(src);
+			var item = this.apiElem.playlist.add(src, " ", ":no-video-title-show");
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();

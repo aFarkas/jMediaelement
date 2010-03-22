@@ -71,7 +71,6 @@
 					type
 				;
 				if(!api){return false;}
-				
 				switch(obj.newstate) {
 					case 'PLAYING':
 						type = 'playing';

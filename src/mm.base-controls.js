@@ -36,7 +36,9 @@
 							control[sliderMethod]('value', 0);
 							changeDisabledState();
 						})
-						
+						.bind('ended', function(){
+							control[sliderMethod]('value', 100);
+						})
 					;
 					control
 						.bind('slidestart', function(e, ui){

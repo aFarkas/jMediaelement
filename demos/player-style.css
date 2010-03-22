@@ -32,7 +32,7 @@ video {
 	zoom: 1;
 	overflow: hidden;
 	margin: 0;
-	padding: 5px 0 3px;
+	padding: 5px 0;
 }
 .js-ready .media-controls {
 	display: block;

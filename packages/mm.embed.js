@@ -543,13 +543,18 @@
 			if(obj){
 				obj.setAttribute('width', '100%');
 				obj.setAttribute('height', '100%');
-				obj.style.display.width = '100%';
-				obj.style.display.height = '100%';
 			}
 			$(window).unload(function(){
 				jQuery.cleanData( [ obj ] );
 				obj = null;
 			});
+//			vlc in ie is a little stupid here
+//			don´t use the style property!
+			setTimeout(function(){
+				if(!obj || !obj.setAttribute){return;}
+				obj.setAttribute('width', '100%');
+				obj.setAttribute('height', '100%');
+			}, 0);
 			return obj;
 		}
 	});
@@ -677,7 +682,6 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport,
 		jwMM 	= {
-			//isTechAvailable: swfobject.hasFlashPlayerVersion('9.0.124'),
 			isTechAvailable: function(){
 				if($.support.flash9 !== undefined){
 					return $.support.flash9;
@@ -757,7 +761,7 @@
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
-			events: 'true',
+			events: 'True',
 			type: 'application/x-vlc-plugin'
 		},
 		activeXAttrs 	= {
@@ -785,9 +789,9 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%'}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {data: src}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
-						src: src,
+						Src: src,
 						ShowDisplay: 'True',
 						autoplay: ''+ attrs.autoplay,//
 						autoloop: ''+attrs.loop

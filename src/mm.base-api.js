@@ -29,12 +29,14 @@
 	//extend apiPrototype
 	$.extend($.multimediaSupport.apiProto, {
 		_trigger: function(e){
-			var type = e.type || e,
+			var type = e.type || ({type: e}).type,
 				evt  = e
 			;
+			
 			switch(type){
 				case 'mmAPIReady':
 					this.isAPIReady = true;
+					e.api = this.name;
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = e;
@@ -50,7 +52,8 @@
 			e.target = this.html5elem;
 			e = $.Event(e);
 			e.preventDefault();
-			if(e.type === 'timechange' || e.type === 'load' || e.type === 'error'){
+			
+			if(e.type === 'timechange'){
 				e.stopPropagation();
 			}
 			$.event.trigger( e, evt, this.html5elem );
@@ -58,7 +61,6 @@
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
 		},
-		
 		enterFullscreen: $.noop,
 		exitFullscreen: $.noop,
 		isAPIReady: false,
@@ -86,16 +88,17 @@
 				$(this.html5elem).one('mmAPIReady', fn);
 			}
 		},
-		_format: function(sec, base){
-			var ret = [
-				parseInt(sec/3600, 10),
-				parseInt(sec/60%60, 10) < 10 ? "0"+parseInt(sec/60%60, 10) : ""+parseInt(sec/60%60, 10),
-				parseInt(sec%60, 10) < 10 ? "0"+parseInt(sec%60, 10) : ""+parseInt(sec%60, 10)
-			];
-			if(!ret[0]){
-				ret.shift();
-			}
-			return ret.join(':');
+		_format: function(sec){
+			return $.map(
+				[
+					parseInt(sec/60, 10),
+					parseInt(sec%60, 10)
+				], 
+				function(num){
+					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
+				})
+				.join(':')
+			;
 		},
 		getFormattedDuration: function(){
 			return this._format(this.getDuration());
@@ -171,7 +174,6 @@
 						that._trigger(e);
 					},
 					loadedmetadata: function(e){
-						that._trigger('mmAPIReady');
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -197,6 +199,7 @@
 					}
 				})
 			;
+			that._trigger('mmAPIReady');
 		},
 		play: function(src){
 			this.html5elem.play();

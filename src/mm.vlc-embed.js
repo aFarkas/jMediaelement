@@ -49,7 +49,7 @@
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {width: '100%', height: '100%', data: src}, defaultAttrs),
+					vlcAttr = $.extend({}, opts.attrs, {data: src}, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
 						Src: src,
 						ShowDisplay: 'True',

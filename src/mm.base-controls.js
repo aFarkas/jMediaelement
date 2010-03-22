@@ -95,7 +95,7 @@
 				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
 				
 				function changeProgressUI(e, ui){
-					if (ui.lengthComputable) {
+					if ('relLoaded' in ui) {
 						control.progressbar('option', 'disabled', false).progressbar('value', ui.relLoaded);
 					} else {
 						control.progressbar('option', 'disabled', true);

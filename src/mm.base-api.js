@@ -140,7 +140,48 @@
 		}
 	});
 	
-	
+	var fixProgressEvent = (function(){
+		var unboundNeedless;
+		
+		return function(api){
+			// firefox and old webkits (safari 4/chrome 3) are using an extended event, but safari uses load instead of progress
+			// newer webkits are compilant to the current w3c specification
+			// opera 10.5 hasn´t implemented the timerange-object yet <- no support
+			var calculateProgress = function(e){
+				
+				
+				var evt = {type: 'progresschange'}, 
+					dur
+				;
+				//old implementation
+				if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
+					if(e.originalEvent.lengthComputable && e.originalEvent.total){
+						$.extend(evt, {
+							relLoaded: e.originalEvent.loaded / e.originalEvent.total * 100
+						});
+					}
+					//remove event
+					if(!unboundNeedless){
+						$(this).unbind((e.type === 'load') ? 'progress' : 'load', calculateProgress);
+						unboundNeedless = true;
+					}
+					api._trigger(evt);
+				
+				//current implementation
+				//currently handles the simple buffer state, other aren´t supported by current browsers anyway
+				//ToDo add real timerange buffer information
+				} else if(e.type === 'progress' && this.buffered && this.buffered.length){
+					dur = this.duration;
+					if(dur){
+						evt.relLoaded = this.buffered.end(0) / dur * 100;
+					}
+					api._trigger(evt);
+				}
+				
+			};
+			$(api.html5elem).bind('progress load', calculateProgress);
+		};
+	})();
 	
 	//add API for native MM-Support
 	var nativ = {
@@ -149,8 +190,9 @@
 			var that 		= this,
 				curMuted 	= this.apiElem.muted
 			;
-			//addEvents
 			
+			//addEvents
+			fixProgressEvent(this);
 			$(this.html5elem)
 				.bind({
 					volumechange: function(){
@@ -178,24 +220,6 @@
 							type: 'loadedmeta',
 							duration: this.duration
 						});
-					}
-				})
-				//current webkit builds are using load instead of progress
-				.bind('progress load', function(e){
-					if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
-						var evt = {
-							type: 'progresschange',
-							lengthComputable: e.originalEvent.lengthComputable,
-							loaded: e.originalEvent.loaded
-						};
-						
-						if(e.originalEvent.lengthComputable && e.originalEvent.total){
-							$.extend(evt, {
-								total: e.originalEvent.total,
-								relLoaded: e.originalEvent.loaded / e.originalEvent.total * 100
-							});
-						}
-						that._trigger(evt);
 					}
 				})
 			;

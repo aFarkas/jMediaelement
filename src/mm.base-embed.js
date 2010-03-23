@@ -584,13 +584,7 @@
 			m._embedApi(elem, supported, apiData, elemName);
 		}
 	}
-	
-	
-	
-	function loadedmetadata(e){
-		$(this).trigger('multiMediaAPIIsReady');
-	}
-	
+		
 	$.fn.mediaElementEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.mediaElementEmbed.defaults, opts);
 		
@@ -619,13 +613,11 @@
 				apiData.apis[apiData.name]._init();
 			}
 			$(this)
-				.bind('mediaerror', function findInitFallbackOnError(e){
-					
+				.bind('mediaerror', function(e){
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}
 				})
-				.bind('loadedmetadata', loadedmetadata)
 			;
 		});
 	};

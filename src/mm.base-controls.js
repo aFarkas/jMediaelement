@@ -139,9 +139,7 @@
 				control.html('--:--');
 				mm
 					.bind('timechange', function(e, evt){
-						setTimeout(function(){
-							control.html(api.apis[api.name]._format(evt.time));
-						}, 0);
+						control.html(api.apis[api.name]._format(evt.time));
 					})
 					.bind('mediareset', function(){
 						control.html('--:--');

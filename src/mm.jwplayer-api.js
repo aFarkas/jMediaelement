@@ -135,8 +135,8 @@
 					if(!api){return;}
 					var evt = {
 						type: 'progresschange',
-						lengthComputable: !!(isFinite(obj.percentage)),
-						relLoaded: obj.percentage
+						relLoaded: obj.percentage,
+						relStart: 0
 					};
 					api._trigger(evt);
 				},
@@ -206,6 +206,7 @@
 			}
 			
 			this.apiElem.sendEvent('SEEK', ''+t);
+			this._trigger({type: 'timechange', time: t});
 			if(!isPlaying){
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

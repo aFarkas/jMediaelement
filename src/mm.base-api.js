@@ -42,18 +42,24 @@
 					this.loadedmeta = e;
 					break;
 				case 'emptied':
-					this.loadedmeta = false;
-					break;
+				case 'mediareset':
 				case 'error':
 					this.loadedmeta = false;
 					break;
+			}
+			
+			if(e.type === 'progresschange' && 'relStart' in e){
+				if(this._concerningBufferStart !== e.relStart){
+					this._concerningBufferStart = e.relStart;
+					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
+				}
 			}
 			
 			e.target = this.html5elem;
 			e = $.Event(e);
 			e.preventDefault();
 			
-			if(e.type === 'timechange'){
+			if(e.type === 'timechange' || e.type === 'progresschange'){
 				e.stopPropagation();
 			}
 			$.event.trigger( e, evt, this.html5elem );
@@ -65,7 +71,7 @@
 		exitFullscreen: $.noop,
 		isAPIReady: false,
 		relCurrentTime: function(rel){
-			var dur = this.getDuration();
+			var dur = this.getDuration() || Number.MIN_VALUE;
 			if(rel && isFinite(rel)){
 				this.currentTime(dur * rel / 100);
 			}
@@ -140,25 +146,35 @@
 		}
 	});
 	
-	var fixProgressEvent = (function(){
-		var unboundNeedless;
-		
-		return function(api){
-			// firefox and old webkits (safari 4/chrome 3) are using an extended event, but safari uses load instead of progress
-			// newer webkits are compilant to the current w3c specification
-			// opera 10.5 hasn´t implemented the timerange-object yet <- no support
-			var calculateProgress = function(e){
-				
-				
+	// firefox and old webkits (safari 4/chrome 4) are using an extended event, but safari uses load instead of progress
+	// newer webkits are compilant to the current w3c specification
+	// opera 10.5 hasn´t implemented the timerange-object yet <- no support
+	var fixProgressEvent = function(api){
+		var unboundNeedless,
+		 	getConcerningRange 			= function(){
+				var time 	= api.html5elem.currentTime,
+					buffer 	= api.html5elem.buffer,
+					bufLen 	= buffer.length,
+					ret 	= {}
+				;
+				for(var i = 0; i < bufLen; i++){
+					ret.start = buffer.start(i);
+					ret.end = buffer.start(i);
+					if(ret.start <= time && ret.end >= time){
+						break;
+					}
+				}
+				return ret;
+			},
+			calculateProgress 	= function(e){
 				var evt = {type: 'progresschange'}, 
-					dur
+					dur, bufRange
 				;
 				//old implementation
 				if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
 					if(e.originalEvent.lengthComputable && e.originalEvent.total){
-						$.extend(evt, {
-							relLoaded: e.originalEvent.loaded / e.originalEvent.total * 100
-						});
+						evt.relStart = 0;
+						evt.relLoaded = e.originalEvent.loaded / e.originalEvent.total * 100;
 					}
 					//remove event
 					if(!unboundNeedless){
@@ -167,28 +183,34 @@
 					}
 					api._trigger(evt);
 				
-				//current implementation
-				//currently handles the simple buffer state, other aren´t supported by current browsers anyway
-				//ToDo add real timerange buffer information
+				//current implementation -> chrome 5
 				} else if(e.type === 'progress' && this.buffered && this.buffered.length){
 					dur = this.duration;
 					if(dur){
-						evt.relLoaded = this.buffered.end(0) / dur * 100;
+						bufRange = getConcerningRange();
+						evt.relStart = bufRange.start / dur * 100;
+						evt.relLoaded = bufRange.end / dur * 100;
 					}
 					api._trigger(evt);
 				}
 				
-			};
-			$(api.html5elem).bind('progress load', calculateProgress);
-		};
-	})();
+			}
+		;
+		$(api.html5elem).bind('progress load', calculateProgress);
+	};
 	
 	//add API for native MM-Support
 	var nativ = {
 		isTechAvailable: $.support.mediaElements,
 		_init: function(){
-			var that 		= this,
-				curMuted 	= this.apiElem.muted
+			var that 				= this,
+				curMuted 			= this.apiElem.muted,
+				hasInitialError 	= false,
+				catchInitialError 	= function(){
+					hasInitialError = true;
+					$(that.html5elem).unbind('.initialerror');
+					
+				}
 			;
 			
 			//addEvents
@@ -222,8 +244,18 @@
 						});
 					}
 				})
+				.one('mediaerror.initialerror', catchInitialError)
 			;
-			that._trigger('mmAPIReady');
+			//stupid workaround
+			
+			setTimeout(function(){
+				$(that.html5elem).unbind('.initialerror');
+				if(hasInitialError){
+					that.isAPIReady = true;
+				} else {
+					that._trigger('mmAPIReady');
+				}
+			}, 1);
 		},
 		play: function(src){
 			this.html5elem.play();

@@ -6,7 +6,7 @@
  */
 
 (function($){
-	jQuery.multimediaSupport = {};
+	$.multimediaSupport = {};
 	var m 	= $.multimediaSupport,
 		vID = new Date().getTime(),
 		doc	= document
@@ -36,13 +36,13 @@
 	
 	$.attr = function(elem, name, value, pass){
 		
-		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || $.multimediaSupport.attrFns[name] || booleanNames[name] || srcNames[name])) ){
+		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || m.attrFns[name] || booleanNames[name] || srcNames[name])) ){
 			return oldAttr(elem, name, value, pass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
 		
-		if($.multimediaSupport.attrFns[name]){
+		if(m.attrFns[name]){
 			
 			api = $.data(elem, 'mediaElemSupport');
 			if( !api ) {
@@ -157,9 +157,7 @@
 		;
 		
 		if(srces.length && !apis.nativ.canPlaySrces(srces)){
-			setTimeout(function(){
-				$(elem).triggerHandler('mediaerror');
-			}, 0);
+			$(elem).triggerHandler('mediaerror');
 			//stop trying to play
 			try {
 				elem.pause();
@@ -186,10 +184,9 @@
 			$(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				.each(bindSource)
-				.bind('emtptied', bindSource)
+				//some webkit do not support emptied
+				.bind('emtptied loadstart', bindSource)
 			;
-			//some webkit do not support emptied
-			$(this).bind('loadstart', bindSource);
 		},
 		teardown: function(){
 			$(this)
@@ -239,7 +236,7 @@
 		}
 	;
 	
-	$.extend($.multimediaSupport, {
+	$.extend(m, {
 		registerMimetype: function(elemName, mimeObj){
 			if(arguments.length === 1){
 				$.each(mimeTypes, function(name){
@@ -263,14 +260,14 @@
 		attrFns: {},
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
-				this.apis[elemName][name] = m.helper.beget(this.apiProto);
+				this.apis[elemName][name] = m.helper.beget(this.fn);
 				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
 					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
 				}
 			} 
 			$.extend(true, this.apis[elemName][name], api);
 		},
-		apiProto: {
+		fn: {
 			_init: function(){},
 			canPlayType: function(type){
 				var elem = this.apiElem;
@@ -354,6 +351,7 @@
 					return src;
 				};
 			})(),
+			// simple, but powerfull
 			beget: function(sup){
 				var F = function(){};
 				F.prototype = sup;

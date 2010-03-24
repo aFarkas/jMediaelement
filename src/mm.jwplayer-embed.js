@@ -25,10 +25,7 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport,
 		jwMM 	= {
-			isTechAvailable: function(){
-				if($.support.flash9 !== undefined){
-					return $.support.flash9;
-				}
+			isTechAvailable: (function(){
 				$.support.flash9 = false;
 				var swf = m.getPluginVersion('Shockwave Flash');
 				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
@@ -46,7 +43,7 @@
 					} catch(e){}
 				}
 				return $.support.flash9;
-			},
+			})(),
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),

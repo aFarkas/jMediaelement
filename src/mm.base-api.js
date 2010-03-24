@@ -6,6 +6,7 @@
  */
 (function($){
 	var video 		= document.createElement('video'), 
+		$m 			= $.multimediaSupport,
 		fsMethods	= {}
 	;
 	
@@ -26,8 +27,8 @@
 	
 	video = null;
 	
-	//extend apiPrototype
-	$.extend($.multimediaSupport.apiProto, {
+	//extend fn
+	$.extend($m.fn, {
 		_trigger: function(e){
 			var type = e.type || ({type: e}).type,
 				evt  = e
@@ -39,7 +40,7 @@
 					e.api = this.name;
 					break;
 				case 'loadedmeta':
-					this.loadedmeta = e;
+					this.loadedmeta = evt;
 					break;
 				case 'emptied':
 				case 'mediareset':
@@ -91,7 +92,15 @@
 			if(this.isAPIReady){
 				fn.call(this.html5elem, e, e);
 			} else {
-				$(this.html5elem).one('mmAPIReady', fn);
+				$(this.html5elem).one('mmAPIReady.jmediaelement', fn);
+			}
+		},
+		onLoadedmeta: function(fn){
+			var e = this.loadedmeta;
+			if(e){
+				fn.call(this.html5elem, e, e);
+			} else {
+				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
 		_format: function(sec){
@@ -136,7 +145,7 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
+				$m.helper._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -147,31 +156,42 @@
 	});
 	
 	// firefox and old webkits (safari 4/chrome 4) are using an extended event, but safari uses load instead of progress
-	// newer webkits are compilant to the current w3c specification
+	// newer webkits are compilant to the current w3c specification (progress is a simple event + buffered is a timerange-object)
 	// opera 10.5 hasn´t implemented the timerange-object yet <- no support
 	var fixProgressEvent = function(api){
 		var unboundNeedless,
 		 	getConcerningRange 			= function(){
 				var time 	= api.html5elem.currentTime,
-					buffer 	= api.html5elem.buffer,
+					buffer 	= api.html5elem.buffered,
 					bufLen 	= buffer.length,
 					ret 	= {}
 				;
+				
 				for(var i = 0; i < bufLen; i++){
 					ret.start = buffer.start(i);
-					ret.end = buffer.start(i);
+					ret.end = buffer.end(i);
 					if(ret.start <= time && ret.end >= time){
 						break;
 					}
 				}
 				return ret;
 			},
+			
 			calculateProgress 	= function(e){
 				var evt = {type: 'progresschange'}, 
 					dur, bufRange
 				;
-				//old implementation
-				if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
+				//current implementation -> chrome 5
+				if(this.buffered && this.buffered.length){
+					dur = this.duration;
+					if(dur){
+						bufRange = getConcerningRange();
+						evt.relStart = bufRange.start / dur * 100;
+						evt.relLoaded = bufRange.end / dur * 100;
+					}
+					api._trigger(evt);
+				//ff implementation implementation
+				} else if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
 					if(e.originalEvent.lengthComputable && e.originalEvent.total){
 						evt.relStart = 0;
 						evt.relLoaded = e.originalEvent.loaded / e.originalEvent.total * 100;
@@ -180,16 +200,6 @@
 					if(!unboundNeedless){
 						$(this).unbind((e.type === 'load') ? 'progress' : 'load', calculateProgress);
 						unboundNeedless = true;
-					}
-					api._trigger(evt);
-				
-				//current implementation -> chrome 5
-				} else if(e.type === 'progress' && this.buffered && this.buffered.length){
-					dur = this.duration;
-					if(dur){
-						bufRange = getConcerningRange();
-						evt.relStart = bufRange.start / dur * 100;
-						evt.relLoaded = bufRange.end / dur * 100;
 					}
 					api._trigger(evt);
 				}
@@ -209,7 +219,6 @@
 				catchInitialError 	= function(){
 					hasInitialError = true;
 					$(that.html5elem).unbind('.initialerror');
-					
 				}
 			;
 			
@@ -237,7 +246,7 @@
 						}
 						that._trigger(e);
 					},
-					loadedmetadata: function(e){
+					loadedmetadata: function(){
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -246,16 +255,23 @@
 				})
 				.one('mediaerror.initialerror', catchInitialError)
 			;
-			//stupid workaround
-			
-			setTimeout(function(){
-				$(that.html5elem).unbind('.initialerror');
-				if(hasInitialError){
-					that.isAPIReady = true;
-				} else {
-					that._trigger('mmAPIReady');
-				}
-			}, 1);
+			//workaround
+			if(this.html5elem.readyState > 0){
+				that._trigger('mmAPIReady');
+				that._trigger({
+					type: 'loadedmeta',
+					duration: this.html5elem.duration
+				});
+			} else {
+				setTimeout(function(){
+					$(that.html5elem).unbind('.initialerror');
+					if(hasInitialError || that.html5elem.error){
+						that.isAPIReady = true;
+					} else {
+						that._trigger('mmAPIReady');
+					}
+				}, 0);
+			}
 		},
 		play: function(src){
 			this.html5elem.play();
@@ -303,7 +319,7 @@
 	
 	
 	
-	$.multimediaSupport.add('nativ', 'video', $.extend({
+	$m.add('nativ', 'video', $.extend({
 		_videoFullscreen: $.support.videoFullscreen,
 		enterFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
@@ -320,7 +336,7 @@
 	}, nativ));
 	
 	
-	$.multimediaSupport.add('nativ', 'audio', nativ);
+	$m.add('nativ', 'audio', nativ);
 	
 	
 	//public-methods
@@ -330,27 +346,44 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'getCurrentSrc', 'supportsFullScreen', 'enterFullscreen', 'exitFullscreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
-	
-	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
-		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {
-			$.multimediaSupport.attrFns[name] = true;
+	$m.registerAPI = function(names){
+		if(typeof names === 'string'){
+			names = [names];
 		}
+		$.each(names, function(i, name){
+			var fn = $m.apis.video.nativ[name];
+			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
+				$m.attrFns[name] = true;
+				if($.fn[name]){return;}
+				$.fn[name] =  function(){
+					var args = arguments,
+						ret
+					;
+					this.each(function(){
+						var api = $(this).getMMAPI();
+						if(api && api.isAPIReady){
+							ret = api[name].apply(api, args);
+						}
+					});
+					return (ret === undefined) ? this : ret; 
+				};
+			}
+		});
+	};
+	
+	var fnNames = [];
+	$.each($m.apis.video.nativ, function(name, fn){
+		fnNames.push(name);
 	});
 	
-	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
-		if( name.indexOf('_') !== 0 && fn && $.isFunction(fn) && !$.fn[name] ){
-			$.fn[name] =  function(){
-				var args = arguments, ret;
-				this.each(function(){
-					var api = $(this).getMMAPI();
-					if(api){
-						ret = api[name].apply(api, args);
-					}
-				});
-				return (ret === undefined) ? this : ret; 
-			};
-		}
-	});
-	
+	$m.registerAPI(fnNames);
+	//plugin mechanism
+	$m.fn._extend = function(exts){
+		var names = [];
+		$.each(exts, function(name, fn){
+			$m.fn[name] = fn;
+			names.push(name);
+		});
+		$m.registerAPI(names);
+	};
 })(jQuery);

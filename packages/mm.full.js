@@ -6,7 +6,7 @@
  */
 
 (function($){
-	jQuery.multimediaSupport = {};
+	$.multimediaSupport = {};
 	var m 	= $.multimediaSupport,
 		vID = new Date().getTime(),
 		doc	= document
@@ -36,13 +36,13 @@
 	
 	$.attr = function(elem, name, value, pass){
 		
-		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || $.multimediaSupport.attrFns[name] || booleanNames[name] || srcNames[name])) ){
+		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || m.attrFns[name] || booleanNames[name] || srcNames[name])) ){
 			return oldAttr(elem, name, value, pass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
 		
-		if($.multimediaSupport.attrFns[name]){
+		if(m.attrFns[name]){
 			
 			api = $.data(elem, 'mediaElemSupport');
 			if( !api ) {
@@ -157,9 +157,7 @@
 		;
 		
 		if(srces.length && !apis.nativ.canPlaySrces(srces)){
-			setTimeout(function(){
-				$(elem).triggerHandler('mediaerror');
-			}, 0);
+			$(elem).triggerHandler('mediaerror');
 			//stop trying to play
 			try {
 				elem.pause();
@@ -186,10 +184,9 @@
 			$(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				.each(bindSource)
-				.bind('emtptied', bindSource)
+				//some webkit do not support emptied
+				.bind('emtptied loadstart', bindSource)
 			;
-			//some webkit do not support emptied
-			$(this).bind('loadstart', bindSource);
 		},
 		teardown: function(){
 			$(this)
@@ -239,7 +236,7 @@
 		}
 	;
 	
-	$.extend($.multimediaSupport, {
+	$.extend(m, {
 		registerMimetype: function(elemName, mimeObj){
 			if(arguments.length === 1){
 				$.each(mimeTypes, function(name){
@@ -263,14 +260,14 @@
 		attrFns: {},
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
-				this.apis[elemName][name] = m.helper.beget(this.apiProto);
+				this.apis[elemName][name] = m.helper.beget(this.fn);
 				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
 					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
 				}
 			} 
 			$.extend(true, this.apis[elemName][name], api);
 		},
-		apiProto: {
+		fn: {
 			_init: function(){},
 			canPlayType: function(type){
 				var elem = this.apiElem;
@@ -354,6 +351,7 @@
 					return src;
 				};
 			})(),
+			// simple, but powerfull
 			beget: function(sup){
 				var F = function(){};
 				F.prototype = sup;
@@ -584,13 +582,7 @@
 			m._embedApi(elem, supported, apiData, elemName);
 		}
 	}
-	
-	
-	
-	function loadedmetadata(e){
-		$(this).trigger('multiMediaAPIIsReady');
-	}
-	
+		
 	$.fn.mediaElementEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.mediaElementEmbed.defaults, opts);
 		
@@ -619,13 +611,11 @@
 				apiData.apis[apiData.name]._init();
 			}
 			$(this)
-				.bind('mediaerror', function findInitFallbackOnError(e){
-					
+				.bind('mediaerror', function(e){
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}
 				})
-				.bind('loadedmetadata', loadedmetadata)
 			;
 		});
 	};
@@ -663,6 +653,7 @@
  */
 (function($){
 	var video 		= document.createElement('video'), 
+		$m 			= $.multimediaSupport,
 		fsMethods	= {}
 	;
 	
@@ -683,8 +674,8 @@
 	
 	video = null;
 	
-	//extend apiPrototype
-	$.extend($.multimediaSupport.apiProto, {
+	//extend fn
+	$.extend($m.fn, {
 		_trigger: function(e){
 			var type = e.type || ({type: e}).type,
 				evt  = e
@@ -696,21 +687,27 @@
 					e.api = this.name;
 					break;
 				case 'loadedmeta':
-					this.loadedmeta = e;
+					this.loadedmeta = evt;
 					break;
 				case 'emptied':
-					this.loadedmeta = false;
-					break;
+				case 'mediareset':
 				case 'error':
 					this.loadedmeta = false;
 					break;
+			}
+			
+			if(e.type === 'progresschange' && 'relStart' in e){
+				if(this._concerningBufferStart !== e.relStart){
+					this._concerningBufferStart = e.relStart;
+					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
+				}
 			}
 			
 			e.target = this.html5elem;
 			e = $.Event(e);
 			e.preventDefault();
 			
-			if(e.type === 'timechange'){
+			if(e.type === 'timechange' || e.type === 'progresschange'){
 				e.stopPropagation();
 			}
 			$.event.trigger( e, evt, this.html5elem );
@@ -722,7 +719,7 @@
 		exitFullscreen: $.noop,
 		isAPIReady: false,
 		relCurrentTime: function(rel){
-			var dur = this.getDuration();
+			var dur = this.getDuration() || Number.MIN_VALUE;
 			if(rel && isFinite(rel)){
 				this.currentTime(dur * rel / 100);
 			}
@@ -742,7 +739,15 @@
 			if(this.isAPIReady){
 				fn.call(this.html5elem, e, e);
 			} else {
-				$(this.html5elem).one('mmAPIReady', fn);
+				$(this.html5elem).one('mmAPIReady.jmediaelement', fn);
+			}
+		},
+		onLoadedmeta: function(fn){
+			var e = this.loadedmeta;
+			if(e){
+				fn.call(this.html5elem, e, e);
+			} else {
+				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
 		_format: function(sec){
@@ -787,7 +792,7 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$.multimediaSupport.helper._setAPIActive(this.html5elem, 'nativ');
+				$m.helper._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -797,25 +802,46 @@
 		}
 	});
 	
-	var fixProgressEvent = (function(){
-		var unboundNeedless;
-		
-		return function(api){
-			// firefox and old webkits (safari 4/chrome 3) are using an extended event, but safari uses load instead of progress
-			// newer webkits are compilant to the current w3c specification
-			// opera 10.5 hasn´t implemented the timerange-object yet <- no support
-			var calculateProgress = function(e){
-				
-				
-				var evt = {type: 'progresschange'}, 
-					dur
+	// firefox and old webkits (safari 4/chrome 4) are using an extended event, but safari uses load instead of progress
+	// newer webkits are compilant to the current w3c specification (progress is a simple event + buffered is a timerange-object)
+	// opera 10.5 hasn´t implemented the timerange-object yet <- no support
+	var fixProgressEvent = function(api){
+		var unboundNeedless,
+		 	getConcerningRange 			= function(){
+				var time 	= api.html5elem.currentTime,
+					buffer 	= api.html5elem.buffered,
+					bufLen 	= buffer.length,
+					ret 	= {}
 				;
-				//old implementation
-				if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
+				
+				for(var i = 0; i < bufLen; i++){
+					ret.start = buffer.start(i);
+					ret.end = buffer.end(i);
+					if(ret.start <= time && ret.end >= time){
+						break;
+					}
+				}
+				return ret;
+			},
+			
+			calculateProgress 	= function(e){
+				var evt = {type: 'progresschange'}, 
+					dur, bufRange
+				;
+				//current implementation -> chrome 5
+				if(this.buffered && this.buffered.length){
+					dur = this.duration;
+					if(dur){
+						bufRange = getConcerningRange();
+						evt.relStart = bufRange.start / dur * 100;
+						evt.relLoaded = bufRange.end / dur * 100;
+					}
+					api._trigger(evt);
+				//ff implementation implementation
+				} else if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
 					if(e.originalEvent.lengthComputable && e.originalEvent.total){
-						$.extend(evt, {
-							relLoaded: e.originalEvent.loaded / e.originalEvent.total * 100
-						});
+						evt.relStart = 0;
+						evt.relLoaded = e.originalEvent.loaded / e.originalEvent.total * 100;
 					}
 					//remove event
 					if(!unboundNeedless){
@@ -823,29 +849,24 @@
 						unboundNeedless = true;
 					}
 					api._trigger(evt);
-				
-				//current implementation
-				//currently handles the simple buffer state, other aren´t supported by current browsers anyway
-				//ToDo add real timerange buffer information
-				} else if(e.type === 'progress' && this.buffered && this.buffered.length){
-					dur = this.duration;
-					if(dur){
-						evt.relLoaded = this.buffered.end(0) / dur * 100;
-					}
-					api._trigger(evt);
 				}
 				
-			};
-			$(api.html5elem).bind('progress load', calculateProgress);
-		};
-	})();
+			}
+		;
+		$(api.html5elem).bind('progress load', calculateProgress);
+	};
 	
 	//add API for native MM-Support
 	var nativ = {
 		isTechAvailable: $.support.mediaElements,
 		_init: function(){
-			var that 		= this,
-				curMuted 	= this.apiElem.muted
+			var that 				= this,
+				curMuted 			= this.apiElem.muted,
+				hasInitialError 	= false,
+				catchInitialError 	= function(){
+					hasInitialError = true;
+					$(that.html5elem).unbind('.initialerror');
+				}
 			;
 			
 			//addEvents
@@ -872,15 +893,32 @@
 						}
 						that._trigger(e);
 					},
-					loadedmetadata: function(e){
+					loadedmetadata: function(){
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
 						});
 					}
 				})
+				.one('mediaerror.initialerror', catchInitialError)
 			;
-			that._trigger('mmAPIReady');
+			//workaround
+			if(this.html5elem.readyState > 0){
+				that._trigger('mmAPIReady');
+				that._trigger({
+					type: 'loadedmeta',
+					duration: this.html5elem.duration
+				});
+			} else {
+				setTimeout(function(){
+					$(that.html5elem).unbind('.initialerror');
+					if(hasInitialError || that.html5elem.error){
+						that.isAPIReady = true;
+					} else {
+						that._trigger('mmAPIReady');
+					}
+				}, 0);
+			}
 		},
 		play: function(src){
 			this.html5elem.play();
@@ -928,7 +966,7 @@
 	
 	
 	
-	$.multimediaSupport.add('nativ', 'video', $.extend({
+	$m.add('nativ', 'video', $.extend({
 		_videoFullscreen: $.support.videoFullscreen,
 		enterFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
@@ -945,7 +983,7 @@
 	}, nativ));
 	
 	
-	$.multimediaSupport.add('nativ', 'audio', nativ);
+	$m.add('nativ', 'audio', nativ);
 	
 	
 	//public-methods
@@ -955,29 +993,46 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	var attrFns = ['muted', 'getCurrentSrc', 'supportsFullScreen', 'enterFullscreen', 'exitFullscreen', 'getFormattedDuration', 'getFormattedTime', 'currentTime', 'isPlaying', 'getDuration', 'volume', 'relCurrentTime'];
-	
-	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
-		if ( name.indexOf('_') !== 0 && fn && $.isFunction(fn) ) {
-			$.multimediaSupport.attrFns[name] = true;
+	$m.registerAPI = function(names){
+		if(typeof names === 'string'){
+			names = [names];
 		}
+		$.each(names, function(i, name){
+			var fn = $m.apis.video.nativ[name];
+			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
+				$m.attrFns[name] = true;
+				if($.fn[name]){return;}
+				$.fn[name] =  function(){
+					var args = arguments,
+						ret
+					;
+					this.each(function(){
+						var api = $(this).getMMAPI();
+						if(api && api.isAPIReady){
+							ret = api[name].apply(api, args);
+						}
+					});
+					return (ret === undefined) ? this : ret; 
+				};
+			}
+		});
+	};
+	
+	var fnNames = [];
+	$.each($m.apis.video.nativ, function(name, fn){
+		fnNames.push(name);
 	});
 	
-	$.each($.multimediaSupport.apis.video.nativ, function(name, fn){
-		if( name.indexOf('_') !== 0 && fn && $.isFunction(fn) && !$.fn[name] ){
-			$.fn[name] =  function(){
-				var args = arguments, ret;
-				this.each(function(){
-					var api = $(this).getMMAPI();
-					if(api){
-						ret = api[name].apply(api, args);
-					}
-				});
-				return (ret === undefined) ? this : ret; 
-			};
-		}
-	});
-	
+	$m.registerAPI(fnNames);
+	//plugin mechanism
+	$m.fn._extend = function(exts){
+		var names = [];
+		$.each(exts, function(name, fn){
+			$m.fn[name] = fn;
+			names.push(name);
+		});
+		$m.registerAPI(names);
+	};
 })(jQuery);/**!
  * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
@@ -1119,9 +1174,7 @@
 				control.html('--:--');
 				mm
 					.bind('timechange', function(e, evt){
-						setTimeout(function(){
-							control.html(api.apis[api.name]._format(evt.time));
-						}, 0);
+						control.html(api.apis[api.name]._format(evt.time));
 					})
 					.bind('mediareset', function(){
 						control.html('--:--');
@@ -1173,7 +1226,7 @@
 		controls[name] = function(control, mm, api, o){
 			var iconElem 	= $('.ui-icon', control),
 				textElem 	= $('.button-text', control),
-				stateNames 	= textElem.text().split(split),
+				stateNames,
 				that 		= this
 			;
 			
@@ -1181,14 +1234,15 @@
 				control.addClass('ui-state-default ui-corner-all');
 			}
 			
-			if(!iconElem[0]){
+			if(!iconElem[0] && !textElem[0] && !$('*', control)[0]){
 				iconElem = control;
-			}
-			if(!textElem[0]){
 				textElem = control;
 			}
-			if(stateNames.length < 2){
-				stateNames = [stateNames[0], stateNames[1]];
+			
+			stateNames = textElem.text().split(split);
+			
+			if(stateNames.length !== 2){
+				textElem = $([]);
 			}
 			
 			function changeState(e, ui){
@@ -1389,10 +1443,7 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport,
 		jwMM 	= {
-			isTechAvailable: function(){
-				if($.support.flash9 !== undefined){
-					return $.support.flash9;
-				}
+			isTechAvailable: (function(){
 				$.support.flash9 = false;
 				var swf = m.getPluginVersion('Shockwave Flash');
 				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
@@ -1410,7 +1461,7 @@
 					} catch(e){}
 				}
 				return $.support.flash9;
-			},
+			})(),
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
@@ -1582,8 +1633,8 @@
 					if(!api){return;}
 					var evt = {
 						type: 'progresschange',
-						lengthComputable: !!(isFinite(obj.percentage)),
-						relLoaded: obj.percentage
+						relLoaded: obj.percentage,
+						relStart: 0
 					};
 					api._trigger(evt);
 				},
@@ -1627,8 +1678,11 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_mmload: function(src, poster, extras){
-			this.apiElem.sendEvent('LOAD', src);
+		_mmload: function(src, poster){
+			this.apiElem.sendEvent('LOAD', {
+				file: src,
+				image: poster
+			});
 			if (!$.attr(this.html5elem, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
 			}
@@ -1650,6 +1704,7 @@
 			}
 			
 			this.apiElem.sendEvent('SEEK', ''+t);
+			this._trigger({type: 'timechange', time: t});
 			if(!isPlaying){
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

@@ -191,7 +191,7 @@
 		controls[name] = function(control, mm, api, o){
 			var iconElem 	= $('.ui-icon', control),
 				textElem 	= $('.button-text', control),
-				stateNames 	= textElem.text().split(split),
+				stateNames,
 				that 		= this
 			;
 			
@@ -199,14 +199,15 @@
 				control.addClass('ui-state-default ui-corner-all');
 			}
 			
-			if(!iconElem[0]){
+			if(!iconElem[0] && !textElem[0] && !$('*', control)[0]){
 				iconElem = control;
-			}
-			if(!textElem[0]){
 				textElem = control;
 			}
-			if(stateNames.length < 2){
-				stateNames = [stateNames[0], stateNames[1]];
+			
+			stateNames = textElem.text().split(split);
+			
+			if(stateNames.length !== 2){
+				textElem = $([]);
 			}
 			
 			function changeState(e, ui){

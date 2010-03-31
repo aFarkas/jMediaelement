@@ -25,8 +25,7 @@
 		booleanNames 	= {
 					loop: true,
 					autoplay: true,
-					controls: true,
-					autobuffer: true
+					controls: true
 				},
 		mixedNames 		= {
 			srces: true,
@@ -94,7 +93,7 @@
 			} 
 			if(name === 'getConfig'){
 				ret = {};
-				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
+				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
 					ret[name] = $.attr(elem, name);
 				});
 				return ret;

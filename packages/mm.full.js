@@ -59,7 +59,7 @@
 				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
 			}
 			if(srcNames[name]){
-				return $.support.video && elem[name] || m.helper.makeAbsURI(elem.getAttribute(name));
+				return $.support.video && elem[name] || m.makeAbsURI(elem.getAttribute(name));
 			}
 			if(name === 'srces'){
 				ret = $.attr(elem, 'src');
@@ -260,7 +260,7 @@
 		attrFns: {},
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
-				this.apis[elemName][name] = m.helper.beget(this.fn);
+				this.apis[elemName][name] = m.beget(this.fn);
 				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
 					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
 				}
@@ -274,7 +274,7 @@
 				if(elem && elem.canPlayType){
 					return elem.canPlayType(type);
 				}
-				var parts 	= m.helper.extractContainerCodecsFormType(type),
+				var parts 	= m.extractContainerCodecsFormType(type),
 					that 	= this,
 					ret		= 'probably'
 				;
@@ -334,85 +334,82 @@
 			audio: {},
 			video: {}
 		},
-		
-		helper: {
-			extractContainerCodecsFormType: function(type){
-				var types = type.split(/\s*;\s*/g);
-				if(types[1] && types[1].indexOf('codecs') !== -1){
-					types[1] = types[1].replace(/["|']$/, '').replace(/^\s*codecs=('|")/, '').split(/\s*,\s*/g);
-				}
-				return types;
-			},
-			makeAbsURI: (function(){
-				return function(src){
-					if(src && typeof src === 'string'){
-						src = $('<a href="'+ src +'"></a>')[0].href;
-					}
-					return src;
-				};
-			})(),
-			// simple, but powerfull
-			beget: function(sup){
-				var F = function(){};
-				F.prototype = sup;
-				return new F();
-			},
-			_create: function(elemName, supType, html5elem, opts){
-				var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
-				if(!data.apis[supType]){
-					data.apis[supType] = m.helper.beget( m.apis[elemName][supType]);
-					data.apis[supType].html5elem = html5elem;
-					data.apis[supType].nodeName = elemName;
-					data.apis[supType].name = supType;
-					data.apis[supType].data = {};
-					data.apis[supType].embedOpts = opts;
-				}
-				return data;
-			},
-			_setAPIActive: function(html5elem, supType){
-				var data 		= $.data(html5elem, 'mediaElemSupport'),
-					oldActive 	= data.name
-				;
-				if(oldActive === supType){return true;}
-				
-				var hideElem = data.apis[oldActive].apiElem,
-					showElem = data.apis[supType] && data.apis[supType].apiElem,
-					apiReady = false
-				;
-				
-				if(showElem && showElem.nodeName){
-					if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
-						data.apis[supType].visualElem.css({
-							width: data.apis[oldActive].visualElem.width(),
-							height: data.apis[oldActive].visualElem.height(),
-							visibility: '',
-							display: ''
-						});
-					}
-					data.apis[supType]._setActive(oldActive);
-					apiReady = true;
-					data.apis[supType]._trigger({type: 'apiActivated', api: supType});
-				}
-				
-				if(hideElem && hideElem.nodeName){
-					if(oldActive === 'nativ'){
-						hideElem.style.display = 'none';
-					} else {
-						data.apis[oldActive].visualElem.css({
-							height: 0,
-							width: 0,
-							overflow: 'hidden',
-							visibility: 'hidden'
-						});
-					}
-					data.apis[oldActive]._setInactive(supType);
-					data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
-				}
-				
-				data.name = supType;
-				
-				return apiReady;
+		extractContainerCodecsFormType: function(type){
+			var types = type.split(/\s*;\s*/g);
+			if(types[1] && types[1].indexOf('codecs') !== -1){
+				types[1] = types[1].replace(/["|']$/, '').replace(/^\s*codecs=('|")/, '').split(/\s*,\s*/g);
 			}
+			return types;
+		},
+		makeAbsURI: (function(){
+			return function(src){
+				if(src && typeof src === 'string'){
+					src = $('<a href="'+ src +'"></a>')[0].href;
+				}
+				return src;
+			};
+		})(),
+		// simple, but powerfull
+		beget: function(sup){
+			var F = function(){};
+			F.prototype = sup;
+			return new F();
+		},
+		_create: function(elemName, supType, html5elem, opts){
+			var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
+			if(!data.apis[supType]){
+				data.apis[supType] = m.beget( m.apis[elemName][supType]);
+				data.apis[supType].html5elem = html5elem;
+				data.apis[supType].nodeName = elemName;
+				data.apis[supType].name = supType;
+				data.apis[supType].data = {};
+				data.apis[supType].embedOpts = opts;
+			}
+			return data;
+		},
+		_setAPIActive: function(html5elem, supType){
+			var data 		= $.data(html5elem, 'mediaElemSupport'),
+				oldActive 	= data.name
+			;
+			if(oldActive === supType){return true;}
+			
+			var hideElem = data.apis[oldActive].apiElem,
+				showElem = data.apis[supType] && data.apis[supType].apiElem,
+				apiReady = false
+			;
+			
+			if(showElem && showElem.nodeName){
+				if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
+					data.apis[supType].visualElem.css({
+						width: data.apis[oldActive].visualElem.width(),
+						height: data.apis[oldActive].visualElem.height(),
+						visibility: '',
+						display: ''
+					});
+				}
+				data.apis[supType]._setActive(oldActive);
+				apiReady = true;
+				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
+			}
+			
+			if(hideElem && hideElem.nodeName){
+				if(oldActive === 'nativ'){
+					hideElem.style.display = 'none';
+				} else {
+					data.apis[oldActive].visualElem.css({
+						height: 0,
+						width: 0,
+						overflow: 'hidden',
+						visibility: 'hidden'
+					});
+				}
+				data.apis[oldActive]._setInactive(supType);
+				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
+			}
+			
+			data.name = supType;
+			
+			return apiReady;
 		},
 		getSuitedPlayers: function(elem, apiOrder){
 			var apis = $.data(elem, 'mediaElemSupport');
@@ -578,7 +575,7 @@
 		}
 		if(supported === 'noSource'){return;}
 		//returns false if player isn´t embeded
-		if(!m.helper._setAPIActive(elem, supported.name)){
+		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
 		}
 	}
@@ -595,14 +592,14 @@
 				$.attr(this, 'controls', false);
 			}
 			
-			var apiData = m.helper._create(elemName, 'nativ', this, opts);
+			var apiData = m._create(elemName, 'nativ', this, opts);
 			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			apiData.apis.nativ.visualElem = $(this);
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
-					m.helper._create(elemName, name, elem, opts);
+					m._create(elemName, name, elem, opts);
 				}
 			});
 			if(opts.debug || !$.support.mediaElements || this.error){
@@ -673,6 +670,21 @@
 	}
 	
 	video = null;
+	
+	$.extend($m, {
+		formatTime: function(sec){
+			return $.map(
+				[
+					parseInt(sec/60, 10),
+					parseInt(sec%60, 10)
+				], 
+				function(num){
+					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
+				})
+				.join(':')
+			;
+		}
+	});
 	
 	//extend fn
 	$.extend($m.fn, {
@@ -750,18 +762,7 @@
 				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
-		_format: function(sec){
-			return $.map(
-				[
-					parseInt(sec/60, 10),
-					parseInt(sec%60, 10)
-				], 
-				function(num){
-					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
-				})
-				.join(':')
-			;
-		},
+		_format: $m.formatTime,
 		getFormattedDuration: function(){
 			return this._format(this.getDuration());
 		},
@@ -792,7 +793,7 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$m.helper._setAPIActive(this.html5elem, 'nativ');
+				$m._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -1280,12 +1281,12 @@
 		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
-		} else {
+		} 
+		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
-			ret.controls = $(o.controlSel, jElm);
+			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
 			ret.api.controlWrapper = jElm;
 		}
-		ret.api.controls = (ret.api.controls) ? ret.api.controls.add(ret.controls) : ret.controls;
 		return ret;
 	}
 	
@@ -1378,10 +1379,12 @@
 		o.controlSel = o.controlSel.join(', ');
 		function registerControl(){
 			var elems = getElems(this, o);
-			
+			elems.api.controls = elems.api.controls || [];
 			if(!elems.api){return;}
 			elems.controls.each(function(){
 				var jElm = $(this);
+				if($.inArray(this, elems.api.controls) !== -1){return;}
+				elems.api.controls.push(this);
 				$.each(controls, function(name, ui){
 					if( jElm.hasClass(o.classPrefix+name) ){
 						ui(jElm, elems.mm, elems.api, o);

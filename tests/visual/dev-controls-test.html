@@ -16,8 +16,8 @@
         </script>
         <script src="../../src/mm.base-api.js">
         </script>
-        <script src="../../src/mm.base-controls.js">
-        </script>
+        <script src="../../src/mm.base-controls.js"></script>
+		<script src="../../plugins/dev/pseudofullscreen.js"></script>
 		<!--
 		<script src="../../src/mm.qtp-embed.js">
         </script>
@@ -102,7 +102,13 @@
 				 } else {
 				 	alert('not supported, try right click/doubble-click on video');
 				 }
-             });             
+             });
+			 $('a.enter-fw ').click(function(e){
+	             e.preventDefault();
+	             var media = $(this).closest('div.test-wrapper').find('video, audio');
+				 media.enterFullWindow(true, {duration: 800});
+             }); 
+			            
         });
         </script>
         <!-- lazy load themeswitcher -->
@@ -137,6 +143,7 @@
                 <audio controls="controls">
                 	<source src="../../demos/media/swazzrokk_v1.ogg"></source>
 					<source src="../../demos/media/swazzrokk_v1.mp3"></source>
+					<p>Fallback-Content</p>
                 </audio>
                 <div class="media-controls ui-widget ui-widget-header ui-corner-all">
                     <button class="play-pause">
@@ -160,15 +167,16 @@
                 </div>
                 <div class="current-time">
                 </div>
-				<a class="play-pause">play</a>
             </div>
         </div>
-
+		
+		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
                 <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-                    <source src="../../demos/media/bbb_trailer_400p.ogg">
+                    <source src="BigBuckBunny.ogv">
                     </source>
+					<p>Fallback-Content</p>
                     <a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a>
                     <source src="../../demos/media/bbb_trailer_mobile.m4v">
                     </source>
@@ -201,10 +209,12 @@
             <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video">Load-ogg</a>
             <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
 			<a href="#" class="enter-fs">enter fullscreen</a>
+			<a href="#" class="enter-fw">enter fullwindow</a>
             <p>
                 (c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a>
             </p>
         </div>
+		
         <!--
         <button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
         -->

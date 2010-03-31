@@ -27,6 +27,21 @@
 	
 	video = null;
 	
+	$.extend($m, {
+		formatTime: function(sec){
+			return $.map(
+				[
+					parseInt(sec/60, 10),
+					parseInt(sec%60, 10)
+				], 
+				function(num){
+					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
+				})
+				.join(':')
+			;
+		}
+	});
+	
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
@@ -103,18 +118,7 @@
 				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
-		_format: function(sec){
-			return $.map(
-				[
-					parseInt(sec/60, 10),
-					parseInt(sec%60, 10)
-				], 
-				function(num){
-					return (isNaN(num)) ? '--' : (num < 10) ? ('0'+num) : num;
-				})
-				.join(':')
-			;
-		},
+		_format: $m.formatTime,
 		getFormattedDuration: function(){
 			return this._format(this.getDuration());
 		},
@@ -145,7 +149,7 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$m.helper._setAPIActive(this.html5elem, 'nativ');
+				$m._setAPIActive(this.html5elem, 'nativ');
 				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;

@@ -245,12 +245,12 @@
 		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
-		} else {
+		} 
+		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
-			ret.controls = $(o.controlSel, jElm);
-			ret.api.controlWrapper = jElm;
+			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
+			ret.api.controlWrapper = (ret.api.controlWrapper) ? ret.api.controlWrapper.add(jElm) : jElm;
 		}
-		ret.api.controls = (ret.api.controls) ? ret.api.controls.add(ret.controls) : ret.controls;
 		return ret;
 	}
 	
@@ -343,10 +343,12 @@
 		o.controlSel = o.controlSel.join(', ');
 		function registerControl(){
 			var elems = getElems(this, o);
-			
+			elems.api.controls = elems.api.controls || [];
 			if(!elems.api){return;}
 			elems.controls.each(function(){
 				var jElm = $(this);
+				if($.inArray(this, elems.api.controls) !== -1){return;}
+				elems.api.controls.push(this);
 				$.each(controls, function(name, ui){
 					if( jElm.hasClass(o.classPrefix+name) ){
 						ui(jElm, elems.mm, elems.api, o);

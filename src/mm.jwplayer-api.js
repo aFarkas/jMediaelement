@@ -183,10 +183,12 @@
 		_mmload: function(src, poster){
 			this.apiElem.sendEvent('LOAD', {
 				file: src,
-				image: poster
+				image: poster || false
 			});
 			if (!$.attr(this.html5elem, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
+			} else {
+				this.apiElem.sendEvent('PLAY', 'true');
 			}
 		},
 		muted: function(state){

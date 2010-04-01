@@ -63,7 +63,7 @@
 					this.loadedmeta = false;
 					break;
 			}
-			
+			if(!this.isApiActive){return;}
 			if(e.type === 'progresschange' && 'relStart' in e){
 				if(this._concerningBufferStart !== e.relStart){
 					this._concerningBufferStart = e.relStart;
@@ -365,7 +365,7 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isAPIReady){
+						if(api && api.isApiActive){
 							ret = api[name].apply(api, args);
 						}
 					});

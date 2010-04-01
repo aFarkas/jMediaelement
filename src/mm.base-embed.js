@@ -103,11 +103,11 @@
 				value = !!(value);
 				elem[name] = value;
 				if(value){
+					elem[name] = value;
 					elem.setAttribute(name, name);
-					elem[name] = value;
 				} else {
-					elem.removeAttribute(name);
 					elem[name] = value;
+					elem.removeAttribute(name);
 				}
 			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
@@ -393,7 +393,7 @@
 				apiReady = true;
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 			}
-			
+			data.apis[supType].isApiActive = true;
 			if(hideElem && hideElem.nodeName){
 				if(oldActive === 'nativ'){
 					hideElem.style.display = 'none';
@@ -406,6 +406,7 @@
 					});
 				}
 				data.apis[oldActive]._setInactive(supType);
+				data.apis[oldActive].isApiActive = false;
 				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
 			}
 			
@@ -595,10 +596,10 @@
 			}
 			
 			var apiData = m._create(elemName, 'nativ', this, opts);
-			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			apiData.apis.nativ.visualElem = $(this);
+			apiData.apis.nativ.isApiActive = true;
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m._create(elemName, name, elem, opts);
@@ -611,10 +612,11 @@
 				});
 			}
 			
-			if(opts.debug || !$.support.mediaElements || this.error){
+			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
 			} else {
-				apiData.apis[apiData.name]._init();
+				//ToDo: always init nativ api
+				apiData.apis.nativ._init();
 			}
 			$(this)
 				.bind('mediaerror', function(e){
@@ -633,7 +635,7 @@
 	};
 	
 	
-	if($.cleanData){
+	if($.cleanData && window.ActiveXObject){
 		var _cleanData = $.cleanData;
 		$.cleanData = function(elems){
 			_cleanData(elems);

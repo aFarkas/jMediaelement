@@ -143,6 +143,8 @@
 				STATE: function(obj){
 					var state = privJwEvents.Model.STATE(obj);
 					if(state === 'playing'){
+						var api = getAPI(obj.id);
+						if(!api){return;}
 						api._trigger('play');
 					}
 				}

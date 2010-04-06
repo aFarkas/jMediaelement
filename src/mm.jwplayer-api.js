@@ -43,7 +43,7 @@
 				;
 				if(!api){return;}
 				
-				//workaround: meta isn´t triggered on audio
+				//workaround: meta isn´t triggered on audio | ToDo: Is this needed with jwplayer 5.1.x?
 				if(!api.loadedmeta){
 					api._trigger({
 						type: 'loadedmeta',
@@ -113,21 +113,19 @@
 					if(!api){return;}
 					var evt = {
 						type: 'progresschange',
-						lengthComputable: !!(obj.total),
-						loaded: obj.loaded
+						lengthComputable: !!(obj.total)
 					};
 					if(obj.total){
 						$.extend(evt, {
-							total: obj.total,
 							relLoaded: obj.total / obj.loaded * 100
 						});
+						api._buffered = evt.relLoaded;
 					}
 					api._trigger(evt);
 				}
 			}
 			
 		}),
-		// version five is a little bit buggy, the following methods are al workarounds
 		five: $.extend(true, {}, privJwEvents, {
 			Model: {
 				BUFFER: function(obj){
@@ -138,6 +136,7 @@
 						relLoaded: obj.percentage,
 						relStart: 0
 					};
+					api._buffered = obj.percentage;
 					api._trigger(evt);
 				},
 				STATE: function(obj){
@@ -170,6 +169,9 @@
 	};
 	
 	var jwAPI = {
+		_init: function(){
+			this._buffered = this._buffered || 0;
+		},
 		play: function(){
 			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
@@ -200,20 +202,48 @@
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
+		_isSeekable: function(t){
+			if(this._buffered === 100){
+				return true;
+			}
+			var dur = this.getDuration();
+			if(!dur){
+				return false;
+			}
+			return (t / dur * 100 <= this._buffered);
+		},
 		currentTime: function(t){
 			if(!isFinite(t)){
 				return this.currentPos || 0;
 			}
-			var isPlaying = (this.apiElem.getConfig().state === 'PLAYING');
-			if(!isPlaying){
+			var api 			= this,
+				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
+				doSeek 			= function(){
+					$(api.element).unbind('.jwseekrequest');
+					api.apiElem.sendEvent('SEEK', t);
+					api.currentPos = t;
+					api._trigger({type: 'timechange', time: t});
+				}
+			;
+			if(!wantsPlaying){
 				this.apiElem.sendEvent('PLAY', 'true');
-			}
-			
-			this.apiElem.sendEvent('SEEK', ''+t);
-			this._trigger({type: 'timechange', time: t});
-			if(!isPlaying){
 				this.apiElem.sendEvent('PLAY', 'false');
 			}
+			if(this._isSeekable(t)){
+				doSeek();
+			} else {
+				$(this.element)
+					.bind('progresschange.jwseekrequest', function(){
+						if(api._isSeekable(t)){
+							doSeek();
+						}
+					})
+					.bind('mediareset.jwseekrequest', function(){
+						$(api.element).unbind('.jwseekrequest');
+					})
+				;
+			}
+			
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;

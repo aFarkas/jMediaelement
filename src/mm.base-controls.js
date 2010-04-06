@@ -28,7 +28,7 @@
 					}
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm
 						.bind('loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
@@ -69,7 +69,7 @@
 					}
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm.bind('volumelevelchange', changeVolumeUI);
 					control
 						.bind('slidestart', function(e, ui){
@@ -106,7 +106,7 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
 						.bind('mediareset', resetProgress)
@@ -127,7 +127,7 @@
 						control.html('--:--');
 					})
 				;
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					control.html(api.apis[api.name].getFormattedDuration());
 				});
 				
@@ -145,7 +145,7 @@
 						control.html('--:--');
 					})
 				;
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					control.html(api.apis[api.name].getFormattedTime());
 				});
 			},
@@ -171,7 +171,7 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					api.apis[api.name].onMediaReady(function(){
+					api.apis[api.name].onAPIReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
 					}, 'one');
@@ -222,7 +222,7 @@
 				}
 			}
 			
-			api.apis[api.name].onMediaReady(function(){
+			api.apis[api.name].onAPIReady(function(){
 				mm.bind(opts.evts, changeState);
 				changeState();
 			});

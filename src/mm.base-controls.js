@@ -274,7 +274,7 @@
 				apiActivated: function(e, d){
 					wrapper.addClass(o.classPrefix+d.api);
 				},
-				apiInActivated: function(e, d){
+				apiDeActivated: function(e, d){
 					wrapper.removeClass(o.classPrefix+d.api);
 				}
 			})

@@ -7,6 +7,12 @@
 (function($){
 	var video 		= document.createElement('video'), 
 		$m 			= $.multimediaSupport,
+		noAPIEvents = {
+			apiActivated: true,
+			apiDeActivated: true,
+			mediareset: true,
+			totalerror: true
+		},
 		fsMethods	= {}
 	;
 	
@@ -45,40 +51,49 @@
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
-			var type = e.type || ({type: e}).type,
+			var type = e.type || e,
 				evt  = e
 			;
 			
 			switch(type){
 				case 'mmAPIReady':
-					this.isAPIReady = true;
-					e.api = this.name;
+					if(this.isAPIReady){
+						return;
+					} else {
+						this.isAPIReady = true;
+					}
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = evt;
 					break;
-				case 'emptied':
 				case 'mediareset':
-				case 'error':
 					this.loadedmeta = false;
 					break;
 			}
-			if(!this.isApiActive){return;}
-			if(e.type === 'progresschange' && 'relStart' in e){
+			
+			if(!this.isAPIActive){return;}
+			if(!this.isAPIReady && !noAPIEvents[type]){
+				this._trigger('mmAPIReady');
+			}
+			if(e.type === 'progresschange'){
+				e.relStart = e.relStart || 0;
 				if(this._concerningBufferStart !== e.relStart){
 					this._concerningBufferStart = e.relStart;
 					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
 				}
 			}
 			
-			e.target = this.html5elem;
+			e.target = this.element;
 			e = $.Event(e);
 			e.preventDefault();
+			
+			e.mediaapi = this.name;
 			
 			if(e.type === 'timechange' || e.type === 'progresschange'){
 				e.stopPropagation();
 			}
-			$.event.trigger( e, evt, this.html5elem );
+			
+			$.event.trigger( e, evt, this.element );
 		},
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
@@ -105,17 +120,17 @@
 		onMediaReady: function(fn){
 			var e = {type: 'mmAPIReady'};
 			if(this.isAPIReady){
-				fn.call(this.html5elem, e, e);
+				fn.call(this.element, e, e);
 			} else {
-				$(this.html5elem).one('mmAPIReady.jmediaelement', fn);
+				$(this.element).one('mmAPIReady.jmediaelement', fn);
 			}
 		},
 		onLoadedmeta: function(fn){
 			var e = this.loadedmeta;
 			if(e){
-				fn.call(this.html5elem, e, e);
+				fn.call(this.element, e, e);
 			} else {
-				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
+				$(this.element).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
 		_format: $m.formatTime,
@@ -127,19 +142,19 @@
 		},
 		loadSrc: function(srces, poster){
 			if(srces){
-				$.attr(this.html5elem, 'srces', srces);
+				$.attr(this.element, 'srces', srces);
 				srces = $.isArray(srces) ? srces : [srces];
 			} else {
-				srces = $.attr(this.html5elem, 'srces');
+				srces = $.attr(this.element, 'srces');
 			}
 			if(poster !== undefined){
 				if(poster){
-					$.attr(this.html5elem, 'poster', poster);
+					$.attr(this.element, 'poster', poster);
 				} else {
-					$(this.html5elem).removeAttr('poster');
+					$(this.element).removeAttr('poster');
 				}
 			} else {
-				poster = $.attr(this.html5elem, 'poster');
+				poster = $.attr(this.element, 'poster');
 			}
 			this._isResetting = true;
 			this._trigger('mediareset');
@@ -149,8 +164,8 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$m._setAPIActive(this.html5elem, 'nativ');
-				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
+				$m._setAPIActive(this.element, 'nativ');
+				$(this.element).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
 		},
@@ -165,8 +180,8 @@
 	var fixProgressEvent = function(api){
 		var unboundNeedless,
 		 	getConcerningRange 			= function(){
-				var time 	= api.html5elem.currentTime,
-					buffer 	= api.html5elem.buffered,
+				var time 	= api.element.currentTime,
+					buffer 	= api.element.buffered,
 					bufLen 	= buffer.length,
 					ret 	= {}
 				;
@@ -210,7 +225,7 @@
 				
 			}
 		;
-		$(api.html5elem).bind('progress load', calculateProgress);
+		$(api.element).bind('progress load', calculateProgress);
 	};
 	
 	//add API for native MM-Support
@@ -222,13 +237,12 @@
 				hasInitialError 	= false,
 				catchInitialError 	= function(){
 					hasInitialError = true;
-					$(that.html5elem).unbind('.initialerror');
 				}
 			;
 			
 			//addEvents
 			fixProgressEvent(this);
-			$(this.html5elem)
+			$(this.element)
 				.bind({
 					volumechange: function(){
 						if(curMuted !== that.apiElem.muted){
@@ -257,67 +271,67 @@
 						});
 					}
 				})
-				.one('mediaerror.initialerror', catchInitialError)
+				.one('mediaerror', catchInitialError)
 			;
 			//workaround
-			if(this.html5elem.readyState > 0){
-				that._trigger('mmAPIReady');
-				that._trigger({
+			if(this.element.readyState > 0 && !this.element.error){
+				$(that.element).unbind('mediaerror', catchInitialError);
+				this._trigger({
 					type: 'loadedmeta',
-					duration: this.html5elem.duration
+					duration: this.element.duration
 				});
 			} else {
 				setTimeout(function(){
-					$(that.html5elem).unbind('.initialerror');
-					if(hasInitialError || that.html5elem.error){
+					$(that.element).unbind('mediaerror', catchInitialError);
+					if(hasInitialError || that.element.error){
 						that.isAPIReady = true;
 					} else {
 						that._trigger('mmAPIReady');
 					}
-				}, 0);
+				}, 150);
 			}
 		},
 		play: function(src){
-			this.html5elem.play();
+			this.element.play();
 		},
 		pause: function(){
-			this.html5elem.pause();
+			this.element.pause();
 		},
 		muted: function(bool){
 			if(typeof bool === 'boolean'){
-				this.html5elem.muted = bool;
+				this.element.muted = bool;
 			}
-			return this.html5elem.muted;
+			return this.element.muted;
 		},
 		volume: function(vol){
 			if(isFinite(vol)){
-				this.html5elem.volume = vol / 100;
+				this.element.volume = vol / 100;
 			}
-			return this.html5elem.volume * 100;
+			return this.element.volume * 100;
 		},
 		currentTime: function(sec){
 			if(isFinite(sec)){
 				try {
-					this.html5elem.currentTime = sec;
+					this.element.currentTime = sec;
 				} catch(e){}
 			}
-			return this.html5elem.currentTime;
+			return this.element.currentTime;
 		},
 		_mmload: function(extras){
-			if(this.html5elem.load){
-				this.html5elem.load();
+			if(this.element.load){
+				this.element.load();
 			} else {
-				$(this.html5elem).triggerHandler('error');
+				$(this.element).triggerHandler('error');
 			}
 		},
 		_isPlaying: function(){
-			return (!this.html5elem.paused && this.html5elem.readyState > 2 && !this.error && !this.ended);
+			return (!this.element.paused && this.element.readyState > 2 && !this.error && !this.ended);
 		},
 		getDuration: function(){
-			return this.html5elem.duration;
+			return this.element.duration;
 		},
 		getCurrentSrc: function(){
-			return this.html5elem.currentSrc;
+			return this.element.currentSrc;
 		}
 	};
 	
@@ -328,13 +342,13 @@
 		enterFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
-				this.html5elem[fsMethods.enter]();
+				this.element[fsMethods.enter]();
 			} catch(e){}
 		},
 		exitFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
-				this.html5elem[fsMethods.exit]();
+				this.element[fsMethods.exit]();
 			} catch(e){}
 		}
 	}, nativ));
@@ -365,7 +379,7 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isApiActive){
+						if(api && api.isAPIReady){
 							ret = api[name].apply(api, args);
 						}
 					});

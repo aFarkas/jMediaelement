@@ -187,7 +187,7 @@
 				file: src,
 				image: poster || false
 			});
-			if (!$.attr(this.html5elem, 'autoplay')) {
+			if (!$.attr(this.element, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
 			} else {
 				this.apiElem.sendEvent('PLAY', 'true');

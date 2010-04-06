@@ -79,12 +79,12 @@
 				console.log(api.apiElem.duration)
 				api._isMuted = (api.apiElem.getParameter('audio') === 'false');
 				lastTime = api.apiElem.currentTime;
-				if($.attr(api.html5elem, 'autoplay')){
+				if($.attr(api.element, 'autoplay')){
 					playTimer.add(updateCurrentTime);
 				} else {
 					api.apiElem.paused = true;
 				}
-				$(api.html5elem)
+				$(api.element)
 					.bind('play', function(){
 						playTimer.add(updateCurrentTime);
 					})
@@ -140,9 +140,9 @@
 			this._trigger(e);
 		},
 		_mmload: function(src, poster){
-			var autoplay = $.attr(this.html5elem, 'autoplay');
+			var autoplay = $.attr(this.element, 'autoplay');
 			this.apiElem.setParam('autoPlay', ''+autoplay);
-			this.apiElem.setParam('image', $.attr(this.html5elem, 'poster') || '');
+			this.apiElem.setParam('image', $.attr(this.element, 'poster') || '');
 			this.apiElem.setParam("url", uri);
 			this.apiElem.restart();
 		}

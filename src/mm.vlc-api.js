@@ -16,7 +16,7 @@
 					return;
 				}
 				clearInterval(timer);
-				if($.attr(api.html5elem, 'autoplay')){
+				if($.attr(api.element, 'autoplay')){
 					interval.start(api);
 				} else {
 					api.apiElem.playlist.stop();
@@ -158,14 +158,14 @@
 			return ret;
 		},
 		_mmload: function(src){
-			$(this.html5elem).unbind('playing.enterFullscreen');
+			$(this.element).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
 			var item = this.apiElem.playlist.add(src, " ", ":no-video-title-show");
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
-			if(!$.attr(this.html5elem, 'autoplay')){
+			if(!$.attr(this.element, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
@@ -216,7 +216,7 @@
 			enterFullScreen: function(){
 				if(!this._isPlaying()){
 					var that = this;
-					$(that.html5elem).one('playing.enterFullscreen', function(){
+					$(that.element).one('playing.enterFullscreen', function(){
 						that.apiElem.video.fullscreen = true;
 					});
 					this.play();

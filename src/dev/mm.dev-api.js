@@ -15,7 +15,7 @@
 	/*
 	 * this object will be used as a prototype for your plugin
 	 * this.apiElem refers to your embedded element
-	 * this.html5elem reffers to the mediaelement
+	 * this.element reffers to the mediaelement
 	 */ 
 	var yourPlugin = {
 		/*
@@ -72,7 +72,7 @@
 		},
 		/*
 		 * changes the media: retrieves the source of the main media-file and the optional poster-src
-		 * if $.attr(this.html5elem, 'autoplay') is true, the playback has to be start immediatley otherwise it shouldn´t start
+		 * if $.attr(this.element, 'autoplay') is true, the playback has to be start immediatley otherwise it shouldn´t start
 		 */
 		_mmload: function(src, poster){
 			

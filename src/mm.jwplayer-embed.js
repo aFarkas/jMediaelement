@@ -20,30 +20,42 @@
 			}
 		)
 	;
-	
 	var swfAttr = {type: 'application/x-shockwave-flash'},
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
-		m 		= $.multimediaSupport,
-		jwMM 	= {
-			isTechAvailable: (function(){
+		m 		= $.multimediaSupport
+	;
+	(function(){
+		$.support.flash9 = false;
+		var swf 				= m.getPluginVersion('Shockwave Flash'),
+			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
-				var swf = m.getPluginVersion('Shockwave Flash');
-				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-					$.support.flash9 = true;
-				} else if(window.ActiveXObject){
-					try {
-						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
-						if(!swf){return;}
-						swf = m.getPluginVersion('', {
-							description: swf.GetVariable("$version")
-						});
-						if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-							$.support.flash9 = true;
-						}
-					} catch(e){}
-				}
-				return $.support.flash9;
-			})(),
+				try {
+					obj = m.getPluginVersion('', {
+						description: obj.GetVariable("$version")
+					});
+					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+				} catch(e){}
+			}
+		;
+		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
+			//temp result
+			$.support.flash9 = true;
+			$(function(){
+				swf = $('<object />', swfAttr).appendTo('body');
+				supportsMovieStar(swf[0]);
+				swf.remove();
+			});
+		} else if(window.ActiveXObject){
+			try {
+				swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+				supportsMovieStar(swf);
+				swf = null;
+			} catch(e){}
+		}
+	})();
+	
+	var jwMM 	= {
+			isTechAvailable: $.support.flash9,
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),

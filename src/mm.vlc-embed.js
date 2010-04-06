@@ -17,7 +17,6 @@
 	
 	var $m 				= $.multimediaSupport,
 		defaultAttrs 	= {
-			
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
@@ -66,7 +65,7 @@
 			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
 		}
 	;
-			
+	
 	$m.add('vlc', 'video', vlcMM);
 	$m.add('vlc', 'audio', vlcMM);
 })(jQuery);

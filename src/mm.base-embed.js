@@ -155,7 +155,7 @@
 			srces 	= $.attr(this, 'srces')
 		;
 		
-		if(srces.length && !apis.nativ.canPlaySrces(srces)){
+		if( elem.error || (srces.length && !apis.nativ.canPlaySrces(srces)) ){
 			$(elem).triggerHandler('mediaerror');
 			//stop trying to play
 			try {
@@ -183,7 +183,7 @@
 			$(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				.each(bindSource)
-				//some webkit do not support emptied
+				//older webkit do not support emptied
 				.bind('emtptied loadstart', bindSource)
 			;
 		},
@@ -311,7 +311,7 @@
 				return ret;
 			},
 			canPlaySrces: function(srces){
-				srces = srces || $.attr(this.html5elem, 'srces');
+				srces = srces || $.attr(this.element, 'srces');
 				if(!$.isArray(srces)){
 					srces = [srces];
 				}
@@ -357,11 +357,11 @@
 			F.prototype = sup;
 			return new F();
 		},
-		_create: function(elemName, supType, html5elem, opts){
-			var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
+		_create: function(elemName, supType, element, opts){
+			var data = $.data(element, 'mediaElemSupport') || $.data(element, 'mediaElemSupport', {apis: {}, nodeName: elemName});
 			if(!data.apis[supType]){
 				data.apis[supType] = m.beget( m.apis[elemName][supType]);
-				data.apis[supType].html5elem = html5elem;
+				data.apis[supType].element = element;
 				data.apis[supType].nodeName = elemName;
 				data.apis[supType].name = supType;
 				data.apis[supType].data = {};
@@ -369,8 +369,8 @@
 			}
 			return data;
 		},
-		_setAPIActive: function(html5elem, supType){
-			var data 		= $.data(html5elem, 'mediaElemSupport'),
+		_setAPIActive: function(element, supType){
+			var data 		= $.data(element, 'mediaElemSupport'),
 				oldActive 	= data.name
 			;
 			if(oldActive === supType){return true;}
@@ -381,7 +381,7 @@
 			;
 			
 			if(showElem && showElem.nodeName){
-				if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
+				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
 					data.apis[supType].visualElem.css({
 						width: data.apis[oldActive].visualElem.width(),
 						height: data.apis[oldActive].visualElem.height(),
@@ -393,7 +393,7 @@
 				apiReady = true;
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 			}
-			data.apis[supType].isApiActive = true;
+			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){
 				if(oldActive === 'nativ'){
 					hideElem.style.display = 'none';
@@ -406,8 +406,8 @@
 					});
 				}
 				data.apis[oldActive]._setInactive(supType);
-				data.apis[oldActive].isApiActive = false;
-				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
+				data.apis[oldActive].isAPIActive = false;
+				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiDeActivated', api: oldActive});
 			}
 			
 			data.name = supType;
@@ -599,7 +599,7 @@
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			apiData.apis.nativ.visualElem = $(this);
-			apiData.apis.nativ.isApiActive = true;
+			apiData.apis.nativ.isAPIActive = true;
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m._create(elemName, name, elem, opts);
@@ -608,14 +608,14 @@
 			
 			if(opts.showFallback && $.support.mediaElements){
 				$(this).bind('totalerror', function(){
-					$(this).children(':not(source, itext)').insertAfter(this);
+					$(this).hide().children(':not(source, itext)').insertAfter(this);
 				});
 			}
 			
 			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
+				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				//ToDo: always init nativ api
 				apiData.apis.nativ._init();
 			}
 			$(this)

@@ -86,7 +86,7 @@
 			
 			this.data.normalCSS = this.visualElem.offset();
 			
-			var data 	= $.data(this.html5elem, 'mediaElemSupport'),
+			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
 				curDim 	= {
 					width: this.visualElem.width(),
@@ -137,7 +137,7 @@
 				}
 			});
 			this._trigger('fullwindow');
-			$(this.html5elem).triggerHandler('resize');
+			$(this.element).triggerHandler('resize');
 		},
 		exitFullWindow: function(){
 			$('html, body')
@@ -151,7 +151,7 @@
 			;
 			win.unbind('.fullscreen');
 			this._trigger('fullwindow');
-			$(this.html5elem).triggerHandler('resize');
+			$(this.element).triggerHandler('resize');
 		}
 	});
 })(jQuery);

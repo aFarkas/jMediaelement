@@ -48,13 +48,26 @@
 		}
 	});
 	
+	//ToDo add onAPIReady/mmAPIReady
+	$.event.special.loadedmeta = {
+	    add: function( details ) {
+			var api = $(this).getMMAPI();
+			if(api && api.loadedmeta){
+				var evt = $.extend({}, api.loadedmeta);
+				details.handler.call(this, evt, evt);
+			}
+	    }
+	};
+	
+	
+
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
 			var type = e.type || e,
 				evt  = e
 			;
-			
+
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -117,20 +130,12 @@
 		getMMVisual: function(){
 			return this.visualElem;
 		},
-		onMediaReady: function(fn){
+		onAPIReady: function(fn){
 			var e = {type: 'mmAPIReady'};
 			if(this.isAPIReady){
 				fn.call(this.element, e, e);
 			} else {
 				$(this.element).one('mmAPIReady.jmediaelement', fn);
-			}
-		},
-		onLoadedmeta: function(fn){
-			var e = this.loadedmeta;
-			if(e){
-				fn.call(this.element, e, e);
-			} else {
-				$(this.element).bind('loadedmeta.jmediaelement', fn);
 			}
 		},
 		_format: $m.formatTime,

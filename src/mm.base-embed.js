@@ -407,7 +407,7 @@
 				}
 				data.apis[oldActive]._setInactive(supType);
 				data.apis[oldActive].isAPIActive = false;
-				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiDeActivated', api: oldActive});
+				data.apis[supType]._trigger({type: 'apiDeActivated', api: oldActive});
 			}
 			
 			data.name = supType;

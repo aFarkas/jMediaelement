@@ -180,12 +180,15 @@
 	$.event.special.mediaerror = {
 		setup: function(){
 			//ff always triggers an error on video/audio | w3c/webkit/opera triggers error event on source, if available
-			$(this)
+			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
-				.each(bindSource)
 				//older webkit do not support emptied
 				.bind('emtptied loadstart', bindSource)
 			;
+			//bindSource can trigger mediaerror, but event is always binded after setup
+			setTimeout(function(){
+				media.each(bindSource);
+			}, 0);
 		},
 		teardown: function(){
 			$(this)
@@ -631,6 +634,7 @@
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
 		removeControls: false,
+		showFallback: false,
 		apiOrder: []
 	};
 	

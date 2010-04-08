@@ -185,7 +185,7 @@
 				//older webkit do not support emptied
 				.bind('emtptied loadstart', bindSource)
 			;
-			//bindSource can trigger mediaerror, but event is always binded after setup
+			//bindSource can trigger mediaerror, but event is always bound after setup
 			setTimeout(function(){
 				media.each(bindSource);
 			}, 0);

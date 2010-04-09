@@ -26,7 +26,7 @@
 		});
 	};
 	
-	var videoCSS = {
+	var videoBaseCSS = {
 			position: 'fixed',
 			zIndex: 9998
 		},
@@ -35,8 +35,7 @@
 			left: 0,
 			right: 0,
 			position: 'fixed',
-			zIndex: 9999,
-			opacity: 0
+			zIndex: 9999
 		},
 		bodyCSS = {
 			overflow: 'hidden'
@@ -62,29 +61,57 @@
 			}
 			return ret;
 		},
-		getControlBar 	= function(data){
-			var bar;
-			if(data.controls){
-				$.each(data.controls, function(i, elem){
-					if((elem.className || '').indexOf('media-controls') !== -1){
-						bar = $(elem);
-						return false;
-					}
-				});
-			}
-			return bar || $([]);
-		}
+		supportsFullWindow
 	;
 	
 	var videoOverlay = (function(){
-		
+		var overlay, isVisible;
+		var pub = {
+			init: function(){
+				overlay = $('<div class="fullwindow-overlay" />')
+					.css({
+						position: 'fixed',
+						display: 'none',
+						height: '100%',
+						width: '100%',
+						top: 0,
+						left: 0,
+						zIndex: 9997
+					})
+					.appendTo('body')
+				;
+			},
+			show: function(video){
+				if(!overlay || isVisible){return;}
+				if(overlay.css('backgroundColor') === 'transparent'){
+					var color = $.curCSS(video, 'backgroundColor');
+					overlay.css('backgroundColor', (color !== 'transparent') ? color :'#000');
+				}
+				overlay.show();
+				isVisible = true;
+			},
+			hide: function(){
+				if(!overlay || !isVisible){return;}
+				overlay.hide();
+				isVisible = false;
+			}
+		};
+		return pub;
 	})();
 	
+	$(function(){
+		videoOverlay.init();
+		var div = $('<div style="position: fixed; visibility: hidden; height: 0; width: 0; margin: 0; padding: 0; border: none;" />').appendTo('body');
+		supportsFullWindow = ($.curCSS(div[0], 'position', true) === 'fixed');
+		div.remove();
+	});
+	
 	$.multimediaSupport.fn._extend({
-		enterFullWindow: function(animate, animOpts){
-			if(this.visualElem.hasClass('displays-fullscreen')){return;}
-			
-			this.data.normalCSS = this.visualElem.offset();
+		supportsFullWindow: function(){
+			return supportsFullWindow;
+		},
+		enterFullWindow: function(){
+			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
@@ -93,15 +120,16 @@
 					height: this.visualElem.height()
 				},
 				rel 	= curDim.width / curDim.height,
-				ctrlBar = getControlBar(data),
-				sizePos	= getSize(rel)
+				ctrlBar = data.controlBar || $([]),
+				videoCSS= $.extend({}, videoBaseCSS, getSize(rel))
 			;
-			$.extend(this.data.normalCSS, curDim);
 			$('html, body')
 				.addClass('contains-fullscreenvideo')
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
 				.css(bodyCSS)
 			;
+			
+			videoOverlay.show(this.element);
 			
 			this.visualElem
 				.parent()
@@ -114,32 +142,32 @@
 				.storeInlineStyle(barCSS, 'fsstoredInlineStyle')
 				.css(barCSS)
 			;
-			
-			if(animate){
-				ctrlBar
-					.css({opacity: 0})
-					.animate({opacity: 1}, $.extend({}, animOpts))
-				;
-			}
-			
+						
 			this.visualElem
 				.addClass('displays-fullscreen')
-				.storeInlineStyle($.extend({}, videoCSS, sizePos), 'fsstoredInlineStyle')
+				.storeInlineStyle(videoCSS, 'fsstoredInlineStyle')
 				.css(videoCSS)
-				[(animate) ? 'animate': 'css'](sizePos, animOpts)
 			;
-			win.bind('resize.fullscreen', function(){
-				that.visualElem.css(getSize(rel));
-			});
-			doc.bind('keydown', function(e){
+			
+			doc.bind('keydown.fullscreen', function(e){
 				if(e.keyCode === 27){
 					that.exitFullWindow();
 				}
 			});
+			//IE 7 triggers resize event on enterFullWindow
+			setTimeout(function(){
+				win.bind('resize.fullscreen', function(){
+					that.visualElem.css(getSize(rel));
+				});
+			}, 0);
 			this._trigger('fullwindow');
 			$(this.element).triggerHandler('resize');
 		},
 		exitFullWindow: function(){
+			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
+			var data 	= $.data(this.element, 'mediaElemSupport'),
+				ctrlBar = data.controlBar || $([])
+			;
 			$('html, body')
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('contains-fullscreenvideo')
@@ -149,9 +177,37 @@
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('displays-fullscreen')
 			;
+			
+			ctrlBar
+				.storeInlineStyle('fsstoredInlineStyle')
+				.removeClass('controls-fullscreenvideo')
+			;
+			
+			videoOverlay.hide();
+			
 			win.unbind('.fullscreen');
+			doc.unbind('.fullscreen');
 			this._trigger('fullwindow');
 			$(this.element).triggerHandler('resize');
 		}
 	});
+	
+	$.fn.registerMMControl.addControl('fullscreen', function(control, video, data, o){
+		if(!supportsFullWindow){
+			control.addClass('unsupported');
+			return;
+		}
+		var elems = $.fn.registerMMControl.getBtn(control);
+		if(o.addThemeRoller){
+			control.addClass('ui-state-default ui-corner-all');
+		}
+		control.bind('click', function(){
+			if(video.supportsFullScreen()){
+			
+			}
+		});
+		
+	});
+	
+	
 })(jQuery);

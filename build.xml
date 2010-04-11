@@ -58,7 +58,6 @@
         <concat destfile="${mediaembed}">
             <fileset file="src/mm.base-embed.js" />
             <fileset file="src/mm.jwplayer-embed.js" />
-            <fileset file="src/mm.vlc-embed.js" />
         </concat>
         <echo message="${mediaembed} built." />
     </target>

@@ -25,8 +25,7 @@
 		booleanNames 	= {
 					loop: true,
 					autoplay: true,
-					controls: true,
-					autobuffer: true
+					controls: true
 				},
 		mixedNames 		= {
 			srces: true,
@@ -94,7 +93,7 @@
 			} 
 			if(name === 'getConfig'){
 				ret = {};
-				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
+				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
 					ret[name] = $.attr(elem, name);
 				});
 				return ret;
@@ -104,11 +103,11 @@
 				value = !!(value);
 				elem[name] = value;
 				if(value){
+					elem[name] = value;
 					elem.setAttribute(name, name);
-					elem[name] = value;
 				} else {
-					elem.removeAttribute(name);
 					elem[name] = value;
+					elem.removeAttribute(name);
 				}
 			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
@@ -147,8 +146,13 @@
 	
 	function bindSource(e){
 		if(!$.support.mediaElements){return;}
+		
 		var apis = $.data(this, 'mediaElemSupport');
 		if(!apis || !apis.apis){return;}
+		//reset error
+		if(e && e.type){
+			$.data(this, 'calledMediaError', false);
+		}
 		apis = apis.apis;
 		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
@@ -156,20 +160,14 @@
 			srces 	= $.attr(this, 'srces')
 		;
 		
-		if(srces.length && !apis.nativ.canPlaySrces(srces)){
-			$(elem).triggerHandler('mediaerror');
+		if( elem.error || (srces.length && !apis.nativ.canPlaySrces(srces)) ){
+			$.event.special.mediaerror.handler.call(this, $.Event('mediaerror'));
 			//stop trying to play
 			try {
 				elem.pause();
 			} catch(er){}
 		}
-		
-		// we don´t need loadstart workaround
-		if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
-			$(this).unbind('loadstart', bindSource);
-		}
-		//END: webkit workaround
-		
+				
 		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
@@ -181,12 +179,15 @@
 	$.event.special.mediaerror = {
 		setup: function(){
 			//ff always triggers an error on video/audio | w3c/webkit/opera triggers error event on source, if available
-			$(this)
+			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
-				.each(bindSource)
-				//some webkit do not support emptied
-				.bind('emtptied loadstart', bindSource)
+				//older webkit do not support emptied
+				.bind('mediareset', bindSource)
 			;
+			//bindSource can trigger mediaerror, but event is always bound after setup
+			setTimeout(function(){
+				media.each(bindSource);
+			}, 0);
 		},
 		teardown: function(){
 			$(this)
@@ -196,7 +197,10 @@
 			;
 		},
 		handler: function(e){
+			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
+			$.data(this, 'calledError', true);
+			
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -268,16 +272,19 @@
 			$.extend(true, this.apis[elemName][name], api);
 		},
 		fn: {
-			_init: function(){},
+			_init: $.noop,
 			canPlayType: function(type){
-				var elem = this.apiElem;
+				var elem = this.apiElem,
+					ret
+				;
 				if(elem && elem.canPlayType){
-					return elem.canPlayType(type);
+					ret = elem.canPlayType(type);
+					return (ret === 'no') ? '' : ret;
 				}
 				var parts 	= m.extractContainerCodecsFormType(type),
-					that 	= this,
-					ret		= 'probably'
+					that 	= this
 				;
+				ret		= 'probably';
 				if(!parts[1]){
 					return (this.canPlayContainer && $.inArray(parts[0], this.canPlayContainer) !== -1) ? 'maybe' : '';
 				}
@@ -309,7 +316,7 @@
 				return ret;
 			},
 			canPlaySrces: function(srces){
-				srces = srces || $.attr(this.html5elem, 'srces');
+				srces = srces || $.attr(this.element, 'srces');
 				if(!$.isArray(srces)){
 					srces = [srces];
 				}
@@ -328,7 +335,7 @@
 			},
 			_setActive: $.noop,
 			_setInactive: $.noop,
-			_trigger: $.noop
+			_trigger: function(e){$(this.element).triggerHandler(e, e);}
 		},
 		apis: {
 			audio: {},
@@ -355,11 +362,11 @@
 			F.prototype = sup;
 			return new F();
 		},
-		_create: function(elemName, supType, html5elem, opts){
-			var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
+		_create: function(elemName, supType, element, opts){
+			var data = $.data(element, 'mediaElemSupport') || $.data(element, 'mediaElemSupport', {apis: {}, nodeName: elemName});
 			if(!data.apis[supType]){
 				data.apis[supType] = m.beget( m.apis[elemName][supType]);
-				data.apis[supType].html5elem = html5elem;
+				data.apis[supType].element = element;
 				data.apis[supType].nodeName = elemName;
 				data.apis[supType].name = supType;
 				data.apis[supType].data = {};
@@ -367,8 +374,8 @@
 			}
 			return data;
 		},
-		_setAPIActive: function(html5elem, supType){
-			var data 		= $.data(html5elem, 'mediaElemSupport'),
+		_setAPIActive: function(element, supType){
+			var data 		= $.data(element, 'mediaElemSupport'),
 				oldActive 	= data.name
 			;
 			if(oldActive === supType){return true;}
@@ -379,7 +386,7 @@
 			;
 			
 			if(showElem && showElem.nodeName){
-				if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
+				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
 					data.apis[supType].visualElem.css({
 						width: data.apis[oldActive].visualElem.width(),
 						height: data.apis[oldActive].visualElem.height(),
@@ -391,7 +398,7 @@
 				apiReady = true;
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 			}
-			
+			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){
 				if(oldActive === 'nativ'){
 					hideElem.style.display = 'none';
@@ -404,7 +411,8 @@
 					});
 				}
 				data.apis[oldActive]._setInactive(supType);
-				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
+				data.apis[oldActive].isAPIActive = false;
+				data.apis[supType]._trigger({type: 'apiDeActivated', api: oldActive});
 			}
 			
 			data.name = supType;
@@ -418,7 +426,7 @@
 			var srces 		= $.attr(elem, 'srces'),
 				supported 	= false,
 				getSupported = function(name, api){
-					if( !api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
+					if( (typeof api.isTechAvailable === 'boolean' && !api.isTechAvailable) || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
 						return;
 					}
 					var src = api.canPlaySrces(srces);
@@ -593,19 +601,27 @@
 			}
 			
 			var apiData = m._create(elemName, 'nativ', this, opts);
-			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			apiData.apis.nativ.visualElem = $(this);
+			apiData.apis.nativ.isAPIActive = true;
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m._create(elemName, name, elem, opts);
 				}
 			});
-			if(opts.debug || !$.support.mediaElements || this.error){
+			
+			if(opts.showFallback && $.support.mediaElements){
+				$(this).bind('totalerror', function(){
+					$(this).hide().children(':not(source, itext)').insertAfter(this);
+				});
+			}
+			
+			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
+				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				apiData.apis[apiData.name]._init();
+				apiData.apis.nativ._init();
 			}
 			$(this)
 				.bind('mediaerror', function(e){
@@ -620,11 +636,12 @@
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
 		removeControls: false,
+		showFallback: false,
 		apiOrder: []
 	};
 	
 	
-	if($.cleanData){
+	if($.cleanData && window.ActiveXObject){
 		var _cleanData = $.cleanData;
 		$.cleanData = function(elems){
 			_cleanData(elems);
@@ -664,30 +681,44 @@
 			}
 		)
 	;
-	
 	var swfAttr = {type: 'application/x-shockwave-flash'},
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
-		m 		= $.multimediaSupport,
-		jwMM 	= {
-			isTechAvailable: (function(){
+		m 		= $.multimediaSupport
+	;
+	(function(){
+		$.support.flash9 = false;
+		var swf 				= m.getPluginVersion('Shockwave Flash'),
+			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
-				var swf = m.getPluginVersion('Shockwave Flash');
-				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-					$.support.flash9 = true;
-				} else if(window.ActiveXObject){
-					try {
-						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
-						if(!swf){return;}
-						swf = m.getPluginVersion('', {
-							description: swf.GetVariable("$version")
-						});
-						if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-							$.support.flash9 = true;
-						}
-					} catch(e){}
-				}
+				try {
+					obj = m.getPluginVersion('', {
+						description: obj.GetVariable("$version")
+					});
+					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+				} catch(e){}
+			}
+		;
+		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
+			//temp result
+			$.support.flash9 = true;
+			$(function(){
+				swf = $('<object />', swfAttr).appendTo('body');
+				supportsMovieStar(swf[0]);
+				swf.remove();
+			});
+		} else if(window.ActiveXObject){
+			try {
+				swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+				supportsMovieStar(swf);
+				swf = null;
+			} catch(e){}
+		}
+	})();
+	
+	var jwMM 	= {
+			isTechAvailable: function(){
 				return $.support.flash9;
-			})(),
+			},
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
@@ -702,7 +733,7 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( (opts.playFirstFrame || cfg.autobuffer) && !cfg.poster && !cfg.autoplay ){
+				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
 					this.data.playFirstFrame = true;
 					vars.autostart = 'true';
 				}
@@ -721,76 +752,4 @@
 	m.add('jwPlayer', 'video', jwMM);
 	m.add('jwPlayer', 'audio', jwMM);
 	
-})(jQuery);
-/**!
- * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
- * @author Alexander Farkas
- * Copyright 2010, Alexander Farkas
- * Dual licensed under the MIT or GPL Version 2 licenses.
- */
-(function($){
-	$.extend($.fn.mediaElementEmbed.defaults, 
-			{
-				vlc: {
-					params: {},
-					attrs: {}
-				}
-			}
-		)
-	;
-	
-	var $m 				= $.multimediaSupport,
-		defaultAttrs 	= {
-			
-			pluginspage: 'http://www.videolan.org',
-			version: 'VideoLAN.VLCPlugin.2',
-			progid: 'VideoLAN.VLCPlugin.2',
-			events: 'True',
-			type: 'application/x-vlc-plugin'
-		},
-		activeXAttrs 	= {
-			classid: 'clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921'
-		}
-	;
-	
-	var vlcMM = {
-			isTechAvailable: function(){
-				if($.support.vlc !== undefined){
-					return $.support.vlc;
-				}
-				$.support.vlc = false;
-				var vlc = $m.getPluginVersion('VLC Multimedia Plug-in');
-				if(vlc[0] >= 0.9){
-					$.support.vlc = true;
-				} else if(window.ActiveXObject){
-					try {
-						if(new ActiveXObject('VideoLAN.VLCPlugin.2')){
-							$.support.vlc = true;
-						}
-					} catch(e){}
-				}
-				return $.support.vlc;
-			},
-			_embed: function(src, id, attrs, fn){
-				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {data: src}, defaultAttrs),
-					params 	= $.extend({}, opts.params, {
-						Src: src,
-						ShowDisplay: 'True',
-						autoplay: ''+ attrs.autoplay,//
-						autoloop: ''+attrs.loop
-					}),
-					elem = $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs, 'VLC Multimedia Plug-in' )
-				;
-				this._currentSrc = src;
-				fn( elem );
-				elem = null;
-			},
-			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis'],
-			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
-		}
-	;
-			
-	$m.add('vlc', 'video', vlcMM);
-	$m.add('vlc', 'audio', vlcMM);
 })(jQuery);

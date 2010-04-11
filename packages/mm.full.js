@@ -25,8 +25,7 @@
 		booleanNames 	= {
 					loop: true,
 					autoplay: true,
-					controls: true,
-					autobuffer: true
+					controls: true
 				},
 		mixedNames 		= {
 			srces: true,
@@ -94,7 +93,7 @@
 			} 
 			if(name === 'getConfig'){
 				ret = {};
-				$.each(['autobuffer', 'autoplay', 'loop', 'controls', 'poster'], function(i, name){
+				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
 					ret[name] = $.attr(elem, name);
 				});
 				return ret;
@@ -104,11 +103,11 @@
 				value = !!(value);
 				elem[name] = value;
 				if(value){
+					elem[name] = value;
 					elem.setAttribute(name, name);
-					elem[name] = value;
 				} else {
-					elem.removeAttribute(name);
 					elem[name] = value;
+					elem.removeAttribute(name);
 				}
 			} else if(srcNames[name]){
 				elem.setAttribute(name, value);
@@ -147,8 +146,13 @@
 	
 	function bindSource(e){
 		if(!$.support.mediaElements){return;}
+		
 		var apis = $.data(this, 'mediaElemSupport');
 		if(!apis || !apis.apis){return;}
+		//reset error
+		if(e && e.type){
+			$.data(this, 'calledMediaError', false);
+		}
 		apis = apis.apis;
 		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
@@ -156,20 +160,14 @@
 			srces 	= $.attr(this, 'srces')
 		;
 		
-		if(srces.length && !apis.nativ.canPlaySrces(srces)){
-			$(elem).triggerHandler('mediaerror');
+		if( elem.error || (srces.length && !apis.nativ.canPlaySrces(srces)) ){
+			$.event.special.mediaerror.handler.call(this, $.Event('mediaerror'));
 			//stop trying to play
 			try {
 				elem.pause();
 			} catch(er){}
 		}
-		
-		// we don´t need loadstart workaround
-		if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
-			$(this).unbind('loadstart', bindSource);
-		}
-		//END: webkit workaround
-		
+				
 		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
@@ -181,12 +179,15 @@
 	$.event.special.mediaerror = {
 		setup: function(){
 			//ff always triggers an error on video/audio | w3c/webkit/opera triggers error event on source, if available
-			$(this)
+			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
-				.each(bindSource)
-				//some webkit do not support emptied
-				.bind('emtptied loadstart', bindSource)
+				//older webkit do not support emptied
+				.bind('mediareset', bindSource)
 			;
+			//bindSource can trigger mediaerror, but event is always bound after setup
+			setTimeout(function(){
+				media.each(bindSource);
+			}, 0);
 		},
 		teardown: function(){
 			$(this)
@@ -196,7 +197,10 @@
 			;
 		},
 		handler: function(e){
+			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
+			$.data(this, 'calledError', true);
+			
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -268,16 +272,19 @@
 			$.extend(true, this.apis[elemName][name], api);
 		},
 		fn: {
-			_init: function(){},
+			_init: $.noop,
 			canPlayType: function(type){
-				var elem = this.apiElem;
+				var elem = this.apiElem,
+					ret
+				;
 				if(elem && elem.canPlayType){
-					return elem.canPlayType(type);
+					ret = elem.canPlayType(type);
+					return (ret === 'no') ? '' : ret;
 				}
 				var parts 	= m.extractContainerCodecsFormType(type),
-					that 	= this,
-					ret		= 'probably'
+					that 	= this
 				;
+				ret		= 'probably';
 				if(!parts[1]){
 					return (this.canPlayContainer && $.inArray(parts[0], this.canPlayContainer) !== -1) ? 'maybe' : '';
 				}
@@ -309,7 +316,7 @@
 				return ret;
 			},
 			canPlaySrces: function(srces){
-				srces = srces || $.attr(this.html5elem, 'srces');
+				srces = srces || $.attr(this.element, 'srces');
 				if(!$.isArray(srces)){
 					srces = [srces];
 				}
@@ -328,7 +335,7 @@
 			},
 			_setActive: $.noop,
 			_setInactive: $.noop,
-			_trigger: $.noop
+			_trigger: function(e){$(this.element).triggerHandler(e, e);}
 		},
 		apis: {
 			audio: {},
@@ -355,11 +362,11 @@
 			F.prototype = sup;
 			return new F();
 		},
-		_create: function(elemName, supType, html5elem, opts){
-			var data = $.data(html5elem, 'mediaElemSupport') || $.data(html5elem, 'mediaElemSupport', {apis: {}, nodeName: elemName});
+		_create: function(elemName, supType, element, opts){
+			var data = $.data(element, 'mediaElemSupport') || $.data(element, 'mediaElemSupport', {apis: {}, nodeName: elemName});
 			if(!data.apis[supType]){
 				data.apis[supType] = m.beget( m.apis[elemName][supType]);
-				data.apis[supType].html5elem = html5elem;
+				data.apis[supType].element = element;
 				data.apis[supType].nodeName = elemName;
 				data.apis[supType].name = supType;
 				data.apis[supType].data = {};
@@ -367,8 +374,8 @@
 			}
 			return data;
 		},
-		_setAPIActive: function(html5elem, supType){
-			var data 		= $.data(html5elem, 'mediaElemSupport'),
+		_setAPIActive: function(element, supType){
+			var data 		= $.data(element, 'mediaElemSupport'),
 				oldActive 	= data.name
 			;
 			if(oldActive === supType){return true;}
@@ -379,7 +386,7 @@
 			;
 			
 			if(showElem && showElem.nodeName){
-				if(data.nodeName !== 'audio' || $.attr(html5elem, 'controls')){
+				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
 					data.apis[supType].visualElem.css({
 						width: data.apis[oldActive].visualElem.width(),
 						height: data.apis[oldActive].visualElem.height(),
@@ -391,7 +398,7 @@
 				apiReady = true;
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 			}
-			
+			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){
 				if(oldActive === 'nativ'){
 					hideElem.style.display = 'none';
@@ -404,7 +411,8 @@
 					});
 				}
 				data.apis[oldActive]._setInactive(supType);
-				data.apis[(apiReady) ? supType : oldActive]._trigger({type: 'apiInActivated', api: oldActive});
+				data.apis[oldActive].isAPIActive = false;
+				data.apis[supType]._trigger({type: 'apiDeActivated', api: oldActive});
 			}
 			
 			data.name = supType;
@@ -418,7 +426,7 @@
 			var srces 		= $.attr(elem, 'srces'),
 				supported 	= false,
 				getSupported = function(name, api){
-					if( !api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
+					if( (typeof api.isTechAvailable === 'boolean' && !api.isTechAvailable) || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
 						return;
 					}
 					var src = api.canPlaySrces(srces);
@@ -593,19 +601,27 @@
 			}
 			
 			var apiData = m._create(elemName, 'nativ', this, opts);
-			
 			apiData.name = 'nativ';
 			apiData.apis.nativ.apiElem = this;
 			apiData.apis.nativ.visualElem = $(this);
+			apiData.apis.nativ.isAPIActive = true;
 			$.each(m.apis[elemName], function(name){
 				if(name !== 'nativ'){
 					m._create(elemName, name, elem, opts);
 				}
 			});
-			if(opts.debug || !$.support.mediaElements || this.error){
+			
+			if(opts.showFallback && $.support.mediaElements){
+				$(this).bind('totalerror', function(){
+					$(this).hide().children(':not(source, itext)').insertAfter(this);
+				});
+			}
+			
+			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
+				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				apiData.apis[apiData.name]._init();
+				apiData.apis.nativ._init();
 			}
 			$(this)
 				.bind('mediaerror', function(e){
@@ -620,11 +636,12 @@
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
 		removeControls: false,
+		showFallback: false,
 		apiOrder: []
 	};
 	
 	
-	if($.cleanData){
+	if($.cleanData && window.ActiveXObject){
 		var _cleanData = $.cleanData;
 		$.cleanData = function(elems){
 			_cleanData(elems);
@@ -651,6 +668,12 @@
 (function($){
 	var video 		= document.createElement('video'), 
 		$m 			= $.multimediaSupport,
+		noAPIEvents = {
+			apiActivated: true,
+			apiDeActivated: true,
+			mediareset: true,
+			totalerror: true
+		},
 		fsMethods	= {}
 	;
 	
@@ -686,43 +709,69 @@
 		}
 	});
 	
+	//ToDo add onAPIReady/mmAPIReady
+	$.event.special.loadedmeta = {
+	    add: function( details ) {
+			var api = $(this).getMMAPI();
+			if(api && api.loadedmeta){
+				var evt = $.extend({}, api.loadedmeta);
+				details.handler.call(this, evt, evt);
+			}
+	    }
+	};
+	
+	
+
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
-			var type = e.type || ({type: e}).type,
+			var type = e.type || e,
 				evt  = e
 			;
-			
+
 			switch(type){
 				case 'mmAPIReady':
-					this.isAPIReady = true;
-					e.api = this.name;
+					if(this.isAPIReady){
+						return;
+					} else {
+						this.isAPIReady = true;
+					}
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = evt;
 					break;
-				case 'emptied':
+				case 'totalerror':
+					this.totalerror = true;
+					break;
 				case 'mediareset':
-				case 'error':
 					this.loadedmeta = false;
+					this.totalerror = false;
 					break;
 			}
 			
-			if(e.type === 'progresschange' && 'relStart' in e){
+			if(!this.isAPIActive || (this.totalerror && !noAPIEvents[type])){return;}
+			if(!this.isAPIReady && !noAPIEvents[type]){
+				this._trigger('mmAPIReady');
+			}
+			if(e.type === 'progresschange'){
+				e.relStart = e.relStart || 0;
 				if(this._concerningBufferStart !== e.relStart){
 					this._concerningBufferStart = e.relStart;
 					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
 				}
 			}
 			
-			e.target = this.html5elem;
+			e.target = this.element;
 			e = $.Event(e);
 			e.preventDefault();
+			
+			e.mediaapi = this.name;
 			
 			if(e.type === 'timechange' || e.type === 'progresschange'){
 				e.stopPropagation();
 			}
-			$.event.trigger( e, evt, this.html5elem );
+			
+			$.event.trigger( e, evt, this.element );
 		},
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
@@ -746,20 +795,12 @@
 		getMMVisual: function(){
 			return this.visualElem;
 		},
-		onMediaReady: function(fn){
+		onAPIReady: function(fn){
 			var e = {type: 'mmAPIReady'};
 			if(this.isAPIReady){
-				fn.call(this.html5elem, e, e);
+				fn.call(this.element, e, e);
 			} else {
-				$(this.html5elem).one('mmAPIReady.jmediaelement', fn);
-			}
-		},
-		onLoadedmeta: function(fn){
-			var e = this.loadedmeta;
-			if(e){
-				fn.call(this.html5elem, e, e);
-			} else {
-				$(this.html5elem).bind('loadedmeta.jmediaelement', fn);
+				$(this.element).one('mmAPIReady.jmediaelement', fn);
 			}
 		},
 		_format: $m.formatTime,
@@ -771,19 +812,19 @@
 		},
 		loadSrc: function(srces, poster){
 			if(srces){
-				$.attr(this.html5elem, 'srces', srces);
+				$.attr(this.element, 'srces', srces);
 				srces = $.isArray(srces) ? srces : [srces];
 			} else {
-				srces = $.attr(this.html5elem, 'srces');
+				srces = $.attr(this.element, 'srces');
 			}
 			if(poster !== undefined){
 				if(poster){
-					$.attr(this.html5elem, 'poster', poster);
+					$.attr(this.element, 'poster', poster);
 				} else {
-					$(this.html5elem).removeAttr('poster');
+					$(this.element).removeAttr('poster');
 				}
 			} else {
-				poster = $.attr(this.html5elem, 'poster');
+				poster = $.attr(this.element, 'poster');
 			}
 			this._isResetting = true;
 			this._trigger('mediareset');
@@ -793,8 +834,8 @@
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
 				this._mmload(canPlaySrc, poster);
 			} else {
-				$m._setAPIActive(this.html5elem, 'nativ');
-				$(this.html5elem).data('mediaElemSupport').apis.nativ._mmload();
+				$m._setAPIActive(this.element, 'nativ');
+				$(this.element).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
 		},
@@ -809,8 +850,8 @@
 	var fixProgressEvent = function(api){
 		var unboundNeedless,
 		 	getConcerningRange 			= function(){
-				var time 	= api.html5elem.currentTime,
-					buffer 	= api.html5elem.buffered,
+				var time 	= api.element.currentTime,
+					buffer 	= api.element.buffered,
 					bufLen 	= buffer.length,
 					ret 	= {}
 				;
@@ -854,7 +895,7 @@
 				
 			}
 		;
-		$(api.html5elem).bind('progress load', calculateProgress);
+		$(api.element).bind('progress load', calculateProgress);
 	};
 	
 	//add API for native MM-Support
@@ -866,13 +907,12 @@
 				hasInitialError 	= false,
 				catchInitialError 	= function(){
 					hasInitialError = true;
-					$(that.html5elem).unbind('.initialerror');
 				}
 			;
 			
 			//addEvents
 			fixProgressEvent(this);
-			$(this.html5elem)
+			$(this.element)
 				.bind({
 					volumechange: function(){
 						if(curMuted !== that.apiElem.muted){
@@ -901,67 +941,67 @@
 						});
 					}
 				})
-				.one('mediaerror.initialerror', catchInitialError)
+				.one('mediaerror', catchInitialError)
 			;
 			//workaround
-			if(this.html5elem.readyState > 0){
-				that._trigger('mmAPIReady');
-				that._trigger({
+			if(this.element.readyState > 0 && !this.element.error){
+				$(that.element).unbind('mediaerror', catchInitialError);
+				this._trigger({
 					type: 'loadedmeta',
-					duration: this.html5elem.duration
+					duration: this.element.duration
 				});
 			} else {
 				setTimeout(function(){
-					$(that.html5elem).unbind('.initialerror');
-					if(hasInitialError || that.html5elem.error){
+					$(that.element).unbind('mediaerror', catchInitialError);
+					if(hasInitialError || that.element.error){
 						that.isAPIReady = true;
 					} else {
 						that._trigger('mmAPIReady');
 					}
-				}, 0);
+				}, 150);
 			}
 		},
 		play: function(src){
-			this.html5elem.play();
+			this.element.play();
 		},
 		pause: function(){
-			this.html5elem.pause();
+			this.element.pause();
 		},
 		muted: function(bool){
 			if(typeof bool === 'boolean'){
-				this.html5elem.muted = bool;
+				this.element.muted = bool;
 			}
-			return this.html5elem.muted;
+			return this.element.muted;
 		},
 		volume: function(vol){
 			if(isFinite(vol)){
-				this.html5elem.volume = vol / 100;
+				this.element.volume = vol / 100;
 			}
-			return this.html5elem.volume * 100;
+			return this.element.volume * 100;
 		},
 		currentTime: function(sec){
 			if(isFinite(sec)){
 				try {
-					this.html5elem.currentTime = sec;
+					this.element.currentTime = sec;
 				} catch(e){}
 			}
-			return this.html5elem.currentTime;
+			return this.element.currentTime;
 		},
 		_mmload: function(extras){
-			if(this.html5elem.load){
-				this.html5elem.load();
+			if(this.element.load){
+				this.element.load();
 			} else {
-				$(this.html5elem).triggerHandler('error');
+				$(this.element).triggerHandler('error');
 			}
 		},
 		_isPlaying: function(){
-			return (!this.html5elem.paused && this.html5elem.readyState > 2 && !this.error && !this.ended);
+			return (!this.element.paused && this.element.readyState > 2 && !this.error && !this.ended);
 		},
 		getDuration: function(){
-			return this.html5elem.duration;
+			return this.element.duration;
 		},
 		getCurrentSrc: function(){
-			return this.html5elem.currentSrc;
+			return this.element.currentSrc;
 		}
 	};
 	
@@ -972,13 +1012,13 @@
 		enterFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
-				this.html5elem[fsMethods.enter]();
+				this.element[fsMethods.enter]();
 			} catch(e){}
 		},
 		exitFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
-				this.html5elem[fsMethods.exit]();
+				this.element[fsMethods.exit]();
 			} catch(e){}
 		}
 	}, nativ));
@@ -1009,7 +1049,7 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isAPIReady){
+						if(api && api.isAPIReady && !api.totalerror){
 							ret = api[name].apply(api, args);
 						}
 					});
@@ -1064,7 +1104,7 @@
 					}
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm
 						.bind('loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
@@ -1105,7 +1145,7 @@
 					}
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm.bind('volumelevelchange', changeVolumeUI);
 					control
 						.bind('slidestart', function(e, ui){
@@ -1142,7 +1182,7 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
 						.bind('mediareset', resetProgress)
@@ -1163,7 +1203,7 @@
 						control.html('--:--');
 					})
 				;
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					control.html(api.apis[api.name].getFormattedDuration());
 				});
 				
@@ -1181,7 +1221,7 @@
 						control.html('--:--');
 					})
 				;
-				api.apis[api.name].onMediaReady(function(){
+				api.apis[api.name].onAPIReady(function(){
 					control.html(api.apis[api.name].getFormattedTime());
 				});
 			},
@@ -1195,7 +1235,7 @@
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
 					$('> *', control).each(function(){
-						if(timeSlider[0] !== this && this.offsetWidth && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
+						if(timeSlider[0] !== this && this.offsetWidth && $.curCSS(this, 'position') !== 'absolute' && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
 							occupied += $(this).outerWidth(true);
 						}
 					});
@@ -1207,7 +1247,7 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					api.apis[api.name].onMediaReady(function(){
+					api.apis[api.name].onAPIReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
 					}, 'one');
@@ -1225,40 +1265,23 @@
 	//create Toggle Button UI
 	$.each(toggleModells, function(name, opts){
 		controls[name] = function(control, mm, api, o){
-			var iconElem 	= $('.ui-icon', control),
-				textElem 	= $('.button-text', control),
-				stateNames,
-				that 		= this
-			;
-			
+			var elems = $.fn.registerMMControl.getBtn(control);
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
-			}
-			
-			if(!iconElem[0] && !textElem[0] && !$('*', control)[0]){
-				iconElem = control;
-				textElem = control;
-			}
-			
-			stateNames = textElem.text().split(split);
-			
-			if(stateNames.length !== 2){
-				textElem = $([]);
-			}
-			
+			}		
 			function changeState(e, ui){
 				var state = api.apis[api.name][opts.stateMethod]();
 				
 				if(state){
-					textElem.text(stateNames[1]);
-					iconElem.addClass(opts.trueClass).removeClass(opts.falseClass);
+					elems.text.text(elems.names[1]);
+					elems.icon.addClass(opts.trueClass).removeClass(opts.falseClass);
 				} else {
-					textElem.text(stateNames[0]);
-					iconElem.addClass(opts.falseClass).removeClass(opts.trueClass);
+					elems.text.text(elems.names[0]);
+					elems.icon.addClass(opts.falseClass).removeClass(opts.trueClass);
 				}
 			}
 			
-			api.apis[api.name].onMediaReady(function(){
+			api.apis[api.name].onAPIReady(function(){
 				mm.bind(opts.evts, changeState);
 				changeState();
 			});
@@ -1284,8 +1307,9 @@
 		} 
 		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
+			ret.api.controlWrapper = (ret.api.controlWrapper) ? ret.api.controlWrapper.add(jElm) : jElm;
 			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
-			ret.api.controlWrapper = jElm;
+			ret.api.controlBar = ret.controls.filter('.'+o.classPrefix+'media-controls');
 		}
 		return ret;
 	}
@@ -1310,7 +1334,7 @@
 				apiActivated: function(e, d){
 					wrapper.addClass(o.classPrefix+d.api);
 				},
-				apiInActivated: function(e, d){
+				apiDeActivated: function(e, d){
 					wrapper.removeClass(o.classPrefix+d.api);
 				}
 			})
@@ -1416,6 +1440,24 @@
 		timeSlider: {}
 	};
 	
+	$.fn.registerMMControl.getBtn = function(control){
+		var elems = {
+			icon: $('.ui-icon', control),
+			text: $('.button-text', control)
+		};
+			
+		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
+			elems.icon = control;
+			elems.text = control;
+		}
+		
+		elems.names = elems.text.text().split(split);
+		
+		if(elems.names.length !== 2){
+			elems.text = $([]);
+		}
+		return elems;
+	};
 	$.fn.registerMMControl.addControl = function(name, fn){
 		controls[name] = fn;
 	};
@@ -1441,30 +1483,44 @@
 			}
 		)
 	;
-	
 	var swfAttr = {type: 'application/x-shockwave-flash'},
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
-		m 		= $.multimediaSupport,
-		jwMM 	= {
-			isTechAvailable: (function(){
+		m 		= $.multimediaSupport
+	;
+	(function(){
+		$.support.flash9 = false;
+		var swf 				= m.getPluginVersion('Shockwave Flash'),
+			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
-				var swf = m.getPluginVersion('Shockwave Flash');
-				if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-					$.support.flash9 = true;
-				} else if(window.ActiveXObject){
-					try {
-						swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
-						if(!swf){return;}
-						swf = m.getPluginVersion('', {
-							description: swf.GetVariable("$version")
-						});
-						if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
-							$.support.flash9 = true;
-						}
-					} catch(e){}
-				}
+				try {
+					obj = m.getPluginVersion('', {
+						description: obj.GetVariable("$version")
+					});
+					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+				} catch(e){}
+			}
+		;
+		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
+			//temp result
+			$.support.flash9 = true;
+			$(function(){
+				swf = $('<object />', swfAttr).appendTo('body');
+				supportsMovieStar(swf[0]);
+				swf.remove();
+			});
+		} else if(window.ActiveXObject){
+			try {
+				swf = new ActiveXObject('ShockwaveFlash.ShockwaveFlash');
+				supportsMovieStar(swf);
+				swf = null;
+			} catch(e){}
+		}
+	})();
+	
+	var jwMM 	= {
+			isTechAvailable: function(){
 				return $.support.flash9;
-			})(),
+			},
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
@@ -1479,7 +1535,7 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( (opts.playFirstFrame || cfg.autobuffer) && !cfg.poster && !cfg.autoplay ){
+				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
 					this.data.playFirstFrame = true;
 					vars.autostart = 'true';
 				}
@@ -1544,7 +1600,7 @@
 				;
 				if(!api){return;}
 				
-				//workaround: meta isn´t triggered on audio
+				//workaround: meta isn´t triggered on audio | ToDo: Is this needed with jwplayer 5.1.x?
 				if(!api.loadedmeta){
 					api._trigger({
 						type: 'loadedmeta',
@@ -1614,21 +1670,19 @@
 					if(!api){return;}
 					var evt = {
 						type: 'progresschange',
-						lengthComputable: !!(obj.total),
-						loaded: obj.loaded
+						lengthComputable: !!(obj.total)
 					};
 					if(obj.total){
 						$.extend(evt, {
-							total: obj.total,
 							relLoaded: obj.total / obj.loaded * 100
 						});
+						api._buffered = evt.relLoaded;
 					}
 					api._trigger(evt);
 				}
 			}
 			
 		}),
-		// version five is a little bit buggy, the following methods are al workarounds
 		five: $.extend(true, {}, privJwEvents, {
 			Model: {
 				BUFFER: function(obj){
@@ -1639,11 +1693,14 @@
 						relLoaded: obj.percentage,
 						relStart: 0
 					};
+					api._buffered = obj.percentage;
 					api._trigger(evt);
 				},
 				STATE: function(obj){
 					var state = privJwEvents.Model.STATE(obj);
 					if(state === 'playing'){
+						var api = getAPI(obj.id);
+						if(!api){return;}
 						api._trigger('play');
 					}
 				}
@@ -1669,6 +1726,9 @@
 	};
 	
 	var jwAPI = {
+		_init: function(){
+			this._buffered = this._buffered || 0;
+		},
 		play: function(){
 			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
@@ -1684,10 +1744,12 @@
 		_mmload: function(src, poster){
 			this.apiElem.sendEvent('LOAD', {
 				file: src,
-				image: poster
+				image: poster || false
 			});
-			if (!$.attr(this.html5elem, 'autoplay')) {
+			if (!$.attr(this.element, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
+			} else {
+				this.apiElem.sendEvent('PLAY', 'true');
 			}
 		},
 		muted: function(state){
@@ -1697,20 +1759,65 @@
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
+		_isSeekable: function(t){
+			var file = this.getCurrentSrc();
+			
+			if(this._buffered === 100 || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
+				return true;
+			}
+			
+			var dur = this.getDuration();
+			if(!dur){
+				return false;
+			}
+			
+			return (t / dur * 100 < this._buffered);
+		},
 		currentTime: function(t){
 			if(!isFinite(t)){
 				return this.currentPos || 0;
 			}
-			var isPlaying = (this.apiElem.getConfig().state === 'PLAYING');
-			if(!isPlaying){
+			var api 			= this,
+				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
+				doSeek 			= function(){
+					api.apiElem.sendEvent('SEEK', t);
+					api.currentPos = t;
+					api._trigger({type: 'timechange', time: t});
+				},
+				unbind 			= function(){
+					$(api.element).unbind('.jwseekrequest');
+				}
+			;
+			if(!wantsPlaying){
 				this.apiElem.sendEvent('PLAY', 'true');
-			}
-			
-			this.apiElem.sendEvent('SEEK', ''+t);
-			this._trigger({type: 'timechange', time: t});
-			if(!isPlaying){
 				this.apiElem.sendEvent('PLAY', 'false');
 			}
+			clearTimeout(this._seekrequestTimer);
+			unbind();
+			if(this._isSeekable(t)){
+				doSeek();
+			} else {
+				this.apiElem.sendEvent('PLAY', 'false');
+				this._trigger('waiting');
+				$(this.element)
+					.bind('progresschange.jwseekrequest', function(){
+						if(api._isSeekable(t)){
+							unbind();
+							clearTimeout(api._seekrequestTimer);
+							if(wantsPlaying){
+								api.apiElem.sendEvent('PLAY', 'true');
+							}
+							api._seekrequestTimer = setTimeout(doSeek, 99);
+						}
+					})
+					.bind('mediareset.jwseekrequest', unbind)
+					.bind('play.jwseekrequest', unbind)
+					.bind('pause.jwseekrequest', unbind)
+				;
+				//seek failed
+				this._seekrequestTimer = setTimeout(unbind, 9999);
+			}
+			
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;
@@ -1723,7 +1830,7 @@
 			this.apiElem.sendEvent('VOLUME', ''+v);
 		},
 		getCurrentSrc: function(){
-			return (this.apiElem.getConfig() || {}).file;
+			return (this.apiElem.getConfig() || {}).file || '';
 		}
 	};
 	
@@ -1749,7 +1856,6 @@
 	
 	var $m 				= $.multimediaSupport,
 		defaultAttrs 	= {
-			
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
@@ -1798,7 +1904,7 @@
 			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/x-fla', 'audio/fla', 'video/ogg', 'video/x-ogg', 'audio/x-ogg', 'audio/ogg', 'application/ogg', 'application/x-ogg']
 		}
 	;
-			
+	
 	$m.add('vlc', 'video', vlcMM);
 	$m.add('vlc', 'audio', vlcMM);
 })(jQuery);
@@ -1820,7 +1926,7 @@
 					return;
 				}
 				clearInterval(timer);
-				if($.attr(api.html5elem, 'autoplay')){
+				if($.attr(api.element, 'autoplay')){
 					interval.start(api);
 				} else {
 					api.apiElem.playlist.stop();
@@ -1962,14 +2068,14 @@
 			return ret;
 		},
 		_mmload: function(src){
-			$(this.html5elem).unbind('playing.enterFullscreen');
+			$(this.element).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
 			var item = this.apiElem.playlist.add(src, " ", ":no-video-title-show");
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
-			if(!$.attr(this.html5elem, 'autoplay')){
+			if(!$.attr(this.element, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
@@ -2020,7 +2126,7 @@
 			enterFullScreen: function(){
 				if(!this._isPlaying()){
 					var that = this;
-					$(that.html5elem).one('playing.enterFullscreen', function(){
+					$(that.element).one('playing.enterFullscreen', function(){
 						that.apiElem.video.fullscreen = true;
 					});
 					this.play();

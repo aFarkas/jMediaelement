@@ -37,3 +37,27 @@ code {
 .demo-themeswitcher {
 	float: right;
 }
+.totalerror .media-controls {
+	display: none !important;
+}
+.fallback {
+	position: relative;
+	zoom: 1;
+}
+.fallback-text {
+	position: absolute;
+	padding: 10px;
+	bottom: 0;
+	background: #000;
+	background: rgba(0, 0, 0, 0.8);
+	color: #fff;
+}
+.fallback-text p {
+	margin: 0 0 10px;
+}
+.fallback-text li {
+	list-style: none;
+}
+.fallback-text a {
+	color: #fff;
+}

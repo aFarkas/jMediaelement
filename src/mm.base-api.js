@@ -79,12 +79,16 @@
 				case 'loadedmeta':
 					this.loadedmeta = evt;
 					break;
+				case 'totalerror':
+					this.totalerror = true;
+					break;
 				case 'mediareset':
 					this.loadedmeta = false;
+					this.totalerror = false;
 					break;
 			}
 			
-			if(!this.isAPIActive){return;}
+			if(!this.isAPIActive || (this.totalerror && !noAPIEvents[type])){return;}
 			if(!this.isAPIReady && !noAPIEvents[type]){
 				this._trigger('mmAPIReady');
 			}
@@ -384,7 +388,7 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isAPIReady){
+						if(api && api.isAPIReady && !api.totalerror){
 							ret = api[name].apply(api, args);
 						}
 					});

@@ -55,7 +55,9 @@
 	})();
 	
 	var jwMM 	= {
-			isTechAvailable: $.support.flash9,
+			isTechAvailable: function(){
+				return $.support.flash9;
+			},
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),

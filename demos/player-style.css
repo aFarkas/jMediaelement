@@ -22,10 +22,8 @@ video {
 }
 .media-controls-wrapper {
 	position: absolute;
-	bottom: -40px;
+	bottom: 0;
 	width: 100%;
-	opacity: 0;
-	background: #fff;
 }
 .media-controls {
 	display: none;
@@ -33,6 +31,9 @@ video {
 	overflow: hidden;
 	margin: 0;
 	padding: 5px 0;
+	/* ie opacity bug */
+	position: relative;
+	z-index: 999;
 }
 .js-ready .media-controls {
 	display: block;
@@ -45,6 +46,9 @@ button.ui-state-default .button-text {
 	display: block;
 	left: -9999px;
 	width: 3px;
+}
+button.fullscreen-unsupported {
+	display: none;
 }
 .media-controls .ui-slider,
 .media-controls button.ui-state-default,

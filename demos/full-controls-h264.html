@@ -13,9 +13,16 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 		<!-- END:  ui-components -->
 		
+		<!-- jMediaelement -->
 		<script src="../packages/mm.full.min.js"></script>
+		<!-- jMediaelement -->
+		
+		<!-- fullwindow plugin -->
+		<script src="../plugins/fullwindow.js"></script>
+		<!-- fullwindow plugin -->
+		
 		<!-- accessible hover -->
-		<script src="http://gist.github.com/raw/328632/6ba479b9763a8fa805431199b2eb3620f67c8ea7/hover+focus-blur%20events"></script>
+		<script src="http://gist.github.com/raw/328632/863deab936bde696e0649a1a7c65057f8ec9937b/hover+focus-blur%20events"></script>
 		
 		<script>
 			$('html').addClass('js-on');
@@ -25,7 +32,7 @@
 					.registerMMControl({
 						//embed options for the mediaElementEmbed-method
 						embed: {
-							//debug: true,
+							showFallback: true,
 							removeControls: true,
 							//jwPlayer-Options
 							jwPlayer: {
@@ -48,15 +55,15 @@
 					})
 					//inOut = hover + focusenter/focusleave
 					.inOut(function(){
-						$('div.media-controls-wrapper', this).stop().animate({bottom: 0, opacity: 1});
+						$('div.media-controls', this).stop().animate({opacity: 1});
 						//prevent scrollIntoView:
 						this.scrollTop = 0;
 					}, function(){
-						$('div.media-controls-wrapper', this).stop().animate({bottom: -40, opacity: 0});
+						$('div.media-controls', this).stop().animate({opacity: 0});
 					}, {
 						mouseDelay: 250
 					})
-					.find('div.media-controls-wrapper')
+					.find('div.media-controls')
 					.css('opacity', 0)
 				;
 			});
@@ -64,6 +71,43 @@
 		</script>
 		
 		
+	</head>
+	<body>
+		
+		<div class="ui-media-player">
+			
+			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
+				<source src="media/bbb_trailer_mobile.m4v"></source>
+				<div class="fallback">
+					<img src="media/bbb_watchtrailer.gif" alt="" />
+					<div class="fallback-text">
+						<p>Please use a webkit browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+						<ul>
+							<li><a class="source" href="media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+						</ul>
+					</div>
+				</div>
+			</video>
+			<div class="media-controls-wrapper">
+				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
+					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
+					
+					<span class="current-time player-display"></span>
+					
+					<div class="timeline-slider">
+						<span class="ui-slider-handle" tabindex="0"></span>
+						<div class="progressbar"></div>
+					</div>
+					
+					<span class="duration player-display"></span>
+					
+					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
+					<button class="fullscreen"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></button>
+				</div>
+			</div>
+		</div>
+		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
 		<script> 
 			(function($){
 				//lazy load themeswitcher
@@ -115,37 +159,5 @@
 				})();
 			})(jQuery);
 		</script>
-	</head>
-	<body>
-		
-		<div class="ui-media-player">
-			
-			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-				<source src="media/bbb_trailer_mobile.m4v"></source>
-				<a class="source" href="media/bbb_trailer_mobile.m4v">title</a>
-			</video>
-			<div class="media-controls-wrapper">
-				<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-					<button class="play-pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-					
-					<span class="current-time player-display"></span>
-					
-					<div class="timeline-slider">
-						<span class="ui-slider-handle" tabindex="0"></span>
-						<div class="progressbar"></div>
-					</div>
-					
-					<span class="duration player-display"></span>
-					
-					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
-					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
-					
-				</div>
-			</div>
-		</div>
-		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
-		<!--
-		<button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-		-->	
 	</body>
 </html>

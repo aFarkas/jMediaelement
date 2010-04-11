@@ -159,7 +159,7 @@
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
 					$('> *', control).each(function(){
-						if(timeSlider[0] !== this && this.offsetWidth && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
+						if(timeSlider[0] !== this && this.offsetWidth && $.curCSS(this, 'position') !== 'absolute' && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
 							occupied += $(this).outerWidth(true);
 						}
 					});
@@ -189,36 +189,19 @@
 	//create Toggle Button UI
 	$.each(toggleModells, function(name, opts){
 		controls[name] = function(control, mm, api, o){
-			var iconElem 	= $('.ui-icon', control),
-				textElem 	= $('.button-text', control),
-				stateNames,
-				that 		= this
-			;
-			
+			var elems = $.fn.registerMMControl.getBtn(control);
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
-			}
-			
-			if(!iconElem[0] && !textElem[0] && !$('*', control)[0]){
-				iconElem = control;
-				textElem = control;
-			}
-			
-			stateNames = textElem.text().split(split);
-			
-			if(stateNames.length !== 2){
-				textElem = $([]);
-			}
-			
+			}		
 			function changeState(e, ui){
 				var state = api.apis[api.name][opts.stateMethod]();
 				
 				if(state){
-					textElem.text(stateNames[1]);
-					iconElem.addClass(opts.trueClass).removeClass(opts.falseClass);
+					elems.text.text(elems.names[1]);
+					elems.icon.addClass(opts.trueClass).removeClass(opts.falseClass);
 				} else {
-					textElem.text(stateNames[0]);
-					iconElem.addClass(opts.falseClass).removeClass(opts.trueClass);
+					elems.text.text(elems.names[0]);
+					elems.icon.addClass(opts.falseClass).removeClass(opts.trueClass);
 				}
 			}
 			
@@ -248,8 +231,9 @@
 		} 
 		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
-			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
 			ret.api.controlWrapper = (ret.api.controlWrapper) ? ret.api.controlWrapper.add(jElm) : jElm;
+			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
+			ret.api.controlBar = ret.controls.filter('.'+o.classPrefix+'media-controls');
 		}
 		return ret;
 	}
@@ -380,6 +364,24 @@
 		timeSlider: {}
 	};
 	
+	$.fn.registerMMControl.getBtn = function(control){
+		var elems = {
+			icon: $('.ui-icon', control),
+			text: $('.button-text', control)
+		};
+			
+		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
+			elems.icon = control;
+			elems.text = control;
+		}
+		
+		elems.names = elems.text.text().split(split);
+		
+		if(elems.names.length !== 2){
+			elems.text = $([]);
+		}
+		return elems;
+	};
 	$.fn.registerMMControl.addControl = function(name, fn){
 		controls[name] = fn;
 	};

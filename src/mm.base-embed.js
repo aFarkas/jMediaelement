@@ -146,8 +146,13 @@
 	
 	function bindSource(e){
 		if(!$.support.mediaElements){return;}
+		
 		var apis = $.data(this, 'mediaElemSupport');
 		if(!apis || !apis.apis){return;}
+		//reset error
+		if(e && e.type){
+			$.data(this, 'calledMediaError', false);
+		}
 		apis = apis.apis;
 		
 		//webkit is really stupid with the error event, so fallback to canPlaytype
@@ -156,19 +161,13 @@
 		;
 		
 		if( elem.error || (srces.length && !apis.nativ.canPlaySrces(srces)) ){
-			$(elem).triggerHandler('mediaerror');
+			$.event.special.mediaerror.handler.call(this, $.Event('mediaerror'));
 			//stop trying to play
 			try {
 				elem.pause();
 			} catch(er){}
 		}
-		
-		// we don´t need loadstart workaround
-		if(e && e.type === 'emptied' && e.orginalEvent && e.orginalEvent.type === 'emptied'){
-			$(this).unbind('loadstart', bindSource);
-		}
-		//END: webkit workaround
-		
+				
 		//bind error 
 		$('source', this)
 			.unbind('error', sourceError)
@@ -180,12 +179,15 @@
 	$.event.special.mediaerror = {
 		setup: function(){
 			//ff always triggers an error on video/audio | w3c/webkit/opera triggers error event on source, if available
-			$(this)
+			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
-				.each(bindSource)
 				//older webkit do not support emptied
-				.bind('emtptied loadstart', bindSource)
+				.bind('mediareset', bindSource)
 			;
+			//bindSource can trigger mediaerror, but event is always bound after setup
+			setTimeout(function(){
+				media.each(bindSource);
+			}, 0);
 		},
 		teardown: function(){
 			$(this)
@@ -195,7 +197,10 @@
 			;
 		},
 		handler: function(e){
+			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
+			$.data(this, 'calledError', true);
+			
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -267,7 +272,7 @@
 			$.extend(true, this.apis[elemName][name], api);
 		},
 		fn: {
-			_init: function(){},
+			_init: $.noop,
 			canPlayType: function(type){
 				var elem = this.apiElem,
 					ret
@@ -330,7 +335,7 @@
 			},
 			_setActive: $.noop,
 			_setInactive: $.noop,
-			_trigger: $.noop
+			_trigger: function(e){$(this.element).triggerHandler(e, e);}
 		},
 		apis: {
 			audio: {},
@@ -421,7 +426,7 @@
 			var srces 		= $.attr(elem, 'srces'),
 				supported 	= false,
 				getSupported = function(name, api){
-					if( !api.isTechAvailable || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
+					if( (typeof api.isTechAvailable === 'boolean' && !api.isTechAvailable) || ( $.isFunction(api.isTechAvailable) && !api.isTechAvailable() ) ){
 						return;
 					}
 					var src = api.canPlaySrces(srces);
@@ -631,6 +636,7 @@
 	$.fn.mediaElementEmbed.defaults = {
 		debug: false,
 		removeControls: false,
+		showFallback: false,
 		apiOrder: []
 	};
 	

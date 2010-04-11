@@ -203,13 +203,17 @@
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
 		_isSeekable: function(t){
-			if(this._buffered === 100){
+			var file = this.getCurrentSrc();
+			
+			if(this._buffered === 100 || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
 				return true;
 			}
+			
 			var dur = this.getDuration();
 			if(!dur){
 				return false;
 			}
+			
 			return (t / dur * 100 < this._buffered);
 		},
 		currentTime: function(t){
@@ -219,30 +223,42 @@
 			var api 			= this,
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
 				doSeek 			= function(){
-					$(api.element).unbind('.jwseekrequest');
 					api.apiElem.sendEvent('SEEK', t);
 					api.currentPos = t;
 					api._trigger({type: 'timechange', time: t});
+				},
+				unbind 			= function(){
+					$(api.element).unbind('.jwseekrequest');
 				}
 			;
 			if(!wantsPlaying){
 				this.apiElem.sendEvent('PLAY', 'true');
 				this.apiElem.sendEvent('PLAY', 'false');
 			}
+			clearTimeout(this._seekrequestTimer);
+			unbind();
 			if(this._isSeekable(t)){
 				doSeek();
 			} else {
+				this.apiElem.sendEvent('PLAY', 'false');
+				this._trigger('waiting');
 				$(this.element)
-					.unbind('.jwseekrequest')
 					.bind('progresschange.jwseekrequest', function(){
 						if(api._isSeekable(t)){
-							doSeek();
+							unbind();
+							clearTimeout(api._seekrequestTimer);
+							if(wantsPlaying){
+								api.apiElem.sendEvent('PLAY', 'true');
+							}
+							api._seekrequestTimer = setTimeout(doSeek, 99);
 						}
 					})
-					.bind('mediareset.jwseekrequest', function(){
-						$(api.element).unbind('.jwseekrequest');
-					})
+					.bind('mediareset.jwseekrequest', unbind)
+					.bind('play.jwseekrequest', unbind)
+					.bind('pause.jwseekrequest', unbind)
 				;
+				//seek failed
+				this._seekrequestTimer = setTimeout(unbind, 9999);
 			}
 			
 		},
@@ -257,7 +273,7 @@
 			this.apiElem.sendEvent('VOLUME', ''+v);
 		},
 		getCurrentSrc: function(){
-			return (this.apiElem.getConfig() || {}).file;
+			return (this.apiElem.getConfig() || {}).file || '';
 		}
 	};
 	

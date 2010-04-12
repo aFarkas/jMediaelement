@@ -1,46 +1,63 @@
-/**!
- * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
- * @author Alexander Farkas
- * Copyright 2010, Alexander Farkas
- * Dual licensed under the MIT or GPL Version 2 licenses.
- */
 (function($){
-	function isBetweenRange(elem, api, time){
+	function isBetweenRange(elem, timerange, time){
+		if(!timerange.active){return;}
 		
-		if(!api.active){return;}
+		var e 	= {time: time};
 		
-		var i 	= 0,
-			len = api.ranges.length,
-			e 	= {
-				time: time
-			}
-		;
-		if(!api.entered){
-			for(; i < len; i++){
-				if(api.ranges[i] <= time && api.ranges[i+1] >= time){
-					e.rangeEnter = api.ranges[i];
-					e.rangeLeave = api.ranges[i+1];
-					e.rangeIndex = i / 2;
+		if(!timerange.entered){
+			var	i = timerange.lastIndex,
+				len 	= timerange.enterRanges.length,
+				createEvent = function(index){
+					e.rangeEnter = timerange.enterRanges[index];
+					e.rangeLeave = timerange.leaveRanges[index];
+					e.rangeIndex = index;
+					timerange.lastIndex = e.rangeIndex;
+					timerange.lastTime = timerange.enterRanges[index];
 					e.type = 'rangeenter';
-					api.entered = [ e.rangeEnter, e.rangeLeave, e.rangeIndex ];
-					break;
+					timerange.entered = [ e.rangeEnter, e.rangeLeave, e.rangeIndex ];
 				}
-				i++;
+			;
+			if(timerange.lastTime > time){
+				while(i--){
+					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
+						createEvent(i);
+						break;
+					} else if(timerange.leaveRanges[i] < time){
+						timerange.lastIndex = i;
+						timerange.lastTime = timerange.enterRanges[i];
+						break;
+					}
+				}
+			} else {
+				for(; i < len; i++){
+					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
+						createEvent(i);
+						break;
+					} else if(timerange.leaveRanges[i] > time){
+						timerange.lastIndex = i;
+						timerange.lastTime = timerange.leaveRanges[i];
+						break;
+					}
+				} 
 			}
-		} else if(time < api.entered[0] || api.entered[1] < time){
-			e.rangeEnter = api.entered[0];
-			e.rangeLeave = api.entered[1];
-			e.rangeIndex = api.entered[2];
+		} else if(time < timerange.entered[0] || timerange.entered[1] < time){
+			e.rangeEnter = timerange.entered[0];
+			e.rangeLeave = timerange.entered[1];
+			e.rangeIndex = timerange.entered[2];
 			e.type = 'rangeleave';
-			api.entered = false;
+			timerange.entered = false;
 		}
 		if(e.type){
-			if(api.callback){
-				api.callback.call(elem, e );
+			if(timerange.callback){
+				timerange.callback.call(elem, e );
 			}
 			$(elem).triggerHandler(e);
 		}	
 		
+	}
+	
+	function Numsort (a, b) {
+		return a - b;
 	}
 	
 	$.fn.addTimeRange = function(name, o){
@@ -61,15 +78,15 @@
 			
 			if(!api.timeRanges[name]){
 				api.timeRanges[name] = {
-					ranges: [],
+					enterRanges: [],
+					leaveRanges: [],
+					lastIndex: 0,
+					lastTime: 0,
+					lastFound: false,
 					entered: false,
 					active: false,
 					callback: o.callback
 				};
-				
-				$(this).bind('timechange', function(e, evt){
-					isBetweenRange(this, api.timeRanges[name], evt.time);
-				});
 			}
 			
 			if(o.callback){
@@ -78,14 +95,21 @@
 			
 			if(o === 'activate'){
 				api.timeRanges[name].active = true;
+				$(this).bind('timechange.'+name, function(e, evt){
+					isBetweenRange(this, api.timeRanges[name], evt.time);
+				});
 			} else if(o === 'deactivate'){
 				api.timeRanges[name].active = false;
+				api.timeRanges[name].entered = false;
+				$(this).unbind('timechange.'+ name);
 			} else {
-				api.timeRanges[name].ranges.push(o.enter);
-				api.timeRanges[name].ranges.push(o.leave);
+				api.timeRanges[name].enterRanges.push(o.enter);
+				api.timeRanges[name].leaveRanges.push(o.leave);
 			}
+			
 			if(o.resort){
-				
+				api.timeRanges[name].enterRanges.sort(Numsort);
+				api.timeRanges[name].leaveRanges.sort(Numsort);
 			}
 			
 		});
@@ -120,7 +144,6 @@
 						
 						jElm.triggerHandler(e.type, e);
 					}
-					
 					$.each(data.captions, function(i, caption){
 						
 						data.parent.addTimeRange(data.id, {
@@ -243,5 +266,6 @@ $.parseSrt = function(data) {
 
     return captions;
 }
-})(jQuery);
 
+	
+})(jQuery);

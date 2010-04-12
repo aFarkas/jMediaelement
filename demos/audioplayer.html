@@ -7,16 +7,17 @@
 		<link rel="stylesheet" href="../css/styles.css" />
 		<link rel="stylesheet" href="holy-grail-player-style.css" />
 		
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
 		
 		<!-- ui-components -->
-		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.js"></script>
 		<!-- END:  ui-components -->
 		
-		<script src="../packages/mm.full.min.js"></script>
+		<script src="../packages/mm.full.js"></script>
 		
 		<script>
 			$('html').addClass('js-on');
+			
 			function MMPlaylist(wrapper, opts){
 				this.init(wrapper, opts);
 			}
@@ -41,15 +42,19 @@
 							$('div.player-errors', wrapper).html('an media error has occured').show();
 						})
 						.bind('ended', function(){
-							var list = $('li.playlist-item', that.playList);
-							that.loadIndex( (list.length <= that.curIndex + 1) ? 0 : that.curIndex + 1);
+							var list 		= $('li.playlist-item', that.playList),
+								curIndex 	= list.index('.ui-state-active')
+							;
+							that.loadIndex( (list.length <= curIndex + 1) ? 0 : curIndex + 1);
 						})
 					;
 					
 					//init mediaelement api
 					wrapper.registerMMControl(opts);
 					//and load the first item
-					this.loadIndex(0);
+					this.player.onAPIReady(function(){
+						that.loadIndex(0);
+					});
 				},
 				loadItem: function(item){
 					this.loadIndex($('li.playlist-item', this.playList).index(item));
@@ -61,7 +66,6 @@
 						.addClass('ui-state-active')
 					;
 					this.player.loadSrc( this.getItemSrces( item )  );
-					this.curIndex = index;
 				},
 				getItemSrces: function(item){
 					var srces = [];

@@ -373,6 +373,9 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
+	var noAPIMethods = {
+		onAPIReady: 1
+	};
 	$m.registerAPI = function(names){
 		if(typeof names === 'string'){
 			names = [names];
@@ -388,8 +391,12 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isAPIReady && !api.totalerror){
+						if(api && ( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] )){
 							ret = api[name].apply(api, args);
+						} else {
+							api.onAPIReady.call(api, function(){
+								api[name].apply(api, args);
+							});
 						}
 					});
 					return (ret === undefined) ? this : ret; 

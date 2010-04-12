@@ -1034,6 +1034,9 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
+	var noAPIMethods = {
+		onAPIReady: 1
+	};
 	$m.registerAPI = function(names){
 		if(typeof names === 'string'){
 			names = [names];
@@ -1049,8 +1052,12 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && api.isAPIReady && !api.totalerror){
+						if(api && ( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] )){
 							ret = api[name].apply(api, args);
+						} else {
+							api.onAPIReady.call(api, function(){
+								api[name].apply(api, args);
+							});
 						}
 					});
 					return (ret === undefined) ? this : ret; 
@@ -1163,7 +1170,7 @@
 						})
 					;
 					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', api.apis[api.name].volume());
+					control[sliderMethod]('value', mm.volume() || 100);
 					
 				});
 			},
@@ -1270,7 +1277,7 @@
 				control.addClass('ui-state-default ui-corner-all');
 			}		
 			function changeState(e, ui){
-				var state = api.apis[api.name][opts.stateMethod]();
+				var state = mm[opts.stateMethod]();
 				
 				if(state){
 					elems.text.text(elems.names[1]);

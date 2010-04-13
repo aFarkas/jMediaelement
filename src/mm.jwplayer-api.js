@@ -159,7 +159,7 @@
 			//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
 			if(api.isAPIReady){
 				if(!api.apiElem.sendEvent){
-					this._reInit();
+					api._reInit();
 					return;
 				} else if(api._lastLoad && api.isAPIActive){
 					api._mmload(api._lastLoad.file, api._lastLoad.image);
@@ -187,8 +187,7 @@
 		_reInitTimer: false,
 		_reInit: function(){
 			var that = this;
-			
-			if(this._reInitCount < 3){
+			if(this._reInitCount < 5){
 				var overflow = this.visualElem[0].style.overflow;
 				this.visualElem[0].style.overflow = 'hidden';
 				setTimeout(function(){

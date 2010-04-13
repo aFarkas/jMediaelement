@@ -134,13 +134,17 @@
 		getMMVisual: function(){
 			return this.visualElem;
 		},
-		onAPIReady: function(fn){
+		onAPIReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
 			if(this.isAPIReady){
 				fn.call(this.element, e, e);
 			} else {
-				$(this.element).one('mmAPIReady.jmediaelement', fn);
+				n = n || 'jmediaelement';
+				$(this.element).one('mmAPIReady.'+n, fn);
 			}
+		},
+		unAPIReady: function(name){
+			$(this.element).unbind('mmAPIReady.'+name);
 		},
 		_format: $m.formatTime,
 		getFormattedDuration: function(){
@@ -166,14 +170,16 @@
 				poster = $.attr(this.element, 'poster');
 			}
 			this._isResetting = true;
-			this._trigger('mediareset');
+			
 			var canPlaySrc = this.canPlaySrces(srces);
 			
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
+				this._trigger('mediareset');
 				this._mmload(canPlaySrc, poster);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
+				this._trigger('mediareset');
 				$(this.element).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -326,7 +332,7 @@
 			}
 			return this.element.currentTime;
 		},
-		_mmload: function(extras){
+		_mmload: function(){
 			if(this.element.load){
 				this.element.load();
 			} else {
@@ -374,8 +380,10 @@
 	};
 	
 	var noAPIMethods = {
-		onAPIReady: 1
-	};
+			onAPIReady: 1,
+			loadSrc: 1
+		}
+	;
 	$m.registerAPI = function(names){
 		if(typeof names === 'string'){
 			names = [names];
@@ -394,9 +402,10 @@
 						if(api && ( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] )){
 							ret = api[name].apply(api, args);
 						} else {
+							api.unAPIReady(name+'queue');
 							api.onAPIReady.call(api, function(){
 								api[name].apply(api, args);
-							});
+							}, name+'queue');
 						}
 					});
 					return (ret === undefined) ? this : ret; 

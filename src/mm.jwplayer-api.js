@@ -162,7 +162,7 @@
 					this._reInit();
 					return;
 				} else if(api._lastLoad && api.isAPIActive){
-					api._mmload(api._lastLoad);
+					api._mmload(api._lastLoad.file, api._lastLoad.image);
 				}
 			}
 			

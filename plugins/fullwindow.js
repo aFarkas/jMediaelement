@@ -14,14 +14,13 @@
 				elemS = this.style
 			;
 			if(!styles){
-				$.each(data, function(prop, val){
-					elemS[prop] = val || '';
-				});
+				$(this).css(data);
 				data = {};
 			} else {
-				$.each(styles, function(prop){
+				$.each(styles, function(prop, val){
 					data[prop] = elemS[prop];
 				});
+				$(this).css(styles);
 			}
 		});
 	};
@@ -123,32 +122,31 @@
 				},
 				rel 	= curDim.width / curDim.height,
 				ctrlBar = data.controlBar || $([]),
+				parent  = this.visualElem.parent(),
 				videoCSS= $.extend({}, videoBaseCSS, getSize(rel))
 			;
 			$('html, body')
 				.addClass('contains-fullscreenvideo')
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
-				.css(bodyCSS)
 			;
 			
 			videoOverlay.show(this.element);
 			
-			this.visualElem
-				.parent()
-				.storeInlineStyle(curDim, 'fsstoredInlineStyle')
-				.css(curDim)
+			parent
+				.storeInlineStyle({
+					height: parent.height(),
+					width: parent.width()
+				}, 'fsstoredInlineStyle')
 			;
 			
 			ctrlBar
 				.addClass('controls-fullscreenvideo')
 				.storeInlineStyle(barCSS, 'fsstoredInlineStyle')
-				.css(barCSS)
 			;
 						
 			this.visualElem
 				.addClass('displays-fullscreen')
 				.storeInlineStyle(videoCSS, 'fsstoredInlineStyle')
-				.css(videoCSS)
 			;
 			
 			$(this.element).addClass('displays-fullscreen');
@@ -180,7 +178,10 @@
 			this.visualElem
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('displays-fullscreen')
+				.parent()
+				.storeInlineStyle('fsstoredInlineStyle')
 			;
+			
 			$(this.element).removeClass('displays-fullscreen');
 			ctrlBar
 				.storeInlineStyle('fsstoredInlineStyle')

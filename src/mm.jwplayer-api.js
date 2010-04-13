@@ -187,8 +187,8 @@
 		_reInitTimer: false,
 		_reInit: function(){
 			var that = this;
-			this._reInitCount++;
-			if(this._reinitCount < 3){
+			
+			if(this._reInitCount < 3){
 				var overflow = this.visualElem[0].style.overflow;
 				this.visualElem[0].style.overflow = 'hidden';
 				setTimeout(function(){
@@ -196,6 +196,8 @@
 					that.visualElem[0].style.overflow = overflow;
 				}, 0);
 			}
+			this._reInitCount++;
+			
 			if(!this._reInitTimer){
 				this._reInitTimer = true;
 				setTimeout(function(){

@@ -199,8 +199,7 @@
 		handler: function(e){
 			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
-			$.data(this, 'calledError', true);
-			
+			$.data(this, 'calledMediaError', true);
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -387,12 +386,15 @@
 			
 			if(showElem && showElem.nodeName){
 				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
-					data.apis[supType].visualElem.css({
-						width: data.apis[oldActive].visualElem.width(),
-						height: data.apis[oldActive].visualElem.height(),
-						visibility: '',
-						display: ''
-					});
+					if(supType === 'nativ'){
+						data.apis[supType].visualElem.css({display: ''});
+					} else {
+						data.apis[supType].visualElem.css({
+							width: data.apis[oldActive].visualElem.width(),
+							height: data.apis[oldActive].visualElem.height(),
+							visibility: ''
+						});
+					}
 				}
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
@@ -406,7 +408,6 @@
 					data.apis[oldActive].visualElem.css({
 						height: 0,
 						width: 0,
-						overflow: 'hidden',
 						visibility: 'hidden'
 					});
 				}
@@ -585,6 +586,8 @@
 		//returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
+		} else if(apiData.apis[supported.name]._mmload){
+			apiData.apis[supported.name]._mmload(supported.src, $.attr(elem, 'poster'));
 		}
 	}
 		

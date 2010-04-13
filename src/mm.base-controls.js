@@ -87,8 +87,7 @@
 						})
 					;
 					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', api.apis[api.name].volume());
-					
+					control[sliderMethod]('value', mm.volume() || 100);
 				});
 			},
 			'progressbar': function(control, mm, api, o){
@@ -194,7 +193,7 @@
 				control.addClass('ui-state-default ui-corner-all');
 			}		
 			function changeState(e, ui){
-				var state = api.apis[api.name][opts.stateMethod]();
+				var state = mm[opts.stateMethod]();
 				
 				if(state){
 					elems.text.text(elems.names[1]);

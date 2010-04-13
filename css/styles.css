@@ -2,7 +2,7 @@
     margin: 0;
     padding: 0;
 }
-audio,
+audio[controls],
 video {
 	display: block;
 }

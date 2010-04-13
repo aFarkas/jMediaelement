@@ -182,7 +182,7 @@
 			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				//older webkit do not support emptied
-				.bind('mediareset', bindSource)
+				.bind('native_mediareset', bindSource)
 			;
 			//bindSource can trigger mediaerror, but event is always bound after setup
 			setTimeout(function(){

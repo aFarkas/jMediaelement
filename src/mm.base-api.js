@@ -5,15 +5,20 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function($){
-	var video 		= document.createElement('video'), 
-		$m 			= $.multimediaSupport,
-		noAPIEvents = {
-			apiActivated: true,
-			apiDeActivated: true,
-			mediareset: true,
-			totalerror: true
+	var video 			= document.createElement('video'), 
+		$m 				= $.multimediaSupport,
+		noAPIEvents 	= {
+			apiActivated: 1,
+			apiDeActivated: 1,
+			mediareset: 1,
+			totalerror: 1
 		},
-		fsMethods	= {}
+		nuBubbleEvents 	= {
+			native_mediareset: 1,
+			timechange: 1,
+			progresschange: 1
+		},
+		fsMethods		= {}
 	;
 	
 	if('enterFullScreen' in video && video.supportsFullscreen){
@@ -70,11 +75,7 @@
 
 			switch(type){
 				case 'mmAPIReady':
-					if(this.isAPIReady){
-						return;
-					} else {
-						this.isAPIReady = true;
-					}
+					this.isAPIReady = true;
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = evt;
@@ -106,7 +107,7 @@
 			
 			e.mediaapi = this.name;
 			
-			if(e.type === 'timechange' || e.type === 'progresschange'){
+			if(nuBubbleEvents[type]){
 				e.stopPropagation();
 			}
 			
@@ -172,14 +173,14 @@
 			this._isResetting = true;
 			
 			var canPlaySrc = this.canPlaySrces(srces);
-			
+			this._trigger('mediareset');
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				this._trigger('mediareset');
+				
 				this._mmload(canPlaySrc, poster);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
-				this._trigger('mediareset');
+				this._trigger('native_mediareset');
 				$(this.element).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -300,7 +301,7 @@
 					$(that.element).unbind('mediaerror', catchInitialError);
 					if(hasInitialError || that.element.error){
 						that.isAPIReady = true;
-					} else {
+					} else if(!that.loadedmeta){
 						that._trigger('mmAPIReady');
 					}
 				}, 150);

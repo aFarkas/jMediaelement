@@ -155,6 +155,17 @@
 		
 		var api = getAPI(obj.id);
 		if(api){
+			
+			//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
+			if(api.isAPIReady){
+				if(!api.apiElem.sendEvent){
+					this._reInit();
+					return;
+				} else if(api._lastLoad && api.isAPIActive){
+					api._mmload(api._lastLoad);
+				}
+			}
+			
 			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
 			//add events
 			$.each(jwEvents[apiVersion], function(mvcName, evts){
@@ -172,6 +183,27 @@
 		_init: function(){
 			this._buffered = this._buffered || 0;
 		},
+		_reInitCount: 0,
+		_reInitTimer: false,
+		_reInit: function(){
+			var that = this;
+			this._reInitCount++;
+			if(this._reinitCount < 3){
+				var overflow = this.visualElem[0].style.overflow;
+				this.visualElem[0].style.overflow = 'hidden';
+				setTimeout(function(){
+					that.visualElem[0].style.overflow = 'visible';
+					that.visualElem[0].style.overflow = overflow;
+				}, 0);
+			}
+			if(!this._reInitTimer){
+				this._reInitTimer = true;
+				setTimeout(function(){
+					that._reInitCount = 0;
+					that._reInitTimer = false;
+				}, 30000);
+			}
+		},
 		play: function(){
 			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
@@ -185,10 +217,11 @@
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
 		_mmload: function(src, poster){
-			this.apiElem.sendEvent('LOAD', {
+			this._lastLoad = {
 				file: src,
 				image: poster || false
-			});
+			};
+			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if (!$.attr(this.element, 'autoplay')) {
 				this.apiElem.sendEvent('PLAY', 'false');
 			} else {

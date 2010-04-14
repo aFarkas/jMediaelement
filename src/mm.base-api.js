@@ -69,12 +69,16 @@
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
-			var type = e.type || e,
-				evt  = e
+			var evt  = (e.type) ? e : {type: e},
+				type = evt.type
 			;
 
 			switch(type){
 				case 'mmAPIReady':
+					if(this.isAPIReady){
+						
+						return;	
+					}
 					this.isAPIReady = true;
 					break;
 				case 'loadedmeta':
@@ -105,7 +109,7 @@
 			e = $.Event(e);
 			e.preventDefault();
 			
-			e.mediaapi = this.name;
+			evt.mediaAPI = this.name;
 			
 			if(nuBubbleEvents[type]){
 				e.stopPropagation();
@@ -125,6 +129,9 @@
 				this.currentTime(dur * rel / 100);
 			}
 			return this.currentTime() / dur * 100; 
+		},
+		getMediaAPI: function(){
+			return this.mediaAPI;
 		},
 		togglePlay: function(){
 			this[(this.isPlaying()) ? 'pause' : 'play']();
@@ -296,15 +303,8 @@
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			} else {
-				setTimeout(function(){
-					$(that.element).unbind('mediaerror', catchInitialError);
-					if(hasInitialError || that.element.error){
-						that.isAPIReady = true;
-					} else if(!that.loadedmeta){
-						that._trigger('mmAPIReady');
-					}
-				}, 150);
+			} else if( ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
+				this._trigger('mmAPIReady');
 			}
 		},
 		play: function(src){
@@ -400,7 +400,8 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && ( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] )){
+						if(!api){return;}
+						if( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] ){
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');

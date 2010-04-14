@@ -72,10 +72,10 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
-					this.data.playFirstFrame = true;
-					vars.autostart = 'true';
-				}
+//				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
+//					this.data.playFirstFrame = true;
+//					vars.autostart = 'true';
+//				}
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(name+'='+val);

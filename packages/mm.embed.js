@@ -19,18 +19,24 @@
 	var oldAttr 		= $.attr,
 		attrElems 		= /video|audio|source/i,
 		srcNames 		= {
-					src: true,
-					poster: true
+					src: 1,
+					poster: 1
 				},
 		booleanNames 	= {
-					loop: true,
-					autoplay: true,
-					controls: true
+					loop: 1,
+					autoplay: 1,
+					controls: 1
 				},
 		mixedNames 		= {
-			srces: true,
-			getConfig: true
-		}
+			srces: 1,
+			getConfig: 1,
+			preload: 1
+		},
+		preloadVals = {
+			auto: 1,
+			metadata: 1,
+			none: 1
+		} 
 	;
 	
 	$.attr = function(elem, name, value, pass){
@@ -60,44 +66,51 @@
 			if(srcNames[name]){
 				return $.support.video && elem[name] || m.makeAbsURI(elem.getAttribute(name));
 			}
-			if(name === 'srces'){
-				ret = $.attr(elem, 'src');
-				if( ret ){
-					ret = [{
-							src: ret,
-							type: elem.getAttribute('type'),
-							media: elem.getAttribute('media')
-						}]
-					;
-				} else {
-					ret = [];
-					$('source', elem).each(function(i){
-						ret.push({
-							src: $.attr(this, 'src'),
-							type: this.getAttribute('type'),
-							media: this.getAttribute('media')
-						});
-					});
-					// safari without quicktime ignores source-tags, initially
-					if(!ret.length){
-						$('a.source', elem).each(function(){
+			switch(name) {
+				case 'srces':
+					ret = $.attr(elem, 'src');
+					if( ret ){
+						ret = [{
+								src: ret,
+								type: elem.getAttribute('type'),
+								media: elem.getAttribute('media')
+							}]
+						;
+					} else {
+						ret = [];
+						$('source', elem).each(function(i){
 							ret.push({
-								src: this.href,
+								src: $.attr(this, 'src'),
 								type: this.getAttribute('type'),
-								media: this.getAttribute('data-media')
+								media: this.getAttribute('media')
 							});
 						});
+						// safari without quicktime ignores source-tags, initially
+						if(!ret.length){
+							$('a.source', elem).each(function(){
+								ret.push({
+									src: this.href,
+									type: this.getAttribute('type'),
+									media: this.getAttribute('data-media')
+								});
+							});
+						}
 					}
-				}
-				return ret;
-			} 
-			if(name === 'getConfig'){
-				ret = {};
-				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
-					ret[name] = $.attr(elem, name);
-				});
-				return ret;
+					break;
+				case 'getConfig':
+					ret = {};
+					$.each(['autoplay', 'loop', 'controls', 'poster', 'preload'], function(i, name){
+						ret[name] = $.attr(elem, name);
+					});
+					break;
+				case 'preload':
+					ret = elem.getAttribute('preload');
+					if(!preloadVals[ret]){
+						ret = 'auto';
+					}
+					break;
 			}
+			return ret;
 		} else {
 			if(booleanNames[name]){
 				value = !!(value);
@@ -136,6 +149,9 @@
 				$.each(value, function(n, v){
 					$.attr(elem, n, v);
 				});
+			} else if(name === 'preload'){
+				if(!preloadVals[value]){return;}
+				elem.setAttribute(name, value);
 			}
 		}
 	};
@@ -182,7 +198,7 @@
 			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				//older webkit do not support emptied
-				.bind('mediareset', bindSource)
+				.bind('native_mediareset', bindSource)
 			;
 			//bindSource can trigger mediaerror, but event is always bound after setup
 			setTimeout(function(){
@@ -199,8 +215,7 @@
 		handler: function(e){
 			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
-			$.data(this, 'calledError', true);
-			
+			$.data(this, 'calledMediaError', true);
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -387,12 +402,15 @@
 			
 			if(showElem && showElem.nodeName){
 				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
-					data.apis[supType].visualElem.css({
-						width: data.apis[oldActive].visualElem.width(),
-						height: data.apis[oldActive].visualElem.height(),
-						visibility: '',
-						display: ''
-					});
+					if(supType === 'nativ'){
+						data.apis[supType].visualElem.css({display: ''});
+					} else {
+						data.apis[supType].visualElem.css({
+							width: data.apis[oldActive].visualElem.width(),
+							height: data.apis[oldActive].visualElem.height(),
+							visibility: ''
+						});
+					}
 				}
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
@@ -406,7 +424,6 @@
 					data.apis[oldActive].visualElem.css({
 						height: 0,
 						width: 0,
-						overflow: 'hidden',
 						visibility: 'hidden'
 					});
 				}
@@ -492,7 +509,7 @@
 		getPluginVersion: function(name, plugDesc){
 			var plugin 	= plugDesc || (navigator.plugins && navigator.plugins[name]),
 				version = [-1, 0],
-				description
+				desc
 			;
 			if(plugin){
 				desc = (plugin.description || '').replace(/,/g, '.').match(/(\d+)/g) || ['0'];
@@ -585,6 +602,8 @@
 		//returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
+		} else if(apiData.apis[supported.name]._mmload){
+			apiData.apis[supported.name]._mmload(supported.src, $.attr(elem, 'poster'));
 		}
 	}
 		
@@ -733,10 +752,10 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
-					this.data.playFirstFrame = true;
-					vars.autostart = 'true';
-				}
+//				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
+//					this.data.playFirstFrame = true;
+//					vars.autostart = 'true';
+//				}
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(name+'='+val);

@@ -125,11 +125,7 @@
 				parent  = this.visualElem.parent(),
 				videoCSS= $.extend({}, videoBaseCSS, getSize(rel))
 			;
-			$('html, body')
-				.addClass('contains-fullscreenvideo')
-				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
-			;
-			
+						
 			videoOverlay.show(this.element);
 			
 			parent
@@ -137,6 +133,11 @@
 					height: parent.height(),
 					width: parent.width()
 				}, 'fsstoredInlineStyle')
+			;
+			
+			$('html, body')
+				.addClass('contains-fullscreenvideo')
+				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
 			;
 			
 			ctrlBar
@@ -148,8 +149,6 @@
 				.addClass('displays-fullscreen')
 				.storeInlineStyle(videoCSS, 'fsstoredInlineStyle')
 			;
-			
-			$(this.element).addClass('displays-fullscreen');
 			
 			doc.bind('keydown.fullscreen', function(e){
 				if(e.keyCode === 27){
@@ -182,7 +181,6 @@
 				.storeInlineStyle('fsstoredInlineStyle')
 			;
 			
-			$(this.element).removeClass('displays-fullscreen');
 			ctrlBar
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('controls-fullscreenvideo')

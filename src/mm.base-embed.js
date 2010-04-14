@@ -19,18 +19,24 @@
 	var oldAttr 		= $.attr,
 		attrElems 		= /video|audio|source/i,
 		srcNames 		= {
-					src: true,
-					poster: true
+					src: 1,
+					poster: 1
 				},
 		booleanNames 	= {
-					loop: true,
-					autoplay: true,
-					controls: true
+					loop: 1,
+					autoplay: 1,
+					controls: 1
 				},
 		mixedNames 		= {
-			srces: true,
-			getConfig: true
-		}
+			srces: 1,
+			getConfig: 1,
+			preload: 1
+		},
+		preloadVals = {
+			auto: 1,
+			metadata: 1,
+			none: 1
+		} 
 	;
 	
 	$.attr = function(elem, name, value, pass){
@@ -60,44 +66,51 @@
 			if(srcNames[name]){
 				return $.support.video && elem[name] || m.makeAbsURI(elem.getAttribute(name));
 			}
-			if(name === 'srces'){
-				ret = $.attr(elem, 'src');
-				if( ret ){
-					ret = [{
-							src: ret,
-							type: elem.getAttribute('type'),
-							media: elem.getAttribute('media')
-						}]
-					;
-				} else {
-					ret = [];
-					$('source', elem).each(function(i){
-						ret.push({
-							src: $.attr(this, 'src'),
-							type: this.getAttribute('type'),
-							media: this.getAttribute('media')
-						});
-					});
-					// safari without quicktime ignores source-tags, initially
-					if(!ret.length){
-						$('a.source', elem).each(function(){
+			switch(name) {
+				case 'srces':
+					ret = $.attr(elem, 'src');
+					if( ret ){
+						ret = [{
+								src: ret,
+								type: elem.getAttribute('type'),
+								media: elem.getAttribute('media')
+							}]
+						;
+					} else {
+						ret = [];
+						$('source', elem).each(function(i){
 							ret.push({
-								src: this.href,
+								src: $.attr(this, 'src'),
 								type: this.getAttribute('type'),
-								media: this.getAttribute('data-media')
+								media: this.getAttribute('media')
 							});
 						});
+						// safari without quicktime ignores source-tags, initially
+						if(!ret.length){
+							$('a.source', elem).each(function(){
+								ret.push({
+									src: this.href,
+									type: this.getAttribute('type'),
+									media: this.getAttribute('data-media')
+								});
+							});
+						}
 					}
-				}
-				return ret;
-			} 
-			if(name === 'getConfig'){
-				ret = {};
-				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
-					ret[name] = $.attr(elem, name);
-				});
-				return ret;
+					break;
+				case 'getConfig':
+					ret = {};
+					$.each(['autoplay', 'loop', 'controls', 'poster', 'preload'], function(i, name){
+						ret[name] = $.attr(elem, name);
+					});
+					break;
+				case 'preload':
+					ret = elem.getAttribute('preload');
+					if(!preloadVals[ret]){
+						ret = 'auto';
+					}
+					break;
 			}
+			return ret;
 		} else {
 			if(booleanNames[name]){
 				value = !!(value);
@@ -136,6 +149,9 @@
 				$.each(value, function(n, v){
 					$.attr(elem, n, v);
 				});
+			} else if(name === 'preload'){
+				if(!preloadVals[value]){return;}
+				elem.setAttribute(name, value);
 			}
 		}
 	};

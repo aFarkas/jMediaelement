@@ -57,10 +57,6 @@
 					e.duration = obj.duration;
 					e.timeProgress = obj.position / obj.duration * 100;
 				}
-				if(obj.position && api.data.playFirstFrame && !api.data.playThrough){
-					api.pause();
-					api.data.playThrough = true;
-				}
 				api._trigger(e);
 			},
 			STATE: function(obj){
@@ -164,6 +160,7 @@
 				} else if( api._lastLoad ){
 					api._mmload(api._lastLoad.file, api._lastLoad.image);
 				}
+				api._trigger('flashRefresh');
 			}
 			
 			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
@@ -172,10 +169,21 @@
 				$.each(evts, function(evtName){
 					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
 				});
-				
 			});
 			
-			api._trigger('mmAPIReady');
+			//preload workaround
+			setTimeout(function(){
+				var cfg = $.attr(api.element, 'getConfig');
+				if(!cfg.autoplay){
+					if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
+						api.apiElem.sendEvent('PLAY', 'true');
+						api.apiElem.sendEvent('PLAY', 'false');
+					} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
+						api.currentTime(0);
+					}
+				}
+				api._trigger('mmAPIReady');
+			}, 0);
 		}		
 	};
 	
@@ -202,11 +210,10 @@
 				setTimeout(function(){
 					that._reInitCount = 0;
 					that._reInitTimer = false;
-				}, 30000);
+				}, 20000);
 			}
 		},
 		play: function(){
-			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
 			this._trigger('play');
 		},
@@ -238,16 +245,13 @@
 		},
 		_isSeekable: function(t){
 			var file = this.getCurrentSrc();
-			
 			if(this._buffered === 100 || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
 				return true;
 			}
-			
 			var dur = this.getDuration();
 			if(!dur){
 				return false;
 			}
-			
 			return (t / dur * 100 < this._buffered);
 		},
 		currentTime: function(t){
@@ -258,6 +262,9 @@
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
 				doSeek 			= function(){
 					api.apiElem.sendEvent('SEEK', t);
+					if(!wantsPlaying){
+						api.apiElem.sendEvent('PLAY', 'false');
+					}
 					api.currentPos = t;
 					api._trigger({type: 'timechange', time: t});
 				},
@@ -279,12 +286,13 @@
 				$(this.element)
 					.bind('progresschange.jwseekrequest', function(){
 						if(api._isSeekable(t)){
+							var wasMuted = api.muted();
 							unbind();
 							clearTimeout(api._seekrequestTimer);
-							if(wantsPlaying){
-								api.apiElem.sendEvent('PLAY', 'true');
-							}
-							api._seekrequestTimer = setTimeout(doSeek, 99);
+							api.muted(true);
+							api.apiElem.sendEvent('PLAY', 'true');
+							api._seekrequestTimer = setTimeout(doSeek, 40);
+							api.muted(wasMuted);
 						}
 					})
 					.bind('mediareset.jwseekrequest', unbind)

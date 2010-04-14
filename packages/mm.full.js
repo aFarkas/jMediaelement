@@ -19,18 +19,24 @@
 	var oldAttr 		= $.attr,
 		attrElems 		= /video|audio|source/i,
 		srcNames 		= {
-					src: true,
-					poster: true
+					src: 1,
+					poster: 1
 				},
 		booleanNames 	= {
-					loop: true,
-					autoplay: true,
-					controls: true
+					loop: 1,
+					autoplay: 1,
+					controls: 1
 				},
 		mixedNames 		= {
-			srces: true,
-			getConfig: true
-		}
+			srces: 1,
+			getConfig: 1,
+			preload: 1
+		},
+		preloadVals = {
+			auto: 1,
+			metadata: 1,
+			none: 1
+		} 
 	;
 	
 	$.attr = function(elem, name, value, pass){
@@ -60,44 +66,51 @@
 			if(srcNames[name]){
 				return $.support.video && elem[name] || m.makeAbsURI(elem.getAttribute(name));
 			}
-			if(name === 'srces'){
-				ret = $.attr(elem, 'src');
-				if( ret ){
-					ret = [{
-							src: ret,
-							type: elem.getAttribute('type'),
-							media: elem.getAttribute('media')
-						}]
-					;
-				} else {
-					ret = [];
-					$('source', elem).each(function(i){
-						ret.push({
-							src: $.attr(this, 'src'),
-							type: this.getAttribute('type'),
-							media: this.getAttribute('media')
-						});
-					});
-					// safari without quicktime ignores source-tags, initially
-					if(!ret.length){
-						$('a.source', elem).each(function(){
+			switch(name) {
+				case 'srces':
+					ret = $.attr(elem, 'src');
+					if( ret ){
+						ret = [{
+								src: ret,
+								type: elem.getAttribute('type'),
+								media: elem.getAttribute('media')
+							}]
+						;
+					} else {
+						ret = [];
+						$('source', elem).each(function(i){
 							ret.push({
-								src: this.href,
+								src: $.attr(this, 'src'),
 								type: this.getAttribute('type'),
-								media: this.getAttribute('data-media')
+								media: this.getAttribute('media')
 							});
 						});
+						// safari without quicktime ignores source-tags, initially
+						if(!ret.length){
+							$('a.source', elem).each(function(){
+								ret.push({
+									src: this.href,
+									type: this.getAttribute('type'),
+									media: this.getAttribute('data-media')
+								});
+							});
+						}
 					}
-				}
-				return ret;
-			} 
-			if(name === 'getConfig'){
-				ret = {};
-				$.each(['autoplay', 'loop', 'controls', 'poster'], function(i, name){
-					ret[name] = $.attr(elem, name);
-				});
-				return ret;
+					break;
+				case 'getConfig':
+					ret = {};
+					$.each(['autoplay', 'loop', 'controls', 'poster', 'preload'], function(i, name){
+						ret[name] = $.attr(elem, name);
+					});
+					break;
+				case 'preload':
+					ret = elem.getAttribute('preload');
+					if(!preloadVals[ret]){
+						ret = 'auto';
+					}
+					break;
 			}
+			return ret;
 		} else {
 			if(booleanNames[name]){
 				value = !!(value);
@@ -136,6 +149,9 @@
 				$.each(value, function(n, v){
 					$.attr(elem, n, v);
 				});
+			} else if(name === 'preload'){
+				if(!preloadVals[value]){return;}
+				elem.setAttribute(name, value);
 			}
 		}
 	};
@@ -182,7 +198,7 @@
 			var media = $(this)
 				.bind('error', $.event.special.mediaerror.handler)
 				//older webkit do not support emptied
-				.bind('mediareset', bindSource)
+				.bind('native_mediareset', bindSource)
 			;
 			//bindSource can trigger mediaerror, but event is always bound after setup
 			setTimeout(function(){
@@ -199,8 +215,7 @@
 		handler: function(e){
 			if($.data(this, 'calledMediaError')){return;}
 			e = $.extend({}, e || {}, {type: 'mediaerror'});
-			$.data(this, 'calledError', true);
-			
+			$.data(this, 'calledMediaError', true);
 			return $.event.handle.apply(this, arguments);
 		}
 	};
@@ -387,12 +402,15 @@
 			
 			if(showElem && showElem.nodeName){
 				if(data.nodeName !== 'audio' || $.attr(element, 'controls')){
-					data.apis[supType].visualElem.css({
-						width: data.apis[oldActive].visualElem.width(),
-						height: data.apis[oldActive].visualElem.height(),
-						visibility: '',
-						display: ''
-					});
+					if(supType === 'nativ'){
+						data.apis[supType].visualElem.css({display: ''});
+					} else {
+						data.apis[supType].visualElem.css({
+							width: data.apis[oldActive].visualElem.width(),
+							height: data.apis[oldActive].visualElem.height(),
+							visibility: ''
+						});
+					}
 				}
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
@@ -406,7 +424,6 @@
 					data.apis[oldActive].visualElem.css({
 						height: 0,
 						width: 0,
-						overflow: 'hidden',
 						visibility: 'hidden'
 					});
 				}
@@ -492,7 +509,7 @@
 		getPluginVersion: function(name, plugDesc){
 			var plugin 	= plugDesc || (navigator.plugins && navigator.plugins[name]),
 				version = [-1, 0],
-				description
+				desc
 			;
 			if(plugin){
 				desc = (plugin.description || '').replace(/,/g, '.').match(/(\d+)/g) || ['0'];
@@ -585,6 +602,8 @@
 		//returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
+		} else if(apiData.apis[supported.name]._mmload){
+			apiData.apis[supported.name]._mmload(supported.src, $.attr(elem, 'poster'));
 		}
 	}
 		
@@ -666,15 +685,20 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function($){
-	var video 		= document.createElement('video'), 
-		$m 			= $.multimediaSupport,
-		noAPIEvents = {
-			apiActivated: true,
-			apiDeActivated: true,
-			mediareset: true,
-			totalerror: true
+	var video 			= document.createElement('video'), 
+		$m 				= $.multimediaSupport,
+		noAPIEvents 	= {
+			apiActivated: 1,
+			apiDeActivated: 1,
+			mediareset: 1,
+			totalerror: 1
 		},
-		fsMethods	= {}
+		nuBubbleEvents 	= {
+			native_mediareset: 1,
+			timechange: 1,
+			progresschange: 1
+		},
+		fsMethods		= {}
 	;
 	
 	if('enterFullScreen' in video && video.supportsFullscreen){
@@ -725,17 +749,17 @@
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
-			var type = e.type || e,
-				evt  = e
+			var evt  = (e.type) ? e : {type: e},
+				type = evt.type
 			;
 
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
-						return;
-					} else {
-						this.isAPIReady = true;
+						
+						return;	
 					}
+					this.isAPIReady = true;
 					break;
 				case 'loadedmeta':
 					this.loadedmeta = evt;
@@ -765,9 +789,9 @@
 			e = $.Event(e);
 			e.preventDefault();
 			
-			e.mediaapi = this.name;
+			evt.mediaAPI = this.name;
 			
-			if(e.type === 'timechange' || e.type === 'progresschange'){
+			if(nuBubbleEvents[type]){
 				e.stopPropagation();
 			}
 			
@@ -786,6 +810,9 @@
 			}
 			return this.currentTime() / dur * 100; 
 		},
+		getMediaAPI: function(){
+			return this.mediaAPI;
+		},
 		togglePlay: function(){
 			this[(this.isPlaying()) ? 'pause' : 'play']();
 		},
@@ -795,13 +822,17 @@
 		getMMVisual: function(){
 			return this.visualElem;
 		},
-		onAPIReady: function(fn){
+		onAPIReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
 			if(this.isAPIReady){
 				fn.call(this.element, e, e);
 			} else {
-				$(this.element).one('mmAPIReady.jmediaelement', fn);
+				n = n || 'jmediaelement';
+				$(this.element).one('mmAPIReady.'+n, fn);
 			}
+		},
+		unAPIReady: function(name){
+			$(this.element).unbind('mmAPIReady.'+name);
 		},
 		_format: $m.formatTime,
 		getFormattedDuration: function(){
@@ -827,14 +858,16 @@
 				poster = $.attr(this.element, 'poster');
 			}
 			this._isResetting = true;
-			this._trigger('mediareset');
-			var canPlaySrc = this.canPlaySrces(srces);
 			
+			var canPlaySrc = this.canPlaySrces(srces);
+			this._trigger('mediareset');
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
+				
 				this._mmload(canPlaySrc, poster);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
+				this._trigger('native_mediareset');
 				$(this.element).data('mediaElemSupport').apis.nativ._mmload();
 			}
 			this._isResetting = false;
@@ -950,15 +983,8 @@
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			} else {
-				setTimeout(function(){
-					$(that.element).unbind('mediaerror', catchInitialError);
-					if(hasInitialError || that.element.error){
-						that.isAPIReady = true;
-					} else {
-						that._trigger('mmAPIReady');
-					}
-				}, 150);
+			} else if( ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
+				this._trigger('mmAPIReady');
 			}
 		},
 		play: function(src){
@@ -987,7 +1013,7 @@
 			}
 			return this.element.currentTime;
 		},
-		_mmload: function(extras){
+		_mmload: function(){
 			if(this.element.load){
 				this.element.load();
 			} else {
@@ -1035,8 +1061,10 @@
 	};
 	
 	var noAPIMethods = {
-		onAPIReady: 1
-	};
+			onAPIReady: 1,
+			loadSrc: 1
+		}
+	;
 	$m.registerAPI = function(names){
 		if(typeof names === 'string'){
 			names = [names];
@@ -1052,12 +1080,14 @@
 					;
 					this.each(function(){
 						var api = $(this).getMMAPI();
-						if(api && ( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] )){
+						if(!api){return;}
+						if( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] ){
 							ret = api[name].apply(api, args);
 						} else {
+							api.unAPIReady(name+'queue');
 							api.onAPIReady.call(api, function(){
 								api[name].apply(api, args);
-							});
+							}, name+'queue');
 						}
 					});
 					return (ret === undefined) ? this : ret; 
@@ -1171,7 +1201,6 @@
 					;
 					control[sliderMethod]('option', 'disabled', false);
 					control[sliderMethod]('value', mm.volume() || 100);
-					
 				});
 			},
 			'progressbar': function(control, mm, api, o){
@@ -1542,10 +1571,10 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
-					this.data.playFirstFrame = true;
-					vars.autostart = 'true';
-				}
+//				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
+//					this.data.playFirstFrame = true;
+//					vars.autostart = 'true';
+//				}
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(name+'='+val);
@@ -1620,10 +1649,6 @@
 				if(obj.duration){
 					e.duration = obj.duration;
 					e.timeProgress = obj.position / obj.duration * 100;
-				}
-				if(obj.position && api.data.playFirstFrame && !api.data.playThrough){
-					api.pause();
-					api.data.playThrough = true;
 				}
 				api._trigger(e);
 			},
@@ -1719,16 +1744,39 @@
 		
 		var api = getAPI(obj.id);
 		if(api){
+			
+			//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
+			if(api.isAPIReady){
+				if(!api.apiElem.sendEvent){
+					api._reInit();
+					return;
+				} else if( api._lastLoad ){
+					api._mmload(api._lastLoad.file, api._lastLoad.image);
+				}
+				api._trigger('flashRefresh');
+			}
+			
 			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
 			//add events
 			$.each(jwEvents[apiVersion], function(mvcName, evts){
 				$.each(evts, function(evtName){
 					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
 				});
-				
 			});
 			
-			api._trigger('mmAPIReady');
+			//preload workaround
+			setTimeout(function(){
+				var cfg = $.attr(api.element, 'getConfig');
+				if(!cfg.autoplay){
+					if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
+						api.apiElem.sendEvent('PLAY', 'true');
+						api.apiElem.sendEvent('PLAY', 'false');
+					} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
+						api.currentTime(0);
+					}
+				}
+				api._trigger('mmAPIReady');
+			}, 0);
 		}		
 	};
 	
@@ -1736,8 +1784,29 @@
 		_init: function(){
 			this._buffered = this._buffered || 0;
 		},
+		_reInitCount: 0,
+		_reInitTimer: false,
+		_reInit: function(){
+			var that = this;
+			if(this._reInitCount < 5){
+				var overflow = this.visualElem[0].style.overflow;
+				this.visualElem[0].style.overflow = 'hidden';
+				setTimeout(function(){
+					that.visualElem[0].style.overflow = 'visible';
+					that.visualElem[0].style.overflow = overflow;
+				}, 0);
+			}
+			this._reInitCount++;
+			
+			if(!this._reInitTimer){
+				this._reInitTimer = true;
+				setTimeout(function(){
+					that._reInitCount = 0;
+					that._reInitTimer = false;
+				}, 20000);
+			}
+		},
 		play: function(){
-			this.data.playThrough = true;
 			this.apiElem.sendEvent('PLAY', 'true');
 			this._trigger('play');
 		},
@@ -1749,14 +1818,15 @@
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
 		_mmload: function(src, poster){
-			this.apiElem.sendEvent('LOAD', {
+			this._lastLoad = {
 				file: src,
 				image: poster || false
-			});
-			if (!$.attr(this.element, 'autoplay')) {
-				this.apiElem.sendEvent('PLAY', 'false');
-			} else {
+			};
+			this.apiElem.sendEvent('LOAD', this._lastLoad);
+			if(this.isAPIActive && $.attr(this.element, 'autoplay')){
 				this.apiElem.sendEvent('PLAY', 'true');
+			} else {
+				this.apiElem.sendEvent('PLAY', 'false');
 			}
 		},
 		muted: function(state){
@@ -1768,16 +1838,13 @@
 		},
 		_isSeekable: function(t){
 			var file = this.getCurrentSrc();
-			
 			if(this._buffered === 100 || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
 				return true;
 			}
-			
 			var dur = this.getDuration();
 			if(!dur){
 				return false;
 			}
-			
 			return (t / dur * 100 < this._buffered);
 		},
 		currentTime: function(t){
@@ -1788,6 +1855,9 @@
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
 				doSeek 			= function(){
 					api.apiElem.sendEvent('SEEK', t);
+					if(!wantsPlaying){
+						api.apiElem.sendEvent('PLAY', 'false');
+					}
 					api.currentPos = t;
 					api._trigger({type: 'timechange', time: t});
 				},
@@ -1809,22 +1879,36 @@
 				$(this.element)
 					.bind('progresschange.jwseekrequest', function(){
 						if(api._isSeekable(t)){
+							var wasMuted = api.muted();
 							unbind();
 							clearTimeout(api._seekrequestTimer);
-							if(wantsPlaying){
-								api.apiElem.sendEvent('PLAY', 'true');
-							}
-							api._seekrequestTimer = setTimeout(doSeek, 99);
+							api.muted(true);
+							api.apiElem.sendEvent('PLAY', 'true');
+							api._seekrequestTimer = setTimeout(doSeek, 40);
+							api.muted(wasMuted);
 						}
 					})
 					.bind('mediareset.jwseekrequest', unbind)
-					.bind('play.jwseekrequest', unbind)
-					.bind('pause.jwseekrequest', unbind)
+					.bind('play.jwseekrequest', function(){
+						api.apiElem.sendEvent('PLAY', 'false');
+						api._trigger('waiting');
+						wantsPlaying = true;
+					})
+					.bind('pause.jwseekrequest', function(){
+						wantsPlaying = false;
+					})
 				;
-				//seek failed
-				this._seekrequestTimer = setTimeout(unbind, 9999);
+				
+				//seek aborted
+				this._seekrequestTimer = setTimeout(function(){
+					$(api.element)
+						.unbind('play.jwseekrequest')
+						.unbind('pause.jwseekrequest')
+						.bind('play.jwseekrequest', unbind)
+						.bind('pause.jwseekrequest', unbind)
+					;
+				}, 999);
 			}
-			
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;

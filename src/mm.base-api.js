@@ -11,6 +11,7 @@
 			apiActivated: 1,
 			apiDeActivated: 1,
 			mediareset: 1,
+			native_mediareset: 1,
 			totalerror: 1
 		},
 		nuBubbleEvents 	= {

@@ -161,7 +161,7 @@
 				if(!api.apiElem.sendEvent){
 					api._reInit();
 					return;
-				} else if(api._lastLoad && api.isAPIActive){
+				} else if( api._lastLoad ){
 					api._mmload(api._lastLoad.file, api._lastLoad.image);
 				}
 			}
@@ -223,10 +223,10 @@
 				image: poster || false
 			};
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
-			if (!$.attr(this.element, 'autoplay')) {
-				this.apiElem.sendEvent('PLAY', 'false');
-			} else {
+			if(this.isAPIActive && $.attr(this.element, 'autoplay')){
 				this.apiElem.sendEvent('PLAY', 'true');
+			} else {
+				this.apiElem.sendEvent('PLAY', 'false');
 			}
 		},
 		muted: function(state){
@@ -288,13 +288,26 @@
 						}
 					})
 					.bind('mediareset.jwseekrequest', unbind)
-					.bind('play.jwseekrequest', unbind)
-					.bind('pause.jwseekrequest', unbind)
+					.bind('play.jwseekrequest', function(){
+						api.apiElem.sendEvent('PLAY', 'false');
+						api._trigger('waiting');
+						wantsPlaying = true;
+					})
+					.bind('pause.jwseekrequest', function(){
+						wantsPlaying = false;
+					})
 				;
-				//seek failed
-				this._seekrequestTimer = setTimeout(unbind, 9999);
+				
+				//seek aborted
+				this._seekrequestTimer = setTimeout(function(){
+					$(api.element)
+						.unbind('play.jwseekrequest')
+						.unbind('pause.jwseekrequest')
+						.bind('play.jwseekrequest', unbind)
+						.bind('pause.jwseekrequest', unbind)
+					;
+				}, 999);
 			}
-			
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;

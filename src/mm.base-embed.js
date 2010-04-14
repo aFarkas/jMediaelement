@@ -493,7 +493,7 @@
 		getPluginVersion: function(name, plugDesc){
 			var plugin 	= plugDesc || (navigator.plugins && navigator.plugins[name]),
 				version = [-1, 0],
-				description
+				desc
 			;
 			if(plugin){
 				desc = (plugin.description || '').replace(/,/g, '.').match(/(\d+)/g) || ['0'];

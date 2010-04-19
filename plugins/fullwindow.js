@@ -161,6 +161,7 @@
 					that.visualElem.css(getSize(rel));
 				});
 			}, 0);
+			$(this.element).addClass('displays-fullscreen');
 			this._trigger('fullwindow');
 			$(this.element).triggerHandler('resize');
 		},
@@ -190,6 +191,7 @@
 			
 			win.unbind('.fullscreen');
 			doc.unbind('.fullscreen');
+			$(this.element).removeClass('displays-fullscreen');
 			this._trigger('fullwindow');
 			$(this.element).triggerHandler('resize');
 		}

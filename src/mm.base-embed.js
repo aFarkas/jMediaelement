@@ -41,24 +41,12 @@
 	
 	$.attr = function(elem, name, value, pass){
 		
-		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || m.attrFns[name] || booleanNames[name] || srcNames[name])) ){
+		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || booleanNames[name] || srcNames[name])) ){
 			return oldAttr(elem, name, value, pass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
 		
-		if(m.attrFns[name]){
-			
-			api = $.data(elem, 'mediaElemSupport');
-			if( !api ) {
-				return oldAttr(elem, name, value, pass);
-			} else {
-				ret = api.apis[api.name][name](value, pass);
-				if(!set){
-					return ret;
-				}
-			} 
-		}
 		if(!set){
 			if(booleanNames[name]){
 				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
@@ -232,8 +220,8 @@
 	
 	var mimeTypes = {
 			audio: {
-				//oga shouldn´t be used!
-				'application/ogg': ['ogg','oga', 'ogm'],
+				//ogm shouldn´t be used!
+				'audio/ogg': ['ogg','oga', 'ogm'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
 				'audio/wav': ['wav'],
@@ -242,8 +230,8 @@
 				'audio/3gpp': ['3gp','3gpp']
 			},
 			video: {
-				//ogv shouldn´t be used!
-				'application/ogg': ['ogg','ogv', 'ogm'],
+				//ogm shouldn´t be used!
+				'video/ogg': ['ogg','ogv', 'ogm'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4', 'm4v'],
 				'video/quicktime': ['mov','qt'],
@@ -276,7 +264,6 @@
 				console.log(mimeTypes);
 			}
 		},
-		attrFns: {},
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
 				this.apis[elemName][name] = m.beget(this.fn);
@@ -487,7 +474,7 @@
 				id = apiData.nodeName +'-'+vID;
 				elem.id = id;
 			}
-			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" />').insertBefore(elem);
+			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative; overflow: hidden;" />').insertBefore(elem);
 			if(apiData.nodeName === 'audio' && !config.controls){
 				apiData.apis[supported.name].visualElem
 					.css({
@@ -530,7 +517,7 @@
 			elem = $('<div />').appendTo(elem)[0];
 			var obj;
 			
-			if(navigator.plugins && navigator.plugins[pluginName]){
+			if(navigator.plugins && navigator.plugins.length){ 
 				obj = doc.createElement('object');
 				$.each(attrs, function(name, val){
 					obj.setAttribute(name, val);

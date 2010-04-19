@@ -150,41 +150,39 @@
 	window.playerReady = function (obj) {
 		
 		var api = getAPI(obj.id);
-		if(api){
-			
-			//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
-			if(api.isAPIReady){
-				if(!api.apiElem.sendEvent){
-					api._reInit();
-					return;
-				} else if( api._lastLoad ){
-					api._mmload(api._lastLoad.file, api._lastLoad.image);
-				}
-				api._trigger('flashRefresh');
+		if(!api){return;}
+		//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
+		if(api.isAPIReady){
+			if(!api.apiElem.sendEvent){
+				api._reInit();
+				return;
+			} else if( api._lastLoad ){
+				api._mmload(api._lastLoad.file, api._lastLoad.image);
 			}
-			
-			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
-			//add events
-			$.each(jwEvents[apiVersion], function(mvcName, evts){
-				$.each(evts, function(evtName){
-					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
-				});
+			api._trigger('flashRefresh');
+		}
+		
+		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
+		//add events
+		$.each(jwEvents[apiVersion], function(mvcName, evts){
+			$.each(evts, function(evtName){
+				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
 			});
-			
-			//preload workaround
-			setTimeout(function(){
-				var cfg = $.attr(api.element, 'getConfig');
-				if(!cfg.autoplay){
-					if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
-						api.apiElem.sendEvent('PLAY', 'true');
-						api.apiElem.sendEvent('PLAY', 'false');
-					} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
-						api.currentTime(0);
-					}
+		});
+		
+		//preload workaround
+		setTimeout(function(){
+			var cfg = $.attr(api.element, 'getConfig');
+			if(!cfg.autoplay){
+				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
+					api.apiElem.sendEvent('PLAY', 'true');
+					api.apiElem.sendEvent('PLAY', 'false');
+				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster && !api.currentPos ){
+					api.currentTime(0);
 				}
-				api._trigger('mmAPIReady');
-			}, 0);
-		}		
+			}
+			api._trigger('mmAPIReady');
+		}, 0);		
 	};
 	
 	var jwAPI = {
@@ -196,11 +194,9 @@
 		_reInit: function(){
 			var that = this;
 			if(this._reInitCount < 5){
-				var overflow = this.visualElem[0].style.overflow;
-				this.visualElem[0].style.overflow = 'hidden';
+				this.visualElem[0].style.overflow = 'visible';
 				setTimeout(function(){
-					that.visualElem[0].style.overflow = 'visible';
-					that.visualElem[0].style.overflow = overflow;
+					that.visualElem[0].style.overflow = 'hidden';
 				}, 0);
 			}
 			this._reInitCount++;
@@ -262,6 +258,7 @@
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
 				doSeek 			= function(){
 					api.apiElem.sendEvent('SEEK', t);
+					unbind();
 					if(!wantsPlaying){
 						api.apiElem.sendEvent('PLAY', 'false');
 					}
@@ -289,10 +286,18 @@
 							var wasMuted = api.muted();
 							unbind();
 							clearTimeout(api._seekrequestTimer);
-							api.muted(true);
+							if (!wasMuted) {
+								api.muted(true);
+							}
 							api.apiElem.sendEvent('PLAY', 'true');
-							api._seekrequestTimer = setTimeout(doSeek, 40);
-							api.muted(wasMuted);
+							api._seekrequestTimer = setTimeout(function(){
+								if(!wasMuted){
+									api.muted(wasMuted);
+								}
+								doSeek();
+							}, 120);
+							
+							
 						}
 					})
 					.bind('mediareset.jwseekrequest', unbind)

@@ -55,6 +55,7 @@ button.fullscreen-unsupported {
 .media-controls .player-display {
 	float: left;
 	margin: 0 2px;
+	zoom: 1;
 }
 .media-controls .player-display {
 	padding: 1px 3px 0;

@@ -22,6 +22,7 @@
 				$('div[data-controlwrapper]').registerMMControl({
 					embed: {
 						//debug: true,
+						showFallback: true,
 						removeControls: true,
 						jwPlayer: {
 							path: '../mediaplayers/jw-player/player.swf'
@@ -32,7 +33,7 @@
 						dynamicTimeslider: false
 					}
 				});
-				
+							
 			});
 			
 		</script>
@@ -96,7 +97,7 @@
 					<span class="ui-slider-handle" tabindex="0"></span>
 					<div class="progressbar"></div>
 				</div>
-				<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+				<button class="mute-unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></button>
 				<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
 				
 			</div>

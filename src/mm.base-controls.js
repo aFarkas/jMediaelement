@@ -13,7 +13,6 @@
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
-				
 				function changeTimeState(e, ui){
 					if(ui.timeProgress !== undefined && !stopSlide){
 						control[sliderMethod]('value', ui.timeProgress);
@@ -28,7 +27,7 @@
 					}
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm
 						.bind('loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
@@ -50,7 +49,7 @@
 							stopSlide = false;
 						})
 						.bind('slide', function(e, ui){
-							if(e.originalEvent){
+							if(e.originalEvent && api.apis[api.name].isAPIReady){
 								api.apis[api.name].relCurrentTime(ui.value);
 							}
 						})
@@ -69,7 +68,7 @@
 					}
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm.bind('volumelevelchange', changeVolumeUI);
 					control
 						.bind('slidestart', function(e, ui){
@@ -81,13 +80,13 @@
 							stopSlide = false;
 						})
 						.bind('slide', function(e, ui){
-							if(e.originalEvent){
+							if(e.originalEvent && api.apis[api.name].isAPIReady){
 								api.apis[api.name].volume(ui.value);
 							}
 						})
 					;
 					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', mm.volume() || 100);
+					control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
 				});
 			},
 			'progressbar': function(control, mm, api, o){
@@ -105,7 +104,7 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
 						.bind('mediareset', resetProgress)
@@ -125,10 +124,10 @@
 					.bind('mediareset', function(){
 						control.html('--:--');
 					})
+					.onAPIReady(function(){
+						control.html(api.apis[api.name].getFormattedDuration());
+					})
 				;
-				api.apis[api.name].onAPIReady(function(){
-					control.html(api.apis[api.name].getFormattedDuration());
-				});
 				
 			},
 			'current-time': function(control, mm, api, o){
@@ -142,11 +141,10 @@
 					})
 					.bind('mediareset', function(){
 						control.html('--:--');
+					}).onAPIReady(function(){
+						control.html(mm.getFormattedTime());
 					})
 				;
-				api.apis[api.name].onAPIReady(function(){
-					control.html(api.apis[api.name].getFormattedTime());
-				});
 			},
 			'media-controls': function(control, mm, api, o){
 				if(o.addThemeRoller){
@@ -170,10 +168,10 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					api.apis[api.name].onAPIReady(function(){
+					mm.onAPIReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
-					}, 'one');
+					});
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);
 				}
@@ -204,12 +202,12 @@
 				}
 			}
 			
-			api.apis[api.name].onAPIReady(function(){
+			mm.onAPIReady(function(){
 				mm.bind(opts.evts, changeState);
 				changeState();
 			});
 			control.bind('click', function(e){
-				api.apis[api.name][opts.actionMethod]();
+				mm[opts.actionMethod]();
 				e.preventDefault();
 			});
 		};

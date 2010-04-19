@@ -16,8 +16,12 @@
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
+			apiDeActivated: 1,
+			native_mediareset: 1,
+			apiActivated: 1,
 			timechange: 1,
-			progresschange: 1
+			progresschange: 1,
+			mmAPIReady: 1
 		},
 		fsMethods		= {}
 	;
@@ -195,6 +199,66 @@
 		},
 		isPlaying: function(){
 			return (this._isResetting) ? false : this._isPlaying();
+		},
+		_makenum: function(num){
+			var ret = false;
+			if(num == num * 1){
+				ret = parseFloat(num, 10);
+			}
+			return ret;
+		},
+		_hidePoster: function(){
+			if(!this._isHiddenPoster){
+				$('img.poster-image', this.visualElem).css('visibility', 'hidden');
+				$(this.apiElem).css('visibility', '');
+				this._isHiddenPoster = true;
+			}
+		},
+		_showPoster: function(e, d){
+			if(!d.time){
+				$('img.poster-image', this.visualElem).css('visibility', '');
+				$(this.apiElem).css('visibility', 'hidden');
+				this._isHiddenPoster = false;
+			} else if(!this._isHiddenPoster){
+				this._hidePoster();
+			}
+		},
+		_setPoster: function(poster){
+			$('img.poster-image', this.visualElem).remove();
+			$(this.element).unbind('.jme_poster');
+			if(poster){
+				var time = this.currentTime();
+				$('<img />', 
+					{
+						'class': 'poster-image',
+						css: {
+							position: 'absolute',
+							top: 0,
+							left: 0,
+							margin: 0,
+							'float': 'none',
+							maxHeight: '100%',
+							maxWidth: '100%',
+							width: '100%',
+							height: 'auto',
+							visibility: 'hidden'
+						},
+						src: poster
+					}
+				)
+					.appendTo(this.visualElem)
+				;
+				this._isHiddenPoster = true;
+				$(this.element)
+					.bind('play.jme_poster', $.proxy(this, '_hidePoster'))
+					.bind('timechange.jme_poster', $.proxy(this, '_showPoster'))
+				;
+				if(!isFinite(time) || !time){
+					this._showPoster(false, {time: 0});
+				} else {
+					this._hidePoster();
+				}
+			}
 		}
 	});
 	
@@ -258,9 +322,16 @@
 		_init: function(){
 			var that 				= this,
 				curMuted 			= this.apiElem.muted,
-				hasInitialError 	= false,
-				catchInitialError 	= function(){
-					hasInitialError = true;
+				//mediaevents do not bubble normally, except in ff, we make them bubble, because we love this feature
+				bubbleEvents 		= function(e, data){
+					if(!that.isAPIActive || that.totalerror || e.bubbles){return;}
+					var parent = this.parentNode || this.ownerDocument;
+					if ( !e.isPropagationStopped() && parent ) {
+						e.bubbles = true;
+						data = jQuery.makeArray( data );
+						data.unshift( e );
+						$.event.trigger( e, data, parent, true );
+					}
 				}
 			;
 			
@@ -295,11 +366,11 @@
 						});
 					}
 				})
-				.one('mediaerror', catchInitialError)
+				.bind('play pause playing ended waiting', bubbleEvents)
 			;
+			
 			//workaround
 			if(this.element.readyState > 0 && !this.element.error){
-				$(that.element).unbind('mediaerror', catchInitialError);
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
@@ -315,24 +386,24 @@
 			this.element.pause();
 		},
 		muted: function(bool){
-			if(typeof bool === 'boolean'){
-				this.element.muted = bool;
+			if(typeof bool !== 'boolean'){
+				return this.element.muted;
 			}
-			return this.element.muted;
+			this.element.muted = bool;
 		},
 		volume: function(vol){
-			if(isFinite(vol)){
-				this.element.volume = vol / 100;
+			if(!isFinite(vol)){
+				return this.element.volume * 100;
 			}
-			return this.element.volume * 100;
+			this.element.volume = vol / 100;
 		},
 		currentTime: function(sec){
-			if(isFinite(sec)){
-				try {
-					this.element.currentTime = sec;
-				} catch(e){}
+			if(!isFinite(sec)){
+				return this.element.currentTime;
 			}
-			return this.element.currentTime;
+			try {
+				this.element.currentTime = sec;
+			} catch(e){}
 		},
 		_mmload: function(){
 			if(this.element.load){
@@ -393,7 +464,6 @@
 		$.each(names, function(i, name){
 			var fn = $m.apis.video.nativ[name];
 			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
-				$m.attrFns[name] = true;
 				if($.fn[name]){return;}
 				$.fn[name] =  function(){
 					var args = arguments,
@@ -402,7 +472,7 @@
 					this.each(function(){
 						var api = $(this).getMMAPI();
 						if(!api){return;}
-						if( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] ){
+						if(  noAPIMethods[name] || (api.isAPIReady && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');

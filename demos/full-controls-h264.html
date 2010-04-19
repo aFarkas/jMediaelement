@@ -46,11 +46,12 @@
 							timeSliderAdjust: -5
 						},
 						timeSlider: {
-							range: 'min',
-							animate: true
+							//strange bug in ie7- either don´t use range or set the current-time-display to position absolute
+							range: (!$.browser.msie || parseInt($.browser.version, 10) > 7) ? 'min' : false,
+							animate: !($.browser.msie)
 						},
 						volumeSlider: {
-							animate: true
+							animate: !($.browser.msie)
 						}
 					})
 					//inOut = hover + focusenter/focusleave
@@ -101,7 +102,7 @@
 					
 					<span class="duration player-display"></span>
 					
-					<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+					<button class="mute-unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></button>
 					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
 					<button class="fullscreen"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></button>
 				</div>

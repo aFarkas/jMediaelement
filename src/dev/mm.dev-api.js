@@ -77,6 +77,9 @@
 		_mmload: function(src, poster){
 			
 		},
+		getCurrentSrc: function(){
+			
+		},
 		
 		/*
 		 * the following methods / properties are optional
@@ -102,12 +105,12 @@
 	 * compley events:
 	 * 	required:
 	 * 		loadedmeta (with duration in secondes)
-	 * 		timechange (widh time in secondes)
+	 * 		timechange (with time in secondes and if duration exsists with duration and timeProgress)
 	 * 		mute (with isMuted as boolean)
 	 * 		
 	 * 	optional:
 	 * 		volumelevelchange: (volumelevel on 0 - 100 basis)
-	 * 		progresschange: (with loaded (number), lengthComputable (boolean) and if lengthComputable total and relLoaded)
+	 * 		progresschange: (if lengthComputable: relLoaded)
 	 * 		
 	 */
 	

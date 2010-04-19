@@ -26,7 +26,7 @@
 					var that = this;
 					this.wrapper = wrapper;
 					$('div.player-errors', wrapper).empty();
-					//autoplay, loop, src, poster autobuffer are normalized + there are two special attributes 'srces' and 'getConfig'
+					//autoplay, loop, src, poster are normalized + there are two special attributes 'srces' and 'getConfig'
 					this.player = $('audio', wrapper).attr({autoplay: true});
 					this.playList = $('div.playlist', wrapper).sortable({ items: 'li.playlist-item' });
 					
@@ -111,7 +111,7 @@
 					<span class="ui-slider-handle" tabindex="0"></span>
 					<div class="progressbar"></div>
 				</div>
-				<button class="mute-unmute"><span class="ui-icon ui-icon-play"> </span><span class="button-text">mute / unmute</span></button>
+				<button class="mute-unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></button>
 				<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
 			</div>
 			

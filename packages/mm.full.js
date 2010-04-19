@@ -41,24 +41,12 @@
 	
 	$.attr = function(elem, name, value, pass){
 		
-		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || m.attrFns[name] || booleanNames[name] || srcNames[name])) ){
+		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || booleanNames[name] || srcNames[name])) ){
 			return oldAttr(elem, name, value, pass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
 		
-		if(m.attrFns[name]){
-			
-			api = $.data(elem, 'mediaElemSupport');
-			if( !api ) {
-				return oldAttr(elem, name, value, pass);
-			} else {
-				ret = api.apis[api.name][name](value, pass);
-				if(!set){
-					return ret;
-				}
-			} 
-		}
 		if(!set){
 			if(booleanNames[name]){
 				return ( typeof elem[name] === 'boolean' ) ? elem[name] : !!((elem.attributes[name] || {}).specified);
@@ -232,8 +220,8 @@
 	
 	var mimeTypes = {
 			audio: {
-				//oga shouldn´t be used!
-				'application/ogg': ['ogg','oga', 'ogm'],
+				//ogm shouldn´t be used!
+				'audio/ogg': ['ogg','oga', 'ogm'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
 				'audio/mp4': ['mp4','mpg4'],
 				'audio/wav': ['wav'],
@@ -242,8 +230,8 @@
 				'audio/3gpp': ['3gp','3gpp']
 			},
 			video: {
-				//ogv shouldn´t be used!
-				'application/ogg': ['ogg','ogv', 'ogm'],
+				//ogm shouldn´t be used!
+				'video/ogg': ['ogg','ogv', 'ogm'],
 				'video/mpeg': ['mpg','mpeg','mpe'],
 				'video/mp4': ['mp4','mpg4', 'm4v'],
 				'video/quicktime': ['mov','qt'],
@@ -276,7 +264,6 @@
 				console.log(mimeTypes);
 			}
 		},
-		attrFns: {},
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
 				this.apis[elemName][name] = m.beget(this.fn);
@@ -487,7 +474,7 @@
 				id = apiData.nodeName +'-'+vID;
 				elem.id = id;
 			}
-			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" />').insertBefore(elem);
+			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative; overflow: hidden;" />').insertBefore(elem);
 			if(apiData.nodeName === 'audio' && !config.controls){
 				apiData.apis[supported.name].visualElem
 					.css({
@@ -530,7 +517,7 @@
 			elem = $('<div />').appendTo(elem)[0];
 			var obj;
 			
-			if(navigator.plugins && navigator.plugins[pluginName]){
+			if(navigator.plugins && navigator.plugins.length){ 
 				obj = doc.createElement('object');
 				$.each(attrs, function(name, val){
 					obj.setAttribute(name, val);
@@ -691,12 +678,17 @@
 			apiActivated: 1,
 			apiDeActivated: 1,
 			mediareset: 1,
+			native_mediareset: 1,
 			totalerror: 1
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
+			apiDeActivated: 1,
+			native_mediareset: 1,
+			apiActivated: 1,
 			timechange: 1,
-			progresschange: 1
+			progresschange: 1,
+			mmAPIReady: 1
 		},
 		fsMethods		= {}
 	;
@@ -874,6 +866,66 @@
 		},
 		isPlaying: function(){
 			return (this._isResetting) ? false : this._isPlaying();
+		},
+		_makenum: function(num){
+			var ret = false;
+			if(num == num * 1){
+				ret = parseFloat(num, 10);
+			}
+			return ret;
+		},
+		_hidePoster: function(){
+			if(!this._isHiddenPoster){
+				$('img.poster-image', this.visualElem).css('visibility', 'hidden');
+				$(this.apiElem).css('visibility', '');
+				this._isHiddenPoster = true;
+			}
+		},
+		_showPoster: function(e, d){
+			if(!d.time){
+				$('img.poster-image', this.visualElem).css('visibility', '');
+				$(this.apiElem).css('visibility', 'hidden');
+				this._isHiddenPoster = false;
+			} else if(!this._isHiddenPoster){
+				this._hidePoster();
+			}
+		},
+		_setPoster: function(poster){
+			$('img.poster-image', this.visualElem).remove();
+			$(this.element).unbind('.jme_poster');
+			if(poster){
+				var time = this.currentTime();
+				$('<img />', 
+					{
+						'class': 'poster-image',
+						css: {
+							position: 'absolute',
+							top: 0,
+							left: 0,
+							margin: 0,
+							'float': 'none',
+							maxHeight: '100%',
+							maxWidth: '100%',
+							width: '100%',
+							height: 'auto',
+							visibility: 'hidden'
+						},
+						src: poster
+					}
+				)
+					.appendTo(this.visualElem)
+				;
+				this._isHiddenPoster = true;
+				$(this.element)
+					.bind('play.jme_poster', $.proxy(this, '_hidePoster'))
+					.bind('timechange.jme_poster', $.proxy(this, '_showPoster'))
+				;
+				if(!isFinite(time) || !time){
+					this._showPoster(false, {time: 0});
+				} else {
+					this._hidePoster();
+				}
+			}
 		}
 	});
 	
@@ -937,9 +989,16 @@
 		_init: function(){
 			var that 				= this,
 				curMuted 			= this.apiElem.muted,
-				hasInitialError 	= false,
-				catchInitialError 	= function(){
-					hasInitialError = true;
+				//mediaevents do not bubble normally, except in ff, we make them bubble, because we love this feature
+				bubbleEvents 		= function(e, data){
+					if(!that.isAPIActive || that.totalerror || e.bubbles){return;}
+					var parent = this.parentNode || this.ownerDocument;
+					if ( !e.isPropagationStopped() && parent ) {
+						e.bubbles = true;
+						data = jQuery.makeArray( data );
+						data.unshift( e );
+						$.event.trigger( e, data, parent, true );
+					}
 				}
 			;
 			
@@ -974,11 +1033,11 @@
 						});
 					}
 				})
-				.one('mediaerror', catchInitialError)
+				.bind('play pause playing ended waiting', bubbleEvents)
 			;
+			
 			//workaround
 			if(this.element.readyState > 0 && !this.element.error){
-				$(that.element).unbind('mediaerror', catchInitialError);
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
@@ -994,24 +1053,24 @@
 			this.element.pause();
 		},
 		muted: function(bool){
-			if(typeof bool === 'boolean'){
-				this.element.muted = bool;
+			if(typeof bool !== 'boolean'){
+				return this.element.muted;
 			}
-			return this.element.muted;
+			this.element.muted = bool;
 		},
 		volume: function(vol){
-			if(isFinite(vol)){
-				this.element.volume = vol / 100;
+			if(!isFinite(vol)){
+				return this.element.volume * 100;
 			}
-			return this.element.volume * 100;
+			this.element.volume = vol / 100;
 		},
 		currentTime: function(sec){
-			if(isFinite(sec)){
-				try {
-					this.element.currentTime = sec;
-				} catch(e){}
+			if(!isFinite(sec)){
+				return this.element.currentTime;
 			}
-			return this.element.currentTime;
+			try {
+				this.element.currentTime = sec;
+			} catch(e){}
 		},
 		_mmload: function(){
 			if(this.element.load){
@@ -1072,7 +1131,6 @@
 		$.each(names, function(i, name){
 			var fn = $m.apis.video.nativ[name];
 			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
-				$m.attrFns[name] = true;
 				if($.fn[name]){return;}
 				$.fn[name] =  function(){
 					var args = arguments,
@@ -1081,7 +1139,7 @@
 					this.each(function(){
 						var api = $(this).getMMAPI();
 						if(!api){return;}
-						if( (api.isAPIReady && !api.totalerror) || noAPIMethods[name] ){
+						if(  noAPIMethods[name] || (api.isAPIReady && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');
@@ -1126,7 +1184,6 @@
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
-				
 				function changeTimeState(e, ui){
 					if(ui.timeProgress !== undefined && !stopSlide){
 						control[sliderMethod]('value', ui.timeProgress);
@@ -1141,7 +1198,7 @@
 					}
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm
 						.bind('loadedmeta', changeDisabledState)
 						.bind('timechange', changeTimeState)
@@ -1163,7 +1220,7 @@
 							stopSlide = false;
 						})
 						.bind('slide', function(e, ui){
-							if(e.originalEvent){
+							if(e.originalEvent && api.apis[api.name].isAPIReady){
 								api.apis[api.name].relCurrentTime(ui.value);
 							}
 						})
@@ -1182,7 +1239,7 @@
 					}
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm.bind('volumelevelchange', changeVolumeUI);
 					control
 						.bind('slidestart', function(e, ui){
@@ -1194,13 +1251,13 @@
 							stopSlide = false;
 						})
 						.bind('slide', function(e, ui){
-							if(e.originalEvent){
+							if(e.originalEvent && api.apis[api.name].isAPIReady){
 								api.apis[api.name].volume(ui.value);
 							}
 						})
 					;
 					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', mm.volume() || 100);
+					control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
 				});
 			},
 			'progressbar': function(control, mm, api, o){
@@ -1218,7 +1275,7 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				api.apis[api.name].onAPIReady(function(){
+				mm.onAPIReady(function(){
 					mm
 						.bind('progresschange', changeProgressUI)
 						.bind('mediareset', resetProgress)
@@ -1238,10 +1295,10 @@
 					.bind('mediareset', function(){
 						control.html('--:--');
 					})
+					.onAPIReady(function(){
+						control.html(api.apis[api.name].getFormattedDuration());
+					})
 				;
-				api.apis[api.name].onAPIReady(function(){
-					control.html(api.apis[api.name].getFormattedDuration());
-				});
 				
 			},
 			'current-time': function(control, mm, api, o){
@@ -1255,11 +1312,10 @@
 					})
 					.bind('mediareset', function(){
 						control.html('--:--');
+					}).onAPIReady(function(){
+						control.html(mm.getFormattedTime());
 					})
 				;
-				api.apis[api.name].onAPIReady(function(){
-					control.html(api.apis[api.name].getFormattedTime());
-				});
 			},
 			'media-controls': function(control, mm, api, o){
 				if(o.addThemeRoller){
@@ -1283,10 +1339,10 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					api.apis[api.name].onAPIReady(function(){
+					mm.onAPIReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
-					}, 'one');
+					});
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);
 				}
@@ -1317,12 +1373,12 @@
 				}
 			}
 			
-			api.apis[api.name].onAPIReady(function(){
+			mm.onAPIReady(function(){
 				mm.bind(opts.evts, changeState);
 				changeState();
 			});
 			control.bind('click', function(e){
-				api.apis[api.name][opts.actionMethod]();
+				mm[opts.actionMethod]();
 				e.preventDefault();
 			});
 		};
@@ -1743,41 +1799,39 @@
 	window.playerReady = function (obj) {
 		
 		var api = getAPI(obj.id);
-		if(api){
-			
-			//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
-			if(api.isAPIReady){
-				if(!api.apiElem.sendEvent){
-					api._reInit();
-					return;
-				} else if( api._lastLoad ){
-					api._mmload(api._lastLoad.file, api._lastLoad.image);
-				}
-				api._trigger('flashRefresh');
+		if(!api){return;}
+		//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
+		if(api.isAPIReady){
+			if(!api.apiElem.sendEvent){
+				api._reInit();
+				return;
+			} else if( api._lastLoad ){
+				api._mmload(api._lastLoad.file, api._lastLoad.image);
 			}
-			
-			var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
-			//add events
-			$.each(jwEvents[apiVersion], function(mvcName, evts){
-				$.each(evts, function(evtName){
-					api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
-				});
+			api._trigger('flashRefresh');
+		}
+		
+		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
+		//add events
+		$.each(jwEvents[apiVersion], function(mvcName, evts){
+			$.each(evts, function(evtName){
+				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
 			});
-			
-			//preload workaround
-			setTimeout(function(){
-				var cfg = $.attr(api.element, 'getConfig');
-				if(!cfg.autoplay){
-					if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
-						api.apiElem.sendEvent('PLAY', 'true');
-						api.apiElem.sendEvent('PLAY', 'false');
-					} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
-						api.currentTime(0);
-					}
+		});
+		
+		//preload workaround
+		setTimeout(function(){
+			var cfg = $.attr(api.element, 'getConfig');
+			if(!cfg.autoplay){
+				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
+					api.apiElem.sendEvent('PLAY', 'true');
+					api.apiElem.sendEvent('PLAY', 'false');
+				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster && !api.currentPos ){
+					api.currentTime(0);
 				}
-				api._trigger('mmAPIReady');
-			}, 0);
-		}		
+			}
+			api._trigger('mmAPIReady');
+		}, 0);		
 	};
 	
 	var jwAPI = {
@@ -1789,11 +1843,9 @@
 		_reInit: function(){
 			var that = this;
 			if(this._reInitCount < 5){
-				var overflow = this.visualElem[0].style.overflow;
-				this.visualElem[0].style.overflow = 'hidden';
+				this.visualElem[0].style.overflow = 'visible';
 				setTimeout(function(){
-					that.visualElem[0].style.overflow = 'visible';
-					that.visualElem[0].style.overflow = overflow;
+					that.visualElem[0].style.overflow = 'hidden';
 				}, 0);
 			}
 			this._reInitCount++;
@@ -1855,6 +1907,7 @@
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
 				doSeek 			= function(){
 					api.apiElem.sendEvent('SEEK', t);
+					unbind();
 					if(!wantsPlaying){
 						api.apiElem.sendEvent('PLAY', 'false');
 					}
@@ -1882,10 +1935,18 @@
 							var wasMuted = api.muted();
 							unbind();
 							clearTimeout(api._seekrequestTimer);
-							api.muted(true);
+							if (!wasMuted) {
+								api.muted(true);
+							}
 							api.apiElem.sendEvent('PLAY', 'true');
-							api._seekrequestTimer = setTimeout(doSeek, 40);
-							api.muted(wasMuted);
+							api._seekrequestTimer = setTimeout(function(){
+								if(!wasMuted){
+									api.muted(wasMuted);
+								}
+								doSeek();
+							}, 120);
+							
+							
 						}
 					})
 					.bind('mediareset.jwseekrequest', unbind)
@@ -2011,7 +2072,7 @@
 		var timer;
 		function testReady(){
 			try{
-				if(api.apiElem.input){
+				if(api.apiElem.input && api.apiElem.input.state !== undefined){
 					queueEvent('mmAPIReady', api);
 				} else {
 					return;
@@ -2030,7 +2091,6 @@
 		}
 		clearInterval(timer);
 		timer = setInterval(testReady, 333);
-		testReady();
 	}
 	
 	function queueEvent(event, api){
@@ -2068,8 +2128,8 @@
 	
 	var vlcAPI = {
 		_init: function(){
-			var api = this;
-			isReady(api);
+			isReady(this);
+			this._setPoster($.attr(this.element, 'poster'));
 		},
 		_intervalCheck: function(){
 			var vlc 	= this.apiElem,
@@ -2143,6 +2203,12 @@
 			this._trigger('play');
 			interval.start(this);
 			queueCheck(this);
+			if(this._currentTimeAdjust !== false){
+				try {
+					this.apiElem.input.time = this._currentTimeAdjust;
+				} catch(e){}
+				this._resetCurrentTime();
+			}
 		},
 		pause: function(){
 			if(states[this.apiElem.input.state] === 'playing'){
@@ -2158,7 +2224,7 @@
 			} catch(e){}
 			return ret;
 		},
-		_mmload: function(src){
+		_mmload: function(src, poster){
 			$(this.element).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
@@ -2166,21 +2232,41 @@
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
+			this._setPoster(poster);
+			this._showPoster(false, {time: 0});
 			if(!$.attr(this.element, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
+			
 		},
 		getCurrentSrc: function(){
 			return this._currentSrc;
 		},
+		_currentTimeAdjust: false,
+		_currentTimeTimer: false,
+		_resetCurrentTime: function(){
+			clearTimeout(this._currentTimeTimer);
+			this._currentTimeAdjust = false;
+		},
 		currentTime: function(t){
 			try {
 				if(!isFinite(t)){
-					return this.apiElem.input.time / 1000;
+					return (this.apiElem.input) ? this.apiElem.input.time / 1000 : 0;
 				}
-				this.apiElem.input.time = t * 1000;
+				var state;
+				if(!this.loadedmeta){
+					state = states[this.apiElem.input.state];
+					this.play();
+				}
+				this._currentTimeAdjust = t * 1000;
+				clearTimeout(this._currentTimeTimer);
+				this._currentTimeTimer = setTimeout($.proxy(this, '_resetCurrentTime'));
+				this.apiElem.input.time = this._currentTimeAdjust;
 				queueCheck(this);
+				if(state && (state !== 'playing' && state !== 'waiting')){
+					this.pause();
+				}
 			} catch(e){
 				if(!isFinite(t)){
 					return 0;
@@ -2198,17 +2284,25 @@
 		},
 		volume: function(v){
 			if (!isFinite(v)) {
-				return parseInt(this.apiElem.audio.volume / 2, 10);
+				return (this.apiElem.audio) ? parseInt(this.apiElem.audio.volume / 2, 10) : 100;
 			}
-			this.apiElem.audio.volume = v * 2;
-			queueCheck(this);
+			if(this.apiElem.audio){
+				this.apiElem.audio.volume = v * 2;
+				queueCheck(this);
+			}
 		},
 		muted: function(state){
 			if(typeof state !== 'boolean'){
-				return this.apiElem.audio.mute;
+				try {
+					return (this.apiElem.audio) ? this.apiElem.audio.mute : true;
+				} catch(e){
+					return false;
+				}
 			} 
-			this.apiElem.audio.mute = state;
-			queueCheck(this);
+			if(this.apiElem.audio){
+				this.apiElem.audio.mute = state;
+				queueCheck(this);
+			}
 		}
 	};
 	

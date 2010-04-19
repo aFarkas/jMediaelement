@@ -23,19 +23,18 @@
         </script>
         <script src="../../src/mm.qtp-api.js">
         </script>
+		<script src="../../src/dev/mm.cortado-embed.js"></script>
+		<script src="../../src/dev/mm.cortado-api.js"></script>
 		-->
 		
-		<script src="../../src/mm.jwplayer-embed.js"></script>
-		<script src="../../src/mm.jwplayer-api.js"></script>
+		<script src="../../src/mm.jw-embed.js"></script>
+		<script src="../../src/mm.jw-api.js"></script>
 		
 		
 		<script src="../../src/mm.vlc-embed.js"></script>
 		<script src="../../src/mm.vlc-api.js"></script>
 		
-		<!--
-		<script src="../../src/dev/mm.cortado-embed.js"></script>
-		<script src="../../src/dev/mm.cortado-api.js"></script>
-		-->
+		
         <script>
             (function(){
                 window.params = {};
@@ -170,7 +169,8 @@
                 </div>
             </div>
         </div>
-		
+
+
 		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
@@ -197,7 +197,7 @@
                         </div>
                     </div>
                     <button class="mute-unmute">
-                        <span class="ui-icon ui-icon-play"></span>
+                        <span class="ui-icon"></span>
                         <span class="button-text">mute / unmute</span>
                     </button>
                     <div class="volume-slider">
@@ -220,6 +220,22 @@
             </p>
         </div>
 		
+	<!--	
+		<object width="400" height="400" pluginspage="www.apple.com/quicktime/download" type="video/quicktime" enablejavascript="true" data="http://127.0.0.1/jMediaelement/jMediaelement/demos/media/bbb_trailer_mobile.m4v" postdomevents="true" id="qtp-video-1" name="qtp-video-1" class="video">
+				<param name="autoplay" value="false">
+				<param name="src" value="http://127.0.0.1/jMediaelement/jMediaelement/demos/media/bbb_trailer_mobile.m4v">
+				<param name="controller" value="true">
+				<param name="postdomevents" value="true">
+				<param name="EnableJavaScript" value="true">
+		</object>
+		<script>
+	
+		
+	$('#qtp-video-1')[0].addEventListener('qt_timechanged', function(e){
+		console.log(e)
+	}, false)
+</script>
+-->
         <!--
         <button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
         -->

@@ -10,7 +10,7 @@
 		var timer;
 		function testReady(){
 			try{
-				if(api.apiElem.input){
+				if(api.apiElem.input && api.apiElem.input.state !== undefined){
 					queueEvent('mmAPIReady', api);
 				} else {
 					return;
@@ -29,7 +29,6 @@
 		}
 		clearInterval(timer);
 		timer = setInterval(testReady, 333);
-		testReady();
 	}
 	
 	function queueEvent(event, api){
@@ -67,8 +66,8 @@
 	
 	var vlcAPI = {
 		_init: function(){
-			var api = this;
-			isReady(api);
+			isReady(this);
+			this._setPoster($.attr(this.element, 'poster'));
 		},
 		_intervalCheck: function(){
 			var vlc 	= this.apiElem,
@@ -142,6 +141,12 @@
 			this._trigger('play');
 			interval.start(this);
 			queueCheck(this);
+			if(this._currentTimeAdjust !== false){
+				try {
+					this.apiElem.input.time = this._currentTimeAdjust;
+				} catch(e){}
+				this._resetCurrentTime();
+			}
 		},
 		pause: function(){
 			if(states[this.apiElem.input.state] === 'playing'){
@@ -157,7 +162,7 @@
 			} catch(e){}
 			return ret;
 		},
-		_mmload: function(src){
+		_mmload: function(src, poster){
 			$(this.element).unbind('playing.enterFullscreen');
 			this.apiElem.playlist.stop();
 			this.data = {};
@@ -165,21 +170,41 @@
 			this._currentSrc = src;
 			this.apiElem.playlist.playItem(item);
 			this.apiElem.playlist.items.clear();
+			this._setPoster(poster);
+			this._showPoster(false, {time: 0});
 			if(!$.attr(this.element, 'autoplay')){
 				interval.end(this);
 				this.apiElem.playlist.stop();
 			}
+			
 		},
 		getCurrentSrc: function(){
 			return this._currentSrc;
 		},
+		_currentTimeAdjust: false,
+		_currentTimeTimer: false,
+		_resetCurrentTime: function(){
+			clearTimeout(this._currentTimeTimer);
+			this._currentTimeAdjust = false;
+		},
 		currentTime: function(t){
 			try {
 				if(!isFinite(t)){
-					return this.apiElem.input.time / 1000;
+					return (this.apiElem.input) ? this.apiElem.input.time / 1000 : 0;
 				}
-				this.apiElem.input.time = t * 1000;
+				var state;
+				if(!this.loadedmeta){
+					state = states[this.apiElem.input.state];
+					this.play();
+				}
+				this._currentTimeAdjust = t * 1000;
+				clearTimeout(this._currentTimeTimer);
+				this._currentTimeTimer = setTimeout($.proxy(this, '_resetCurrentTime'));
+				this.apiElem.input.time = this._currentTimeAdjust;
 				queueCheck(this);
+				if(state && (state !== 'playing' && state !== 'waiting')){
+					this.pause();
+				}
 			} catch(e){
 				if(!isFinite(t)){
 					return 0;
@@ -197,17 +222,25 @@
 		},
 		volume: function(v){
 			if (!isFinite(v)) {
-				return parseInt(this.apiElem.audio.volume / 2, 10);
+				return (this.apiElem.audio) ? parseInt(this.apiElem.audio.volume / 2, 10) : 100;
 			}
-			this.apiElem.audio.volume = v * 2;
-			queueCheck(this);
+			if(this.apiElem.audio){
+				this.apiElem.audio.volume = v * 2;
+				queueCheck(this);
+			}
 		},
 		muted: function(state){
 			if(typeof state !== 'boolean'){
-				return this.apiElem.audio.mute;
+				try {
+					return (this.apiElem.audio) ? this.apiElem.audio.mute : true;
+				} catch(e){
+					return false;
+				}
 			} 
-			this.apiElem.audio.mute = state;
-			queueCheck(this);
+			if(this.apiElem.audio){
+				this.apiElem.audio.mute = state;
+				queueCheck(this);
+			}
 		}
 	};
 	

@@ -1,127 +1,4 @@
 (function($){
-	function isBetweenRange(elem, timerange, time){
-		if(!timerange.active){return;}
-		
-		var e 	= {time: time};
-		
-		if(!timerange.entered){
-			var	i = timerange.lastIndex,
-				len 	= timerange.enterRanges.length,
-				createEvent = function(index){
-					e.rangeEnter = timerange.enterRanges[index];
-					e.rangeLeave = timerange.leaveRanges[index];
-					e.rangeIndex = index;
-					timerange.lastIndex = e.rangeIndex;
-					timerange.lastTime = timerange.enterRanges[index];
-					e.type = 'rangeenter';
-					timerange.entered = [ e.rangeEnter, e.rangeLeave, e.rangeIndex ];
-				}
-			;
-			if(timerange.lastTime > time){
-				while(i--){
-					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
-						createEvent(i);
-						break;
-					} else if(timerange.leaveRanges[i] < time){
-						timerange.lastIndex = i;
-						timerange.lastTime = timerange.enterRanges[i];
-						break;
-					}
-				}
-			} else {
-				for(; i < len; i++){
-					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
-						createEvent(i);
-						break;
-					} else if(timerange.leaveRanges[i] > time){
-						timerange.lastIndex = i;
-						timerange.lastTime = timerange.leaveRanges[i];
-						break;
-					}
-				} 
-			}
-		} else if(time < timerange.entered[0] || timerange.entered[1] < time){
-			e.rangeEnter = timerange.entered[0];
-			e.rangeLeave = timerange.entered[1];
-			e.rangeIndex = timerange.entered[2];
-			e.type = 'rangeleave';
-			timerange.entered = false;
-		}
-		if(e.type){
-			if(timerange.callback){
-				timerange.callback.call(elem, e );
-			}
-			$(elem).triggerHandler(e);
-		}	
-		
-	}
-	
-	function Numsort (a, b) {
-		return a - b;
-	}
-	
-	$.fn.addTimeRange = function(name, o){
-		if(typeof o !== 'string'){
-			o = $.extend({}, $.fn.addTimeRange.defaults, o);
-			if(!isFinite(o.enter) || !isFinite(o.leave)){
-				return this;
-			}
-		}
-		return this.each(function(){
-			var api = $.data(this, 'mediaElemSupport');
-			if(!api){
-				return;
-			}
-			if(!api.timeRanges){
-				api.timeRanges = {};
-			}
-			
-			if(!api.timeRanges[name]){
-				api.timeRanges[name] = {
-					enterRanges: [],
-					leaveRanges: [],
-					lastIndex: 0,
-					lastTime: 0,
-					lastFound: false,
-					entered: false,
-					active: false,
-					callback: o.callback
-				};
-			}
-			
-			if(o.callback){
-				api.timeRanges[name].callback = o.callback;
-			}
-			
-			if(o === 'activate'){
-				api.timeRanges[name].active = true;
-				$(this).bind('timechange.'+name, function(e, evt){
-					isBetweenRange(this, api.timeRanges[name], evt.time);
-				});
-			} else if(o === 'deactivate'){
-				api.timeRanges[name].active = false;
-				api.timeRanges[name].entered = false;
-				$(this).unbind('timechange.'+ name);
-			} else {
-				api.timeRanges[name].enterRanges.push(o.enter);
-				api.timeRanges[name].leaveRanges.push(o.leave);
-			}
-			
-			if(o.resort){
-				api.timeRanges[name].enterRanges.sort(Numsort);
-				api.timeRanges[name].leaveRanges.sort(Numsort);
-			}
-			
-		});
-	};
-		
-	$.fn.addTimeRange.defaults = {
-		enter: false,
-		leave: false,
-		callback: $.noop,
-		resort: false
-	};
-	
 	
 	function activateItext(){
 		var jElm = $(this),
@@ -149,21 +26,22 @@
 						data.parent.addTimeRange(data.id, {
 							enter: caption.start,
 							leave: caption.end,
-							callback: captionChange
+							callback: captionChange,
+							activate: false
 						});
 					});
 					
 				}
 			});
 		}	
-		data.parent.addTimeRange(data.id, 'activate');
+		data.parent.addTimeRange(data.id, true);
 	}
 	
 	function deactivateItext(){
 		var jElm = $(this),
 			data = jElm.data('itextData')
 		;
-		data.parent.addTimeRange(data.id, 'deactivate');
+		data.parent.addTimeRange(data.id, false);
 	}
 	
 	$.fn.itext = function(){

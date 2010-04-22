@@ -1,3 +1,21 @@
+/**
+ * fullwindow plugin for the jMediaelement project | http://github.com/aFarkas/jMediaelement
+ * @author Alexander Farkas
+ * Copyright 2010, Alexander Farkas
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * 
+ * API:
+ * $('video').enterFullWindow() - enters fullWindow
+ * $('video').exitFullWindow() - exits fullWindow
+ * $('video').supportsFullWindow() - is fullwindow / position fixed supported (feature detection, not browser sniffing!)
+ * 
+ * Controls:
+ * an element with the class 'fullscreen' generates a fullwindow-togglebutton
+ * 
+ * <a class="fullscreen" role="button" tabindex="0">toggle fullscreen</a>
+ * 
+ */
+
 (function($){
 	
 	$.fn.storeInlineStyle = function(styles, name){

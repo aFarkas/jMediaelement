@@ -12,7 +12,9 @@
 			apiDeActivated: 1,
 			mediareset: 1,
 			native_mediareset: 1,
-			totalerror: 1
+			//these are api-events, but shouldn´t throw mmAPIReady
+			totalerror: 1,
+			progresschange: 1
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
@@ -81,7 +83,6 @@
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
-						
 						return;	
 					}
 					this.isAPIReady = true;

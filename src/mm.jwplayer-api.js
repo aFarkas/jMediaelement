@@ -241,7 +241,7 @@
 		},
 		_isSeekable: function(t){
 			var file = this.getCurrentSrc();
-			if(this._buffered === 100 || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
+			if(this._buffered === 100 || this.embedOpts.jwPlayer.isStream || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
 				return true;
 			}
 			var dur = this.getDuration();

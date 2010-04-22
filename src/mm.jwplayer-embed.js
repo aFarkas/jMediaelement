@@ -10,6 +10,8 @@
 			{
 				jwPlayer: {
 					path: 'player.swf',
+					hideIcons: 'auto',
+					isStream: false,
 					vars: {},
 					attrs: {},
 					params: {
@@ -72,10 +74,11 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
-//				if( opts.playFirstFrame && !cfg.poster && !cfg.autoplay ){ //ToDo: change this implementation
-//					this.data.playFirstFrame = true;
-//					vars.autostart = 'true';
-//				}
+				if( (!cfg.controls && opts.hideIcons && params.wmode === 'transparent') || opts.hideIcons === true ){
+					vars.icons = 'false';
+					vars.showicons = 'false';
+				}
+				 
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(name+'='+val);

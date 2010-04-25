@@ -6,8 +6,13 @@
  */
 
 (function($){
-	
 	var split 			= /\s*\/\s*|\s*\|\s*/,
+		moveKeys 		= {
+					40: true,
+					37: true,
+					39: true,
+					38: true
+				},
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
@@ -109,7 +114,7 @@
 						.bind('progresschange', changeProgressUI)
 						.bind('mediareset', resetProgress)
 					;
-				}, 'one');
+				});
 				
 			},
 			duration: function(control, mm, api, o){
@@ -134,14 +139,16 @@
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
-				control.html('--:--');
+				
+				control.html('--:--').attr('role', 'timer');
 				mm
 					.bind('timechange', function(e, evt){
 						control.html(api.apis[api.name]._format(evt.time));
 					})
 					.bind('mediareset', function(){
 						control.html('--:--');
-					}).onAPIReady(function(){
+					})
+					.onAPIReady(function(){
 						control.html(mm.getFormattedTime());
 					})
 				;
@@ -150,7 +157,7 @@
 				if(o.addThemeRoller){
 					control.addClass('ui-widget ui-widget-header ui-corner-all');
 				}
-				
+				control.attr('role', 'toolbar');
 				function calcSlider(){
 					var space 		= control.innerWidth() + o.mediaControls.timeSliderAdjust,
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
@@ -195,9 +202,11 @@
 				
 				if(state){
 					elems.text.text(elems.names[1]);
+					elems.title.attr('title', elems.titleText[1]);
 					elems.icon.addClass(opts.trueClass).removeClass(opts.falseClass);
 				} else {
 					elems.text.text(elems.names[0]);
+					elems.title.attr('title', elems.titleText[0]);
 					elems.icon.addClass(opts.falseClass).removeClass(opts.trueClass);
 				}
 			}
@@ -228,19 +237,15 @@
 		} 
 		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
-			ret.api.controlWrapper = (ret.api.controlWrapper) ? ret.api.controlWrapper.add(jElm) : jElm;
+			if( jElm[0] && !ret.api.controlWrapper &&  $.contains( jElm[0], ret.mm[0] ) ){
+				ret.api.controlWrapper = jElm;
+			}
 			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
 			ret.api.controlBar = ret.controls.filter('.'+o.classPrefix+'media-controls');
 		}
 		return ret;
 	}
 	
-	var moveKeys = {
-		40: true,
-		37: true,
-		39: true,
-		38: true
-	};
 	
 	function addWrapperBindings(wrapper, mm, api, o){
 		//classPrefix
@@ -249,8 +254,8 @@
 				wrapper.removeClass(stateClasses);
 			}
 		;
-		wrapper
-			.addClass(o.classPrefix+api.name)
+		wrapper.addClass(o.classPrefix+api.name);
+		mm
 			.bind({
 				apiActivated: function(e, d){
 					wrapper.addClass(o.classPrefix+d.api);
@@ -270,10 +275,12 @@
 				wrapper.removeClass(o.classPrefix+'waiting');
 			})
 		;
-		
-		if($.ui && $.ui.keyCode){
-			wrapper.bind('keydown', function(e){
-				if(moveKeys[e.keyCode]){
+		if (!$.ui || !$.ui.keyCode) {return;}
+		wrapper
+			.bind('keydown', function(e){
+				if( e.jmeHandledEvent ){return;}
+				e.jmeHandledEvent = true;
+				if( moveKeys[e.keyCode] ){
 					//user is interacting with the slider don´t do anything
 					if($(e.target).is('.ui-slider-handle')){return;}
 					var dif = 5;
@@ -282,36 +289,36 @@
 							if(e.ctrlKey){
 								dif += 5;
 							}
-							api.apis[api.name].volume( Math.min(100, api.apis[api.name].volume() + dif ) );
+							mm.volume( Math.min(100, mm.volume() + dif ) );
 							break;
 						case $.ui.keyCode.DOWN:
 							if(e.ctrlKey){
 								dif += 5;
 							}
-							api.apis[api.name].volume( Math.max(0, api.apis[api.name].volume() - dif ) );
+							mm.volume( Math.max(0, mm.volume() - dif ) );
 							break;
 						case $.ui.keyCode.LEFT:
 							if(e.ctrlKey){
 								dif += 55;
 							}
-							api.apis[api.name].currentTime( Math.max(0, api.apis[api.name].currentTime() - dif ) );
+							mm.currentTime( Math.max(0, mm.currentTime() - dif ) );
 							break;
 						case $.ui.keyCode.RIGHT:
 							if(e.ctrlKey){
 								dif += 55;
 							}
-							api.apis[api.name].currentTime( Math.min( api.apis[api.name].getDuration(), api.apis[api.name].currentTime() + dif ) );
+							mm.currentTime( Math.min( mm.getDuration(), mm.currentTime() + dif ) );
 							break;
 					}
 					e.preventDefault();
-				} else if(e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button')){
-					api.apis[api.name].togglePlay();
+				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') ){
+					mm.togglePlay();
 					e.preventDefault();
 				}
-			});
-		}
+			})
+		;
 	}
-	
+		
 	$.fn.registerMMControl = function(o){
 		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
 		o.controlSel = [];
@@ -337,8 +344,8 @@
 					}
 				});
 			});
-			if(elems.controlsgroup && elems.controlsgroup[0]){
-				addWrapperBindings(elems.controlsgroup, elems.mm, elems.api, o);
+			if(elems.api.controlWrapper && elems.api.controlWrapper[0]){
+				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, o);
 			}
 		}
 		
@@ -364,7 +371,8 @@
 	$.fn.registerMMControl.getBtn = function(control){
 		var elems = {
 			icon: $('.ui-icon', control),
-			text: $('.button-text', control)
+			text: $('.button-text', control),
+			title: control
 		};
 			
 		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
@@ -373,9 +381,13 @@
 		}
 		
 		elems.names = elems.text.text().split(split);
+		elems.titleText = (control.attr('title') || '').split(split);
 		
 		if(elems.names.length !== 2){
 			elems.text = $([]);
+		}
+		if(elems.titleText.length !== 2){
+			elems.title = $([]);
 		}
 		return elems;
 	};

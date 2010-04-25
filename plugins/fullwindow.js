@@ -225,12 +225,14 @@
 			changeState = function(){
 				if(video.hasClass('displays-fullscreen')){
 					elems.text.text(elems.names[1]);
+					elems.title.attr('title', elems.titleText[1]);
 					elems.icon
 						.addClass('ui-icon-circle-zoomout')
 						.removeClass('ui-icon-circle-zoomin')
 					;
 				} else {
 					elems.text.text(elems.names[0]);
+					elems.title.attr('title', elems.titleText[0]);
 					elems.icon
 						.addClass('ui-icon-circle-zoomin')
 						.removeClass('ui-icon-circle-zoomout')
@@ -244,15 +246,15 @@
 		control
 			.each(changeState)
 			.bind('click', function(){
-				if(video.supportsFullScreen()){
-					video.enterFullScreen();
-				} else {
+//				if(video.supportsFullScreen()){
+//					video.enterFullScreen();
+//				} else {
 					if(video.hasClass('displays-fullscreen')){
 						video.exitFullWindow();
 					} else {
 						video.enterFullWindow();
 					}
-				}
+//				}
 			})
 		;
 		video.bind('fullwindow', changeState);

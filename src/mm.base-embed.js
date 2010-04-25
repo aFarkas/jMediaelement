@@ -392,11 +392,13 @@
 					if(supType === 'nativ'){
 						data.apis[supType].visualElem.css({display: ''});
 					} else {
-						data.apis[supType].visualElem.css({
-							width: data.apis[oldActive].visualElem.width(),
-							height: data.apis[oldActive].visualElem.height(),
-							visibility: ''
-						});
+						data.apis[supType].visualElem
+							.css({
+								width: data.apis[oldActive].visualElem.width(),
+								height: data.apis[oldActive].visualElem.height(),
+								visibility: ''
+							})
+						;
 					}
 				}
 				data.apis[supType]._setActive(oldActive);
@@ -408,11 +410,13 @@
 				if(oldActive === 'nativ'){
 					hideElem.style.display = 'none';
 				} else {
-					data.apis[oldActive].visualElem.css({
-						height: 0,
-						width: 0,
-						visibility: 'hidden'
-					});
+					data.apis[oldActive].visualElem
+						.css({
+							height: 0,
+							width: 0,
+							visibility: 'hidden'
+						})
+					;
 				}
 				data.apis[oldActive]._setInactive(supType);
 				data.apis[oldActive].isAPIActive = false;
@@ -463,7 +467,10 @@
 				id 		= elem.id,
 				fn 		= function(apiElem){
 							apiData.apis[supported.name].apiElem = apiElem;
-							$(apiElem).addClass(apiData.nodeName);
+							$(apiElem)
+								.addClass(apiData.nodeName)
+								.attr('tabindex', (!config.controls) ?  '-1' : '0')
+							;
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
 						}
@@ -562,6 +569,7 @@
 				obj.setAttribute('width', '100%');
 				obj.setAttribute('height', '100%');
 			}, 0);
+			obj.tabIndex = -1;
 			return obj;
 		}
 	});

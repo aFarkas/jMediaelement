@@ -116,7 +116,6 @@
 			e.preventDefault();
 			
 			evt.mediaAPI = this.name;
-			
 			if(nuBubbleEvents[type]){
 				e.stopPropagation();
 			}

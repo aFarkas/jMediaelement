@@ -473,7 +473,8 @@
 							;
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
-						}
+						},
+				label 	= jElm.attr('aria-labelledby')
 			;
 			
 			if(!id){
@@ -482,6 +483,14 @@
 				elem.id = id;
 			}
 			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative; overflow: hidden;" />').insertBefore(elem);
+			
+			if(label){
+				apiData.apis[supported.name].visualElem.attr({
+					role: 'group',
+					'aria-labelledby': label
+				});
+			}
+			
 			if(apiData.nodeName === 'audio' && !config.controls){
 				apiData.apis[supported.name].visualElem
 					.css({
@@ -1185,20 +1194,6 @@
  */
 
 (function($){
-	var menuhelp = {
-			session: 0,
-			global: 0
-		},
-		storageSupport = false
-	;
-	try {
-		menuhelp.session = parseInt(sessionStorage.jmeA11yHelpText, 10) || 0;
-		menuhelp.global = parseInt(localStorage.jmeA11yHelpText, 10) || 0;
-		storageSupport = true;
-	} catch(e){
-		
-	}
-	
 	var split 			= /\s*\/\s*|\s*\|\s*/,
 		moveKeys 		= {
 					40: true,
@@ -1206,9 +1201,6 @@
 					39: true,
 					38: true
 				},
-		lang 			=  (document.documentElement.lang || navigator.userLanguage || navigator.language || '').split('-')[0],
-		uID 			= 0,
-		announceHelp	= (menuhelp.session < 1 && menuhelp.global < 10),
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
@@ -1349,125 +1341,6 @@
 					})
 				;
 			},
-			'media-label': function(label, mm, apiData, o){
-				var bind = function(){
-						var elem = apiData.apis[apiData.name].visualElem;
-						if(elem){
-							elem.attr('tabindex', '0');
-						}
-						if( ( !o.mediaLabel.overwriteNative && apiData.name === 'nativ' && $.support.mediaElements ) || !elem || $.inArray(apiData.name, apiHasShortcut) !== -1 ){return;}
-						apiHasShortcut.push(apiData.name);
-						elem
-							.bind('keydown.jmeshortcuts', shortcutHandler)
-							.attr({
-								role: 'button',
-								'aria-labelledby': getID()
-							})
-						;
-						
-						//focus class
-						var focusClass 		= o.classPrefix+'probably-keyboard-focus',
-							allowKeyFocus 	= true
-						;
-						elem.bind({
-							focus: function(){
-								if(allowKeyFocus){
-									elem.addClass(focusClass);
-								}
-							},
-							blur: function(){
-								elem.removeClass(focusClass);
-							},
-							mousedown: function(){
-								allowKeyFocus = false;
-								setTimeout(function(){
-									allowKeyFocus = true;
-								}, 20);
-							}
-						});
-					},
-					deActivate = function(e, d){
-						var elem = apiData.apis[d.api].visualElem;
-						if(elem){
-							elem.attr('tabindex', '-1');
-						}
-					},
-					getID 				= function(){
-						var id = label.attr('id');
-						if(!id){
-							uID++;
-							id = 'media-label-id-'+ uID;
-							label.attr('id', id);
-						}
-						return id;
-					},
-					shortcutHandler = function(e){
-						if( e.jmeHandledEvent ){return;}
-						e.jmeHandledEvent = true;
-						if( moveKeys[e.keyCode] ){
-							var dif = 5;
-							switch(e.keyCode) {
-								case $.ui.keyCode.UP:
-									if(e.ctrlKey){
-										dif += 5;
-									}
-									mm.volume( Math.min(100, m.volume() + dif ) );
-									break;
-								case $.ui.keyCode.DOWN:
-									if(e.ctrlKey){
-										dif += 5;
-									}
-									mm.volume( Math.max(0, mm.volume() - dif ) );
-									break;
-								case $.ui.keyCode.LEFT:
-									if(e.ctrlKey){
-										dif += 55;
-									}
-									mm.currentTime( Math.max(0, mm.currentTime() - dif ) );
-									break;
-								case $.ui.keyCode.RIGHT:
-									if(e.ctrlKey){
-										dif += 55;
-									}
-									mm.currentTime( Math.min( mm.getDuration(), mm.currentTime() + dif ) );
-									break;
-							}
-							e.preventDefault();
-						} else if( e.keyCode === $.ui.keyCode.SPACE || e.keyCode === $.ui.keyCode.ENTER ){
-							mm.togglePlay();
-							e.preventDefault();
-						}
-					},
-					generateLabelTxt = function(){
-						var i18n 		= o.mediaLabel.i18n[lang] || o.mediaLabel.i18n[o.i18nDefault],
-							labelText 	= '<span class="'+o.classPrefix+'label-name">'+ label.text() +'</span> <span class="'+o.classPrefix+'role-txt">'+ i18n[apiData.nodeName +'Role'] +'</span> <span class="'+o.classPrefix+'media-states"></span>'
-						;
-						mm.bind('muted', function(e, evt){
-							$('span.'+o.classPrefix+'media-states', label).html( (evt.isMuted) ? i18n.muted : '' );
-						});
-						if(announceHelp){
-							labelText += ' <span class="'+o.classPrefix+'media-shortcuthelp">'+ i18n.menuhelp +'</span>';
-							if(storageSupport){
-								sessionStorage.jmeA11yHelpText = String( menuhelp.session + 1 );
-								localStorage.jmeA11yHelpText = String( menuhelp.global + 1 );
-								
-							}
-							
-						}
-						label.hide().html(labelText);
-					},
-					apiHasShortcut = []
-				;
-				if($.ui && $.ui.keyCode){
-					mm.parent().attr('role', 'application');
-					generateLabelTxt();
-					bind();
-					mm
-						.bind('apiActivated', bind)
-						.bind('apiDeActivated', deActivate)
-					;
-				}
-			},
 			'media-controls': function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget ui-widget-header ui-corner-all');
@@ -1562,7 +1435,7 @@
 	}
 	
 	
-	function addWrapperStateBindings(wrapper, mm, api, o){
+	function addWrapperBindings(wrapper, mm, api, o){
 		//classPrefix
 		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting',
 			removeStateClasses 	= function(){
@@ -1588,6 +1461,48 @@
 			})
 			.bind('canplay canplaythrough', function(e){
 				wrapper.removeClass(o.classPrefix+'waiting');
+			})
+		;
+		if (!$.ui || !$.ui.keyCode) {return;}
+		wrapper
+			.bind('keydown', function(e){
+				if( e.jmeHandledEvent ){return;}
+				e.jmeHandledEvent = true;
+				if( moveKeys[e.keyCode] ){
+					//user is interacting with the slider don´t do anything
+					if($(e.target).is('.ui-slider-handle')){return;}
+					var dif = 5;
+					switch(e.keyCode) {
+						case $.ui.keyCode.UP:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							mm.volume( Math.min(100, mm.volume() + dif ) );
+							break;
+						case $.ui.keyCode.DOWN:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							mm.volume( Math.max(0, mm.volume() - dif ) );
+							break;
+						case $.ui.keyCode.LEFT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							mm.currentTime( Math.max(0, mm.currentTime() - dif ) );
+							break;
+						case $.ui.keyCode.RIGHT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							mm.currentTime( Math.min( mm.getDuration(), mm.currentTime() + dif ) );
+							break;
+					}
+					e.preventDefault();
+				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') ){
+					mm.togglePlay();
+					e.preventDefault();
+				}
 			})
 		;
 	}
@@ -1617,8 +1532,8 @@
 					}
 				});
 			});
-			if(elems.controlsgroup && elems.controlsgroup[0]){
-				addWrapperStateBindings(elems.controlsgroup, elems.mm, elems.api, o);
+			if(elems.api.controlWrapper && elems.api.controlWrapper[0]){
+				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, o);
 			}
 		}
 		
@@ -1630,32 +1545,7 @@
 		embed: $.fn.mediaElementEmbed.defaults,
 		classPrefix: '',
 		addThemeRoller: true,
-		//used for a11y-config in mediaLabel and mediaControls
-		i18nDefault: 'en',
-		mediaLabel: {
-			overwriteNative: true, //should be false sometimes
-			i18n: {
-				en: {
-					//role text
-					videoRole: 'video player',
-					audioRole: 'audio player',
-					//state text
-					muted: 'muted',
-					// menu help text
-					menuhelp: 'use spacekey to toggle play/pause or the arrowkeys to influence volume or playposition'
-				},
-				de: {
-					//role text
-					videoRole: 'videogerät',
-					audioRole: 'audiogerät',
-					//state text
-					muted: 'ton aus',
-					// menu help text
-					menuhelp: 'nutzen sie die leertaste, um abzuspielen / zu pausieren oder die pfeiltasten, um die lautstärke oder die abspielposition zu ändern'
-				}
-			}
-			
-		},
+		
 		mediaControls: {
 			dynamicTimeslider: true,
 			timeSliderAdjust: 0,
@@ -1666,11 +1556,18 @@
 		timeSlider: {}
 	};
 	
+	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
+	
 	$.fn.registerMMControl.getBtn = function(control){
 		var elems = {
 			icon: $('.ui-icon', control),
-			text: $('.button-text', control)
+			text: $('.button-text', control),
+			title: control
 		};
+		
+		if($.support.waiaria && $.nodeName('a', control[0]) ){
+			control.removeAttr('href').attr({role: 'button', tabindex: 0});
+		}
 			
 		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
 			elems.icon = control;
@@ -1679,6 +1576,7 @@
 		
 		elems.names = elems.text.text().split(split);
 		elems.titleText = (control.attr('title') || '').split(split);
+		
 		if(elems.names.length !== 2){
 			elems.text = $([]);
 		}

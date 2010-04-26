@@ -473,7 +473,8 @@
 							;
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
-						}
+						},
+				label 	= jElm.attr('aria-labelledby')
 			;
 			
 			if(!id){
@@ -482,6 +483,14 @@
 				elem.id = id;
 			}
 			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative; overflow: hidden;" />').insertBefore(elem);
+			
+			if(label){
+				apiData.apis[supported.name].visualElem.attr({
+					role: 'group',
+					'aria-labelledby': label
+				});
+			}
+			
 			if(apiData.nodeName === 'audio' && !config.controls){
 				apiData.apis[supported.name].visualElem
 					.css({

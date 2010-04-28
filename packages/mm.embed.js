@@ -209,10 +209,10 @@
 	};
 	
 	function getExt(src){
-		var pos = (src.indexOf('?') + 1),
+		var pos = src.indexOf('?'),
 			ext = ''
 		;
-		src = (pos) ? src.substring(0, pos) : src;
+		src = (pos > 0) ? src.substring(0, pos) : src;
 		pos = src.lastIndexOf('.') + 1;
 		ext = src.substr(pos);
 		return ext;

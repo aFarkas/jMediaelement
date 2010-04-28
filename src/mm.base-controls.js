@@ -6,6 +6,38 @@
  */
 
 (function($){
+	if(!$.event.special.ariaclick){
+		var preventclick = false;
+		function handleAriaClick(e){
+			
+			if(!preventclick && (!e.keyCode || e.keyCode === 13 || ( e.keyCode === 32 && $.attr(e.target, 'role') === 'button' ) )){
+				//ToDo:  || e.keyCode === $.ui.keyCode.SPACE
+				preventclick = true;
+				setTimeout(function(){
+					preventclick = false;
+				}, 1);
+				return $.event.special.ariaclick.handler.apply(this, arguments);
+			} else if(preventclick && e.type == 'click'){
+				e.preventDefault();
+				return false;
+			}
+			return undefined;
+		}
+		$.event.special.ariaclick = {
+			setup: function(){
+				$(this).bind('click keydown', handleAriaClick);
+	            return true;
+	        },
+			teardown: function(){
+	            $(this).unbind('click keydown', handleAriaClick);
+	            return true;
+	        },
+	        handler: function(e){
+	            e.type = 'ariaclick';
+	            return $.event.handle.apply(this, arguments);
+	        }
+		};
+	}
 	var split 			= /\s*\/\s*|\s*\|\s*/,
 		moveKeys 		= {
 					40: true,
@@ -32,36 +64,32 @@
 					}
 				}
 				
-				mm.onAPIReady(function(){
-					mm
-						.bind('loadedmeta', changeDisabledState)
-						.bind('timechange', changeTimeState)
-						.bind('mediareset', function(){
-							control[sliderMethod]('value', 0);
-							changeDisabledState();
-						})
-						.bind('ended', function(){
-							control[sliderMethod]('value', 100);
-						})
-					;
-					control
-						.bind('slidestart', function(e, ui){
-							if (e.originalEvent) {
-								stopSlide = true;
-							}
-						})
-						.bind('slidestop', function(e, ui){
-							stopSlide = false;
-						})
-						.bind('slide', function(e, ui){
-							if(e.originalEvent && api.apis[api.name].isAPIReady){
-								api.apis[api.name].relCurrentTime(ui.value);
-							}
-						})
-					;
-					changeDisabledState();
-				});
-				
+				mm
+					.bind('loadedmeta', changeDisabledState)
+					.bind('timechange', changeTimeState)
+					.bind('mediareset', function(){
+						control[sliderMethod]('value', 0);
+						changeDisabledState();
+					})
+					.bind('ended', function(){
+						control[sliderMethod]('value', 100);
+					})
+				;
+				control
+					.bind('slidestart', function(e, ui){
+						if (e.originalEvent) {
+							stopSlide = true;
+						}
+					})
+					.bind('slidestop', function(e, ui){
+						stopSlide = false;
+					})
+					.bind('slide', function(e, ui){
+						if(e.originalEvent && api.apis[api.name].isAPIReady){
+							api.apis[api.name].relCurrentTime(ui.value);
+						}
+					})
+				;
 			},
 			'volume-slider': function(control, mm, api, o){
 				var stopSlide = false;
@@ -73,26 +101,30 @@
 					}
 				}
 				
-				mm.onAPIReady(function(){
-					mm.bind('volumelevelchange', changeVolumeUI);
-					control
-						.bind('slidestart', function(e, ui){
-							if (e.originalEvent) {
-								stopSlide = true;
-							}
-						})
-						.bind('slidestop', function(e, ui){
-							stopSlide = false;
-						})
-						.bind('slide', function(e, ui){
-							if(e.originalEvent && api.apis[api.name].isAPIReady){
-								api.apis[api.name].volume(ui.value);
-							}
-						})
-					;
-					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
-				});
+				control
+					.bind('slidestart', function(e, ui){
+						if (e.originalEvent) {
+							stopSlide = true;
+						}
+					})
+					.bind('slidestop', function(e, ui){
+						stopSlide = false;
+					})
+					.bind('slide', function(e, ui){
+						if(e.originalEvent && api.apis[api.name].isAPIReady){
+							api.apis[api.name].volume(ui.value);
+						}
+					})
+				;
+				
+				mm
+					.bind('volumelevelchange', changeVolumeUI)
+					.onAPIReady(function(){
+						
+						control[sliderMethod]('option', 'disabled', false);
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
+					})
+				;
 			},
 			'progressbar': function(control, mm, api, o){
 				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
@@ -109,28 +141,23 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				mm.onAPIReady(function(){
-					mm
-						.bind('progresschange', changeProgressUI)
-						.bind('mediareset', resetProgress)
-					;
-				});
+				mm
+					.bind('progresschange', changeProgressUI)
+					.bind('mediareset', resetProgress)
+				;
 				
 			},
 			duration: function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
-				control.html('--:--');
+				control.html('00:00');
 				mm
 					.bind('loadedmeta', function(e, evt){
 						control.html(api.apis[api.name]._format(evt.duration));
 					})
 					.bind('mediareset', function(){
-						control.html('--:--');
-					})
-					.onAPIReady(function(){
-						control.html(api.apis[api.name].getFormattedDuration());
+						control.html('00:00');
 					})
 				;
 				
@@ -139,17 +166,13 @@
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
-				
-				control.html('--:--').attr('role', 'timer');
+				control.html('00:00').attr('role', 'timer');
 				mm
 					.bind('timechange', function(e, evt){
 						control.html(api.apis[api.name]._format(evt.time));
 					})
 					.bind('mediareset', function(){
-						control.html('--:--');
-					})
-					.onAPIReady(function(){
-						control.html(mm.getFormattedTime());
+						control.html('00:00');
 					})
 				;
 			},
@@ -197,7 +220,7 @@
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
-			function changeState(e, ui){
+			function changeState(){
 				var state = mm[opts.stateMethod]();
 				
 				if(state){
@@ -211,11 +234,11 @@
 				}
 			}
 			
-			mm.onAPIReady(function(){
-				mm.bind(opts.evts, changeState);
-				changeState();
-			});
-			control.bind('click', function(e){
+			mm
+				.bind(opts.evts, changeState)
+				.onAPIReady(changeState)
+			;
+			control.bind('ariaclick', function(e){
 				mm[opts.actionMethod]();
 				e.preventDefault();
 			});
@@ -271,7 +294,7 @@
 			.bind('pause ended mediareset', function(e){
 				removeStateClasses();
 			})
-			.bind('canplay canplaythrough', function(e){
+			.bind('canplay', function(e){
 				wrapper.removeClass(o.classPrefix+'waiting');
 			})
 		;
@@ -311,7 +334,7 @@
 							break;
 					}
 					e.preventDefault();
-				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') ){
+				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' ){
 					mm.togglePlay();
 					e.preventDefault();
 				}
@@ -377,7 +400,7 @@
 			title: control
 		};
 		
-		if($.support.waiaria && $.nodeName('a', control[0]) ){
+		if($.support.waiaria && $.nodeName(control[0], 'a') ){
 			control.removeAttr('href').attr({role: 'button', tabindex: 0});
 		}
 			

@@ -244,8 +244,7 @@
 			control.addClass('ui-state-default ui-corner-all');
 		}
 		control
-			.each(changeState)
-			.bind('click', function(){
+			.bind('ariaclick', function(){
 //				if(video.supportsFullScreen()){
 //					video.enterFullScreen();
 //				} else {
@@ -257,6 +256,7 @@
 //				}
 			})
 		;
+		changeState();
 		video.bind('fullwindow', changeState);
 	});
 	

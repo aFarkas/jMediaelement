@@ -20,6 +20,7 @@
 				var api = obj.state && getAPI(obj.id);
 				if(!api){return;}
 				api._trigger('play');
+				api._isPlaystate = true;
 			}
 		},
 		Model: {
@@ -72,9 +73,11 @@
 						type = 'playing';
 						break;
 					case 'PAUSED':
+						api._isPlaystate = false;
 						type = 'pause';
 						break;
 					case 'COMPLETED':
+						api._isPlaystate = false;
 						type = 'ended';
 						break;
 					case 'BUFFERING':
@@ -140,7 +143,8 @@
 					if(state === 'playing'){
 						var api = getAPI(obj.id);
 						if(!api){return;}
-						api._trigger('play');
+						api._trigger('playing');
+						api._isPlaystate = true;
 					}
 				}
 			}
@@ -156,10 +160,20 @@
 			if(!api.apiElem.sendEvent){
 				api._reInit();
 				return;
-			} else if( api._lastLoad ){
-				api._mmload(api._lastLoad.file, api._lastLoad.image);
+			} else {
+				setTimeout(function(){
+					if( api._lastLoad ){
+						api._mmload(api._lastLoad.file, api._lastLoad.image);
+					}
+					if(api._isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
+						api.play();
+					}
+				}, 20);
+				
 			}
-			api._trigger('flashRefresh');
+			setTimeout(function(){
+				api._trigger('jmeflashRefresh');
+			}, 20);
 		}
 		
 		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
@@ -182,7 +196,7 @@
 				}
 			}
 			api._trigger('mmAPIReady');
-		}, 0);		
+		}, 20);		
 	};
 	
 	var jwAPI = {
@@ -211,6 +225,7 @@
 		},
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');
+			this._isPlaystate = true;
 			this._trigger('play');
 		},
 		pause: function(){
@@ -336,6 +351,21 @@
 			return (this.apiElem.getConfig() || {}).file || '';
 		}
 	};
+	
+	// ff flash refreshbug https://bugzilla.mozilla.org/show_bug.cgi?id=90268 
+	if($.browser.mozilla){
+		$.extend(jwAPI, {
+			isJMEReady: function(){
+				var ret = false;
+				if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
+					this.apiElem.getConfig();
+					ret = true;					
+				}
+				return ret;
+			}
+		});
+	}
+	
 	
 	$.multimediaSupport.add('jwPlayer', 'video', jwAPI);
 	$.multimediaSupport.add('jwPlayer', 'audio', jwAPI);

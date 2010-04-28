@@ -12,7 +12,9 @@
 		<!-- ui-components -->
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 		<!-- END:  ui-components -->
-		
+		<!-- for a11y-slider -->
+		<script src="http://gist.github.com/raw/378712/a11y-slider%20for%20jquery%20ui"></script>
+		<!-- END: for a11y-slider -->
 		<!-- jMediaelement -->
 		<script src="../packages/mm.full.min.js"></script>
 		<!-- jMediaelement -->
@@ -22,8 +24,20 @@
 		<!-- fullwindow plugin -->
 		
 		<!-- accessible hover -->
-		<script src="http://gist.github.com/raw/328632/863deab936bde696e0649a1a7c65057f8ec9937b/hover+focus-blur%20events"></script>
-		
+		<script src="http://gist.github.com/raw/328632/hover+focus-blur%20events"></script>
+		<!-- IE Fix -->
+		<script>
+			if(!$.support.opacity){
+				var oldStyle = $.style;
+				$.style = function(elem, name, value){
+					var ret = oldStyle(elem, name, value);
+					if(name === 'opacity' && value == 1){
+						elem.style.filter = (elem.style.filter || '').replace('alpha(opacity=100)', '');
+					}
+					return ret;
+				};
+			}
+		</script>
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
@@ -43,7 +57,7 @@
 							}
 						},
 						mediaControls: {
-							timeSliderAdjust: -5
+							timeSliderAdjust: -15
 						},
 						timeSlider: {
 							//strange bug in ie7- either don´t use range or set the current-time-display to position absolute
@@ -96,14 +110,14 @@
 					<span class="current-time player-display"></span>
 					
 					<div class="timeline-slider">
-						<span class="ui-slider-handle" tabindex="0"></span>
+						<span class="ui-handle-label">play position</span>
 						<div class="progressbar"></div>
 					</div>
 					
 					<span class="duration player-display"></span>
 					
 					<button class="mute-unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></button>
-					<div class="volume-slider"><span class="ui-slider-handle" tabindex="0"></span></div>
+					<div class="volume-slider"><span class="ui-handle-label">volume control</span></div>
 					<button class="fullscreen"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></button>
 				</div>
 			</div>

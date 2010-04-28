@@ -14,10 +14,11 @@ video {
 	width: 510px;
 	background: url(media/loader.gif) -9000px -9000px no-repeat;
 }
-.ui-media-player.waiting:not(.jwPlayer) {
+.ui-media-player.waiting {
 	background: url(media/loader.gif) center no-repeat;
 }
-.ui-media-player.waiting:not(.jwPlayer) video {
+.ui-media-player.waiting video,
+.ui-media-player.waiting .mm-video-box {
 	opacity: 0.5;
 }
 .media-controls-wrapper {

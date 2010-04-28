@@ -209,10 +209,10 @@
 	};
 	
 	function getExt(src){
-		var pos = (src.indexOf('?') + 1),
+		var pos = src.indexOf('?'),
 			ext = ''
 		;
-		src = (pos) ? src.substring(0, pos) : src;
+		src = (pos > 0) ? src.substring(0, pos) : src;
 		pos = src.lastIndexOf('.') + 1;
 		ext = src.substr(pos);
 		return ext;
@@ -698,7 +698,8 @@
 			native_mediareset: 1,
 			//these are api-events, but shouldn´t throw mmAPIReady
 			totalerror: 1,
-			progresschange: 1
+			progresschange: 1,
+			jmeflashRefresh: 1
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
@@ -707,7 +708,8 @@
 			apiActivated: 1,
 			timechange: 1,
 			progresschange: 1,
-			mmAPIReady: 1
+			mmAPIReady: 1,
+			jmeflashRefresh: 1
 		},
 		fsMethods		= {}
 	;
@@ -780,6 +782,7 @@
 				case 'mediareset':
 					this.loadedmeta = false;
 					this.totalerror = false;
+					this._bufferLoaded = false;
 					break;
 			}
 			
@@ -788,6 +791,9 @@
 				this._trigger('mmAPIReady');
 			}
 			if(e.type === 'progresschange'){
+				//firefox buffer bug
+				if(isFinite( this._bufferLoaded ) && isFinite( e.relLoaded ) && this._bufferLoaded >= e.relLoaded){return;}
+				this._bufferLoaded = e.relLoaded;
 				e.relStart = e.relStart || 0;
 				if(this._concerningBufferStart !== e.relStart){
 					this._concerningBufferStart = e.relStart;
@@ -812,6 +818,9 @@
 		enterFullscreen: $.noop,
 		exitFullscreen: $.noop,
 		isAPIReady: false,
+		isJMEReady: function(){
+			return this.isAPIReady;
+		},
 		relCurrentTime: function(rel){
 			var dur = this.getDuration() || Number.MIN_VALUE;
 			if(rel && isFinite(rel)){
@@ -833,11 +842,22 @@
 		},
 		onAPIReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
-			if(this.isAPIReady){
+			if(this.isJMEReady()){
 				fn.call(this.element, e, e);
 			} else {
 				n = n || 'jmediaelement';
-				$(this.element).one('mmAPIReady.'+n, fn);
+				var that = this,
+					fn2	 = function(){
+					$(that.element)
+						.unbind('mmAPIReady.'+n, fn2)
+						.unbind('jmeflashRefresh.'+n, fn2)
+					;
+					fn.call(that.element, e, e);
+				};
+				$(this.element)
+					.bind('mmAPIReady.'+n, fn2)
+					.bind('jmeflashRefresh.'+n, fn2)
+				;
 			}
 		},
 		unAPIReady: function(name){
@@ -1147,8 +1167,7 @@
 		}
 		$.each(names, function(i, name){
 			var fn = $m.apis.video.nativ[name];
-			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
-				if($.fn[name]){return;}
+			if(fn && !$.fn[name] && $.isFunction(fn) && name.indexOf('_') !== 0){
 				$.fn[name] =  function(){
 					var args = arguments,
 						ret
@@ -1156,7 +1175,7 @@
 					this.each(function(){
 						var api = $(this).getMMAPI();
 						if(!api){return;}
-						if(  noAPIMethods[name] || (api.isAPIReady && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
+						if(  noAPIMethods[name] || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');
@@ -1194,6 +1213,38 @@
  */
 
 (function($){
+	if(!$.event.special.ariaclick){
+		var preventclick = false;
+		function handleAriaClick(e){
+			
+			if(!preventclick && (!e.keyCode || e.keyCode === 13 || ( e.keyCode === 32 && $.attr(e.target, 'role') === 'button' ) )){
+				//ToDo:  || e.keyCode === $.ui.keyCode.SPACE
+				preventclick = true;
+				setTimeout(function(){
+					preventclick = false;
+				}, 1);
+				return $.event.special.ariaclick.handler.apply(this, arguments);
+			} else if(preventclick && e.type == 'click'){
+				e.preventDefault();
+				return false;
+			}
+			return undefined;
+		}
+		$.event.special.ariaclick = {
+			setup: function(){
+				$(this).bind('click keydown', handleAriaClick);
+	            return true;
+	        },
+			teardown: function(){
+	            $(this).unbind('click keydown', handleAriaClick);
+	            return true;
+	        },
+	        handler: function(e){
+	            e.type = 'ariaclick';
+	            return $.event.handle.apply(this, arguments);
+	        }
+		};
+	}
 	var split 			= /\s*\/\s*|\s*\|\s*/,
 		moveKeys 		= {
 					40: true,
@@ -1220,36 +1271,32 @@
 					}
 				}
 				
-				mm.onAPIReady(function(){
-					mm
-						.bind('loadedmeta', changeDisabledState)
-						.bind('timechange', changeTimeState)
-						.bind('mediareset', function(){
-							control[sliderMethod]('value', 0);
-							changeDisabledState();
-						})
-						.bind('ended', function(){
-							control[sliderMethod]('value', 100);
-						})
-					;
-					control
-						.bind('slidestart', function(e, ui){
-							if (e.originalEvent) {
-								stopSlide = true;
-							}
-						})
-						.bind('slidestop', function(e, ui){
-							stopSlide = false;
-						})
-						.bind('slide', function(e, ui){
-							if(e.originalEvent && api.apis[api.name].isAPIReady){
-								api.apis[api.name].relCurrentTime(ui.value);
-							}
-						})
-					;
-					changeDisabledState();
-				});
-				
+				mm
+					.bind('loadedmeta', changeDisabledState)
+					.bind('timechange', changeTimeState)
+					.bind('mediareset', function(){
+						control[sliderMethod]('value', 0);
+						changeDisabledState();
+					})
+					.bind('ended', function(){
+						control[sliderMethod]('value', 100);
+					})
+				;
+				control
+					.bind('slidestart', function(e, ui){
+						if (e.originalEvent) {
+							stopSlide = true;
+						}
+					})
+					.bind('slidestop', function(e, ui){
+						stopSlide = false;
+					})
+					.bind('slide', function(e, ui){
+						if(e.originalEvent && api.apis[api.name].isAPIReady){
+							api.apis[api.name].relCurrentTime(ui.value);
+						}
+					})
+				;
 			},
 			'volume-slider': function(control, mm, api, o){
 				var stopSlide = false;
@@ -1261,26 +1308,30 @@
 					}
 				}
 				
-				mm.onAPIReady(function(){
-					mm.bind('volumelevelchange', changeVolumeUI);
-					control
-						.bind('slidestart', function(e, ui){
-							if (e.originalEvent) {
-								stopSlide = true;
-							}
-						})
-						.bind('slidestop', function(e, ui){
-							stopSlide = false;
-						})
-						.bind('slide', function(e, ui){
-							if(e.originalEvent && api.apis[api.name].isAPIReady){
-								api.apis[api.name].volume(ui.value);
-							}
-						})
-					;
-					control[sliderMethod]('option', 'disabled', false);
-					control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
-				});
+				control
+					.bind('slidestart', function(e, ui){
+						if (e.originalEvent) {
+							stopSlide = true;
+						}
+					})
+					.bind('slidestop', function(e, ui){
+						stopSlide = false;
+					})
+					.bind('slide', function(e, ui){
+						if(e.originalEvent && api.apis[api.name].isAPIReady){
+							api.apis[api.name].volume(ui.value);
+						}
+					})
+				;
+				
+				mm
+					.bind('volumelevelchange', changeVolumeUI)
+					.onAPIReady(function(){
+						
+						control[sliderMethod]('option', 'disabled', false);
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
+					})
+				;
 			},
 			'progressbar': function(control, mm, api, o){
 				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
@@ -1297,28 +1348,23 @@
 					control.progressbar('option', 'disabled', true).progressbar('value', 0);
 				}
 				
-				mm.onAPIReady(function(){
-					mm
-						.bind('progresschange', changeProgressUI)
-						.bind('mediareset', resetProgress)
-					;
-				});
+				mm
+					.bind('progresschange', changeProgressUI)
+					.bind('mediareset', resetProgress)
+				;
 				
 			},
 			duration: function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
-				control.html('--:--');
+				control.html('00:00');
 				mm
 					.bind('loadedmeta', function(e, evt){
 						control.html(api.apis[api.name]._format(evt.duration));
 					})
 					.bind('mediareset', function(){
-						control.html('--:--');
-					})
-					.onAPIReady(function(){
-						control.html(api.apis[api.name].getFormattedDuration());
+						control.html('00:00');
 					})
 				;
 				
@@ -1327,17 +1373,13 @@
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
-				
-				control.html('--:--').attr('role', 'timer');
+				control.html('00:00').attr('role', 'timer');
 				mm
 					.bind('timechange', function(e, evt){
 						control.html(api.apis[api.name]._format(evt.time));
 					})
 					.bind('mediareset', function(){
-						control.html('--:--');
-					})
-					.onAPIReady(function(){
-						control.html(mm.getFormattedTime());
+						control.html('00:00');
 					})
 				;
 			},
@@ -1385,7 +1427,7 @@
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
-			function changeState(e, ui){
+			function changeState(){
 				var state = mm[opts.stateMethod]();
 				
 				if(state){
@@ -1399,11 +1441,11 @@
 				}
 			}
 			
-			mm.onAPIReady(function(){
-				mm.bind(opts.evts, changeState);
-				changeState();
-			});
-			control.bind('click', function(e){
+			mm
+				.bind(opts.evts, changeState)
+				.onAPIReady(changeState)
+			;
+			control.bind('ariaclick', function(e){
 				mm[opts.actionMethod]();
 				e.preventDefault();
 			});
@@ -1459,7 +1501,7 @@
 			.bind('pause ended mediareset', function(e){
 				removeStateClasses();
 			})
-			.bind('canplay canplaythrough', function(e){
+			.bind('canplay', function(e){
 				wrapper.removeClass(o.classPrefix+'waiting');
 			})
 		;
@@ -1499,7 +1541,7 @@
 							break;
 					}
 					e.preventDefault();
-				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') ){
+				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' ){
 					mm.togglePlay();
 					e.preventDefault();
 				}
@@ -1565,7 +1607,7 @@
 			title: control
 		};
 		
-		if($.support.waiaria && $.nodeName('a', control[0]) ){
+		if($.support.waiaria && $.nodeName(control[0], 'a') ){
 			control.removeAttr('href').attr({role: 'button', tabindex: 0});
 		}
 			
@@ -1707,6 +1749,7 @@
 				var api = obj.state && getAPI(obj.id);
 				if(!api){return;}
 				api._trigger('play');
+				api._isPlaystate = true;
 			}
 		},
 		Model: {
@@ -1759,9 +1802,11 @@
 						type = 'playing';
 						break;
 					case 'PAUSED':
+						api._isPlaystate = false;
 						type = 'pause';
 						break;
 					case 'COMPLETED':
+						api._isPlaystate = false;
 						type = 'ended';
 						break;
 					case 'BUFFERING':
@@ -1827,7 +1872,8 @@
 					if(state === 'playing'){
 						var api = getAPI(obj.id);
 						if(!api){return;}
-						api._trigger('play');
+						api._trigger('playing');
+						api._isPlaystate = true;
 					}
 				}
 			}
@@ -1843,10 +1889,20 @@
 			if(!api.apiElem.sendEvent){
 				api._reInit();
 				return;
-			} else if( api._lastLoad ){
-				api._mmload(api._lastLoad.file, api._lastLoad.image);
+			} else {
+				setTimeout(function(){
+					if( api._lastLoad ){
+						api._mmload(api._lastLoad.file, api._lastLoad.image);
+					}
+					if(api._isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
+						api.play();
+					}
+				}, 20);
+				
 			}
-			api._trigger('flashRefresh');
+			setTimeout(function(){
+				api._trigger('jmeflashRefresh');
+			}, 20);
 		}
 		
 		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
@@ -1869,7 +1925,7 @@
 				}
 			}
 			api._trigger('mmAPIReady');
-		}, 0);		
+		}, 20);		
 	};
 	
 	var jwAPI = {
@@ -1898,6 +1954,7 @@
 		},
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');
+			this._isPlaystate = true;
 			this._trigger('play');
 		},
 		pause: function(){
@@ -2023,6 +2080,21 @@
 			return (this.apiElem.getConfig() || {}).file || '';
 		}
 	};
+	
+	// ff flash refreshbug https://bugzilla.mozilla.org/show_bug.cgi?id=90268 
+	if($.browser.mozilla){
+		$.extend(jwAPI, {
+			isJMEReady: function(){
+				var ret = false;
+				if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
+					this.apiElem.getConfig();
+					ret = true;					
+				}
+				return ret;
+			}
+		});
+	}
+	
 	
 	$.multimediaSupport.add('jwPlayer', 'video', jwAPI);
 	$.multimediaSupport.add('jwPlayer', 'audio', jwAPI);

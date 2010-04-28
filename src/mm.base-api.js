@@ -14,7 +14,8 @@
 			native_mediareset: 1,
 			//these are api-events, but shouldn´t throw mmAPIReady
 			totalerror: 1,
-			progresschange: 1
+			progresschange: 1,
+			jmeflashRefresh: 1
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
@@ -23,7 +24,8 @@
 			apiActivated: 1,
 			timechange: 1,
 			progresschange: 1,
-			mmAPIReady: 1
+			mmAPIReady: 1,
+			jmeflashRefresh: 1
 		},
 		fsMethods		= {}
 	;
@@ -96,6 +98,7 @@
 				case 'mediareset':
 					this.loadedmeta = false;
 					this.totalerror = false;
+					this._bufferLoaded = false;
 					break;
 			}
 			
@@ -104,6 +107,9 @@
 				this._trigger('mmAPIReady');
 			}
 			if(e.type === 'progresschange'){
+				//firefox buffer bug
+				if(isFinite( this._bufferLoaded ) && isFinite( e.relLoaded ) && this._bufferLoaded >= e.relLoaded){return;}
+				this._bufferLoaded = e.relLoaded;
 				e.relStart = e.relStart || 0;
 				if(this._concerningBufferStart !== e.relStart){
 					this._concerningBufferStart = e.relStart;
@@ -128,6 +134,9 @@
 		enterFullscreen: $.noop,
 		exitFullscreen: $.noop,
 		isAPIReady: false,
+		isJMEReady: function(){
+			return this.isAPIReady;
+		},
 		relCurrentTime: function(rel){
 			var dur = this.getDuration() || Number.MIN_VALUE;
 			if(rel && isFinite(rel)){
@@ -149,11 +158,22 @@
 		},
 		onAPIReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
-			if(this.isAPIReady){
+			if(this.isJMEReady()){
 				fn.call(this.element, e, e);
 			} else {
 				n = n || 'jmediaelement';
-				$(this.element).one('mmAPIReady.'+n, fn);
+				var that = this,
+					fn2	 = function(){
+					$(that.element)
+						.unbind('mmAPIReady.'+n, fn2)
+						.unbind('jmeflashRefresh.'+n, fn2)
+					;
+					fn.call(that.element, e, e);
+				};
+				$(this.element)
+					.bind('mmAPIReady.'+n, fn2)
+					.bind('jmeflashRefresh.'+n, fn2)
+				;
 			}
 		},
 		unAPIReady: function(name){
@@ -463,8 +483,7 @@
 		}
 		$.each(names, function(i, name){
 			var fn = $m.apis.video.nativ[name];
-			if(fn && $.isFunction(fn) && name.indexOf('_') !== 0){
-				if($.fn[name]){return;}
+			if(fn && !$.fn[name] && $.isFunction(fn) && name.indexOf('_') !== 0){
 				$.fn[name] =  function(){
 					var args = arguments,
 						ret
@@ -472,7 +491,7 @@
 					this.each(function(){
 						var api = $(this).getMMAPI();
 						if(!api){return;}
-						if(  noAPIMethods[name] || (api.isAPIReady && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
+						if(  noAPIMethods[name] || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');

@@ -1600,6 +1600,7 @@
 	
 	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
 	
+	
 	$.fn.registerMMControl.getBtn = function(control){
 		var elems = {
 			icon: $('.ui-icon', control),
@@ -1607,8 +1608,11 @@
 			title: control
 		};
 		
-		if($.support.waiaria && $.nodeName(control[0], 'a') ){
-			control.removeAttr('href').attr({role: 'button', tabindex: 0});
+		if( !control.is(':button') && !control.attr('role') ){
+			if($.support.waiaria){
+				control.removeAttr('href');
+			}
+			control.attr({role: 'button', tabindex: 0});
 		}
 			
 		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
@@ -1630,6 +1634,10 @@
 	$.fn.registerMMControl.addControl = function(name, fn){
 		controls[name] = fn;
 	};
+	
+	$(function(){
+		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
+	});
 })(jQuery);/**!
  * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas

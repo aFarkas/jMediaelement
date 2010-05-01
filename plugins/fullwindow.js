@@ -32,6 +32,7 @@
 				elemS = this.style
 			;
 			if(!styles){
+				if(!data){return;}
 				$(this).css(data);
 				data = {};
 			} else {
@@ -129,7 +130,7 @@
 		supportsFullWindow: function(){
 			return supportsFullWindow;
 		},
-		enterFullWindow: function(){
+		enterFullWindow: function(posMediaCtrl){
 			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			
 			var data 	= $.data(this.element, 'mediaElemSupport'),
@@ -158,10 +159,14 @@
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
 			;
 			
-			ctrlBar
-				.addClass('controls-fullscreenvideo')
-				.storeInlineStyle(barCSS, 'fsstoredInlineStyle')
-			;
+			if(data.controlWrapper){
+				data.controlWrapper.addClass('wraps-fullscreen');
+			}
+			
+			ctrlBar.addClass('controls-fullscreenvideo');
+			if(posMediaCtrl){
+				ctrlBar.storeInlineStyle(barCSS, 'fsstoredInlineStyle');
+			}
 						
 			this.visualElem
 				.addClass('displays-fullscreen')
@@ -200,6 +205,9 @@
 				.parent()
 				.storeInlineStyle('fsstoredInlineStyle')
 			;
+			if(data.controlWrapper){
+				data.controlWrapper.removeClass('wraps-fullscreen');
+			}
 			
 			ctrlBar
 				.storeInlineStyle('fsstoredInlineStyle')
@@ -251,7 +259,7 @@
 					if(video.hasClass('displays-fullscreen')){
 						video.exitFullWindow();
 					} else {
-						video.enterFullWindow();
+						video.enterFullWindow(o.fullscreen.posMediaCtrl);
 					}
 //				}
 			})
@@ -260,5 +268,8 @@
 		video.bind('fullwindow', changeState);
 	});
 	
+	$.fn.registerMMControl.defaults.fullscreen = {
+		posMediaCtrl: true
+	};
 	
 })(jQuery);

@@ -7,6 +7,7 @@
 
 (function($){
 	var doc = document,
+		$m 	= $.multimediaSupport,
 		rep = /^jwPlayer-/
 	;
 	
@@ -223,6 +224,23 @@
 				}, 20000);
 			}
 		},
+		canPlaySrc: function(media){
+			var ret 	= '', 
+				index 	= -1,
+				src 	= media.src || media
+			;
+			
+			if( typeof src === 'string' ){
+				index = src.indexOf('youtube.com/');
+				if(index < 15 && index > 6){
+					ret = 'maybe';
+				}
+			}
+			if(!ret){
+				ret = $m.fn.canPlaySrc.apply(this, arguments);
+			}
+			return ret;
+		}, 
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');
 			this._isPlaystate = true;
@@ -366,7 +384,7 @@
 		});
 	}
 	
+	$m.add('jwPlayer', 'video', jwAPI);
+	$m.add('jwPlayer', 'audio', jwAPI);
 	
-	$.multimediaSupport.add('jwPlayer', 'video', jwAPI);
-	$.multimediaSupport.add('jwPlayer', 'audio', jwAPI);
 })(jQuery);

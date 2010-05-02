@@ -29,24 +29,27 @@ video {
 .js-ready .media-controls {
 	display: block;
 }
-.media-controls button.ui-state-default {
+.media-controls a.ui-state-default {
 	position: absolute;
 	top: .4em;
-	overflow: visible;
+	padding: 2px;
 }
-button.ui-state-default .button-text {
+.media-controls a:focus {
+	outline: 1px dotted #666;
+}
+a.ui-state-default .button-text {
 	position: absolute;
 	display: block;
 	left: -9999px;
 	width: 3px;
 }
-.media-controls button.play-pause {
+.media-controls a.play-pause {
 	left: 5px;
 }
 .timeline-slider {
 	top: .5em;
 }
-.media-controls button.mute-unmute {
+.media-controls a.mute-unmute {
 	right: 125px;
 }
 div.volume-slider {

@@ -349,7 +349,7 @@
 							break;
 					}
 					e.preventDefault();
-				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' ){
+				} else if( e.keyCode === $.ui.keyCode.SPACE && ( !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' || wrapper.hasClass('wraps-fullscreen')) ){
 					mm.togglePlay();
 					e.preventDefault();
 				}

@@ -39,20 +39,23 @@ video {
 .js-ready .media-controls {
 	display: block;
 }
-.media-controls button.ui-state-default {
-	overflow: visible;
+.media-controls a.ui-state-default {
+	padding: 2px;
 }
-button.ui-state-default .button-text {
+.media-controls a:focus {
+	outline: 1px dotted #666;
+}
+a.ui-state-default .button-text {
 	position: absolute;
 	display: block;
 	left: -9999px;
 	width: 3px;
 }
-button.fullscreen-unsupported {
+a.fullscreen-unsupported {
 	display: none;
 }
 .media-controls .ui-slider,
-.media-controls button.ui-state-default,
+.media-controls a.ui-state-default,
 .media-controls .player-display {
 	float: left;
 	margin: 0 2px;
@@ -65,7 +68,7 @@ button.fullscreen-unsupported {
 .media-controls .ui-slider {
 	margin: 3px 15px 0;
 }
-.media-controls button.mute-unmute {
+.media-controls a.mute-unmute {
 	right: 155px;
 }
 div.volume-slider {

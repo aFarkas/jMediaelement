@@ -163,14 +163,29 @@
 				
 			},
 			'current-time': function(control, mm, api, o){
+				var timeChange = ( o.currentTime.reverse ) ? 
+					function(e, evt){
+						control.html( api.apis[api.name]._format( duration - evt.time ));
+					} :
+					function(e, evt){
+						control.html(api.apis[api.name]._format(evt.time));
+					},
+					duration = Number.MIN_VALUE
+				;
+				
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
 				control.html('00:00').attr('role', 'timer');
+				
+				if( o.currentTime.reverse ){
+					mm.bind('loadedmeta', function(e, evt){
+						duration = evt.duration || Number.MIN_VALUE;
+						timeChange(false, {time: 0});
+					});
+				}
 				mm
-					.bind('timechange', function(e, evt){
-						control.html(api.apis[api.name]._format(evt.time));
-					})
+					.bind('timechange', timeChange)
 					.bind('mediareset', function(){
 						control.html('00:00');
 					})
@@ -388,7 +403,10 @@
 		},
 		progressbar: {},
 		volumeSlider: {},
-		timeSlider: {}
+		timeSlider: {},
+		currentTime: {
+			reverse: false
+		}
 	};
 	
 	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);

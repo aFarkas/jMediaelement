@@ -231,7 +231,7 @@
 	//create Toggle Button UI
 	$.each(toggleModells, function(name, opts){
 		controls[name] = function(control, mm, api, o){
-			var elems = $.fn.registerMMControl.getBtn(control);
+			var elems = $.fn.jmeControl.getBtn(control);
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
@@ -269,7 +269,7 @@
 		;
 		
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
-		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
+		ret.api = ret.mm.getMMAPI(true) || ret.mm.jmeEmbed(o.embed).getMMAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
 		} 
@@ -357,8 +357,8 @@
 		;
 	}
 		
-	$.fn.registerMMControl = function(o){
-		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
+	$.fn.jmeControl = function(o){
+		o = $.extend(true, {}, $.fn.jmeControl.defaults, o);
 		o.controlSel = [];
 		$.each(controls, function(name){
 			if(name !== 'media-controls'){
@@ -390,9 +390,9 @@
 		return this.each(registerControl);
 	};
 	
-	$.fn.registerMMControl.defaults = {
+	$.fn.jmeControl.defaults = {
 		//common
-		embed: $.fn.mediaElementEmbed.defaults,
+		embed: $.fn.jmeEmbed.defaults,
 		classPrefix: '',
 		addThemeRoller: true,
 		
@@ -412,7 +412,7 @@
 	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
 	
 	
-	$.fn.registerMMControl.getBtn = function(control){
+	$.fn.jmeControl.getBtn = function(control){
 		var elems = {
 			icon: $('.ui-icon', control),
 			text: $('.button-text', control),
@@ -442,9 +442,11 @@
 		}
 		return elems;
 	};
-	$.fn.registerMMControl.addControl = function(name, fn){
+	$.fn.jmeControl.addControl = function(name, fn){
 		controls[name] = fn;
 	};
+	
+	$.fn.registerMMControl = $.fn.jmeControl;
 	
 	$(function(){
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';

@@ -224,12 +224,12 @@
 		}
 	});
 	
-	$.fn.registerMMControl.addControl('fullscreen', function(control, video, data, o){
+	$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
 		if(!supportsFullWindow){
 			control.addClass('fullscreen-unsupported ui-disabled');
 			return;
 		}
-		var elems 		= $.fn.registerMMControl.getBtn(control),
+		var elems 		= $.fn.jmeControl.getBtn(control),
 			changeState = function(){
 				if(video.hasClass('displays-fullscreen')){
 					elems.text.text(elems.names[1]);
@@ -268,7 +268,7 @@
 		video.bind('fullwindow', changeState);
 	});
 	
-	$.fn.registerMMControl.defaults.fullscreen = {
+	$.fn.jmeControl.defaults.fullscreen = {
 		posMediaCtrl: true
 	};
 	

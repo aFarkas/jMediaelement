@@ -267,8 +267,8 @@
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
 				this.apis[elemName][name] = m.beget(this.fn);
-				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
-					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
+				if(name !== 'nativ' && $.inArray(name, $.fn.jmeEmbed.defaults.apiOrder) === -1){
+					$.fn.jmeEmbed.defaults.apiOrder.push(name);
 				}
 			} 
 			$.extend(true, this.apis[elemName][name], api);
@@ -611,8 +611,8 @@
 		}
 	}
 		
-	$.fn.mediaElementEmbed = function(opts){
-		opts = $.extend(true, {}, $.fn.mediaElementEmbed.defaults, opts);
+	$.fn.jmeEmbed = function(opts){
+		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase();
@@ -656,13 +656,15 @@
 		});
 	};
 	
-	$.fn.mediaElementEmbed.defaults = {
+	$.fn.jmeEmbed.defaults = {
 		debug: false,
 		removeControls: false,
 		showFallback: false,
 		apiOrder: []
 	};
 	
+	// deprecated
+	$.fn.mediaElementEmbed = $.fn.jmeEmbed;
 	
 	if($.cleanData && window.ActiveXObject){
 		var _cleanData = $.cleanData;

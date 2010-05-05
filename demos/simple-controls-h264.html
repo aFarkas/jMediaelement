@@ -33,20 +33,22 @@
 			$('html').addClass('js-on');
 			$(function(){
 				$('html').addClass('js-ready');				
-				$('div[data-controlwrapper]').registerMMControl({
-					embed: {
-						//debug: true,
-						showFallback: true,
-						removeControls: true,
-						jwPlayer: {
-							path: '../mediaplayers/jw-player/player.swf'
+				$('div[data-controlwrapper]')
+					.jmeControl({
+						embed: {
+							//debug: true,
+							showFallback: true,
+							removeControls: true,
+							jwPlayer: {
+								path: '../mediaplayers/jw-player/player.swf'
+							}
+						},
+						// we use holy grail css
+						mediaControls: {
+							dynamicTimeslider: false
 						}
-					},
-					// we use holy grail css
-					mediaControls: {
-						dynamicTimeslider: false
-					}
-				});
+					})
+				;
 							
 			});
 			

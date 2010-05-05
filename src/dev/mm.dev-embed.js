@@ -12,7 +12,7 @@
 
 (function($){
 	//options
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{yourPlugin: {}}
 		)
 	;

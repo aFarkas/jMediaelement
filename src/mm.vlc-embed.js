@@ -5,7 +5,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function($){
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				vlc: {
 					params: {},

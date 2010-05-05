@@ -6,7 +6,7 @@
  */
 
 (function($){
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				jwPlayer: {
 					path: 'player.swf',

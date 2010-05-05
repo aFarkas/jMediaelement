@@ -7,7 +7,7 @@
 (function($){
 	var doc = document;
 		
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				cortado: {
 					path: 'http://theora.org/cortado.jar'

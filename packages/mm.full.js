@@ -751,7 +751,7 @@
 	//ToDo add onAPIReady/mmAPIReady
 	$.event.special.loadedmeta = {
 	    add: function( details ) {
-			var api = $(this).getMMAPI();
+			var api = $(this).getJMEAPI();
 			if(api && api.loadedmeta){
 				var evt = $.extend({}, api.loadedmeta);
 				details.handler.call(this, evt, evt);
@@ -839,7 +839,7 @@
 		toggleMuted: function(){
 			this.muted(!(this.muted()));
 		},
-		getMMVisual: function(){
+		getJMEVisual: function(){
 			return this.visualElem;
 		},
 		onAPIReady: function(fn, n){
@@ -1157,11 +1157,13 @@
 	
 	
 	//public-methods
-	$.fn.getMMAPI = function(full){
+	$.fn.getJMEAPI = function(full){
 		if(!this[0]){return;}
 		var api = $.data(this[0], 'mediaElemSupport');
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
+	
+	$.fn.getMMAPI = $.fn.getJMEAPI;
 	
 	var noAPIMethods = {
 			onAPIReady: 1,
@@ -1180,7 +1182,7 @@
 						ret
 					;
 					this.each(function(){
-						var api = $(this).getMMAPI();
+						var api = $(this).getJMEAPI();
 						if(!api){return;}
 						if(  noAPIMethods[name] || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
@@ -1483,7 +1485,7 @@
 		;
 		
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
-		ret.api = ret.mm.getMMAPI(true) || ret.mm.jmeEmbed(o.embed).getMMAPI(true);
+		ret.api = ret.mm.getJMEAPI(true) || ret.mm.jmeEmbed(o.embed).getJMEAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
 		} 

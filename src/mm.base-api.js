@@ -81,7 +81,7 @@
 			var evt  = (e.type) ? e : {type: e},
 				type = evt.type
 			;
-
+			
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -380,6 +380,7 @@
 						that._trigger(e);
 					},
 					loadedmetadata: function(){
+						// this will trigger mmAPIReady in most cases
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -389,15 +390,19 @@
 				.bind('play pause playing ended waiting', bubbleEvents)
 			;
 			
-			//workaround
-			if(this.element.readyState > 0 && !this.element.error){
+			//workaround for loadedmeta and particularly mmAPIReady event
+			if( this.element.error ){return;}
+			//jmeEmbed is called very late (after onload)
+			if( this.element.readyState > 0 ){
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			} else if( ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
+			//if element isn´t busy (default for iPad and iPhone) || if element is busy we should wait (some browsers can crash, if we operate on busy media elements)
+			} else if( this.element.networkState !== 2 || ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
 				this._trigger('mmAPIReady');
 			}
+			//if element is busy and metadata isn´t loaded yet, we will wait for normal loadedmetadata event (see above, default for most browsers)
 		},
 		play: function(src){
 			this.element.play();

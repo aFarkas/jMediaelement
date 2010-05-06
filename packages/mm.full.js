@@ -267,8 +267,8 @@
 		add: function(name, elemName, api){
 			if(!this.apis[elemName][name]){
 				this.apis[elemName][name] = m.beget(this.fn);
-				if(name !== 'nativ' && $.inArray(name, $.fn.mediaElementEmbed.defaults.apiOrder) === -1){
-					$.fn.mediaElementEmbed.defaults.apiOrder.push(name);
+				if(name !== 'nativ' && $.inArray(name, $.fn.jmeEmbed.defaults.apiOrder) === -1){
+					$.fn.jmeEmbed.defaults.apiOrder.push(name);
 				}
 			} 
 			$.extend(true, this.apis[elemName][name], api);
@@ -611,8 +611,8 @@
 		}
 	}
 		
-	$.fn.mediaElementEmbed = function(opts){
-		opts = $.extend(true, {}, $.fn.mediaElementEmbed.defaults, opts);
+	$.fn.jmeEmbed = function(opts){
+		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase();
@@ -656,13 +656,15 @@
 		});
 	};
 	
-	$.fn.mediaElementEmbed.defaults = {
+	$.fn.jmeEmbed.defaults = {
 		debug: false,
 		removeControls: false,
 		showFallback: false,
 		apiOrder: []
 	};
 	
+	// deprecated
+	$.fn.mediaElementEmbed = $.fn.jmeEmbed;
 	
 	if($.cleanData && window.ActiveXObject){
 		var _cleanData = $.cleanData;
@@ -765,7 +767,7 @@
 			var evt  = (e.type) ? e : {type: e},
 				type = evt.type
 			;
-
+			
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -1064,6 +1066,7 @@
 						that._trigger(e);
 					},
 					loadedmetadata: function(){
+						// this will trigger mmAPIReady in most cases
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -1073,15 +1076,19 @@
 				.bind('play pause playing ended waiting', bubbleEvents)
 			;
 			
-			//workaround
-			if(this.element.readyState > 0 && !this.element.error){
+			//workaround for loadedmeta and particularly mmAPIReady event
+			if( this.element.error ){return;}
+			//jmeEmbed is called very late (after onload)
+			if( this.element.readyState > 0 ){
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			} else if( ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
+			//if element isn´t busy (default for iPad and iPhone) || if element is busy we should wait (some browsers can crash, if we operate on busy media elements)
+			} else if( this.element.networkState !== 2 || ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
 				this._trigger('mmAPIReady');
 			}
+			//if element is busy and metadata isn´t loaded yet, we will wait for normal loadedmetadata event (see above, default for most browsers)
 		},
 		play: function(src){
 			this.element.play();
@@ -1370,14 +1377,29 @@
 				
 			},
 			'current-time': function(control, mm, api, o){
+				var timeChange = ( o.currentTime.reverse ) ? 
+					function(e, evt){
+						control.html( api.apis[api.name]._format( duration - evt.time ));
+					} :
+					function(e, evt){
+						control.html(api.apis[api.name]._format(evt.time));
+					},
+					duration = Number.MIN_VALUE
+				;
+				
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
 				control.html('00:00').attr('role', 'timer');
+				
+				if( o.currentTime.reverse ){
+					mm.bind('loadedmeta', function(e, evt){
+						duration = evt.duration || Number.MIN_VALUE;
+						timeChange(false, {time: 0});
+					});
+				}
 				mm
-					.bind('timechange', function(e, evt){
-						control.html(api.apis[api.name]._format(evt.time));
-					})
+					.bind('timechange', timeChange)
 					.bind('mediareset', function(){
 						control.html('00:00');
 					})
@@ -1423,7 +1445,7 @@
 	//create Toggle Button UI
 	$.each(toggleModells, function(name, opts){
 		controls[name] = function(control, mm, api, o){
-			var elems = $.fn.registerMMControl.getBtn(control);
+			var elems = $.fn.jmeControl.getBtn(control);
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
@@ -1461,7 +1483,7 @@
 		;
 		
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
-		ret.api = ret.mm.getMMAPI(true) || ret.mm.mediaElementEmbed(o.embed).getMMAPI(true);
+		ret.api = ret.mm.getMMAPI(true) || ret.mm.jmeEmbed(o.embed).getMMAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
 		} 
@@ -1541,7 +1563,7 @@
 							break;
 					}
 					e.preventDefault();
-				} else if( e.keyCode === $.ui.keyCode.SPACE && !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' ){
+				} else if( e.keyCode === $.ui.keyCode.SPACE && ( !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' || wrapper.hasClass('wraps-fullscreen')) ){
 					mm.togglePlay();
 					e.preventDefault();
 				}
@@ -1549,8 +1571,8 @@
 		;
 	}
 		
-	$.fn.registerMMControl = function(o){
-		o = $.extend(true, {}, $.fn.registerMMControl.defaults, o);
+	$.fn.jmeControl = function(o){
+		o = $.extend(true, {}, $.fn.jmeControl.defaults, o);
 		o.controlSel = [];
 		$.each(controls, function(name){
 			if(name !== 'media-controls'){
@@ -1582,9 +1604,9 @@
 		return this.each(registerControl);
 	};
 	
-	$.fn.registerMMControl.defaults = {
+	$.fn.jmeControl.defaults = {
 		//common
-		embed: $.fn.mediaElementEmbed.defaults,
+		embed: $.fn.jmeEmbed.defaults,
 		classPrefix: '',
 		addThemeRoller: true,
 		
@@ -1595,13 +1617,16 @@
 		},
 		progressbar: {},
 		volumeSlider: {},
-		timeSlider: {}
+		timeSlider: {},
+		currentTime: {
+			reverse: false
+		}
 	};
 	
 	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
 	
 	
-	$.fn.registerMMControl.getBtn = function(control){
+	$.fn.jmeControl.getBtn = function(control){
 		var elems = {
 			icon: $('.ui-icon', control),
 			text: $('.button-text', control),
@@ -1631,9 +1656,11 @@
 		}
 		return elems;
 	};
-	$.fn.registerMMControl.addControl = function(name, fn){
+	$.fn.jmeControl.addControl = function(name, fn){
 		controls[name] = fn;
 	};
+	
+	$.fn.registerMMControl = $.fn.jmeControl;
 	
 	$(function(){
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
@@ -1646,7 +1673,7 @@
  */
 
 (function($){
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				jwPlayer: {
 					path: 'player.swf',
@@ -1744,6 +1771,7 @@
 
 (function($){
 	var doc = document,
+		$m 	= $.multimediaSupport,
 		rep = /^jwPlayer-/
 	;
 	
@@ -1960,6 +1988,23 @@
 				}, 20000);
 			}
 		},
+		canPlaySrc: function(media){
+			var ret 	= '', 
+				index 	= -1,
+				src 	= media.src || media
+			;
+			
+			if( typeof src === 'string' ){
+				index = src.indexOf('youtube.com/');
+				if(index < 15 && index > 6){
+					ret = 'maybe';
+				}
+			}
+			if(!ret){
+				ret = $m.fn.canPlaySrc.apply(this, arguments);
+			}
+			return ret;
+		}, 
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');
 			this._isPlaystate = true;
@@ -2103,9 +2148,9 @@
 		});
 	}
 	
+	$m.add('jwPlayer', 'video', jwAPI);
+	$m.add('jwPlayer', 'audio', jwAPI);
 	
-	$.multimediaSupport.add('jwPlayer', 'video', jwAPI);
-	$.multimediaSupport.add('jwPlayer', 'audio', jwAPI);
 })(jQuery);
 /**!
  * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
@@ -2114,7 +2159,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  */
 (function($){
-	$.extend($.fn.mediaElementEmbed.defaults, 
+	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				vlc: {
 					params: {},

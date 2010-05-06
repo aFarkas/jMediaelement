@@ -700,7 +700,6 @@
 			native_mediareset: 1,
 			//these are api-events, but shouldn´t throw mmAPIReady
 			totalerror: 1,
-			progresschange: 1,
 			jmeflashRefresh: 1
 		},
 		nuBubbleEvents 	= {
@@ -1066,7 +1065,6 @@
 						that._trigger(e);
 					},
 					loadedmetadata: function(){
-						// this will trigger mmAPIReady in most cases
 						that._trigger({
 							type: 'loadedmeta',
 							duration: this.duration
@@ -1079,16 +1077,17 @@
 			//workaround for loadedmeta and particularly mmAPIReady event
 			if( this.element.error ){return;}
 			//jmeEmbed is called very late (after onload)
-			if( this.element.readyState > 0 ){
+			if (this.element.readyState > 0) {
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			//if element isn´t busy (default for iPad and iPhone) || if element is busy we should wait (some browsers can crash, if we operate on busy media elements)
-			} else if( this.element.networkState !== 2 || ( $.attr(this.element, 'preload') === 'none' && !$.attr(this.element, 'autoplay') ) || !$.attr(this.element, 'srces').length ){
+			// if element isn´t busy 
+			// we only need this for mozilla
+			// although other browser like chrome, opera and safari for desktop aren´t damaged by the following code
+			} else if ( this.element.networkState !== 2 || !$.browser.mozilla ) {
 				this._trigger('mmAPIReady');
 			}
-			//if element is busy and metadata isn´t loaded yet, we will wait for normal loadedmetadata event (see above, default for most browsers)
 		},
 		play: function(src){
 			this.element.play();

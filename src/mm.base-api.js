@@ -391,15 +391,14 @@
 			//workaround for loadedmeta and particularly mmAPIReady event
 			if( this.element.error ){return;}
 			//jmeEmbed is called very late (after onload)
-			if (this.element.readyState > 0) {
+			if ( this.element.readyState > 0 ) {
 				this._trigger({
 					type: 'loadedmeta',
 					duration: this.element.duration
 				});
-			// if element isn´t busy 
-			// we only need this for mozilla
-			// although other browser like chrome, opera and safari for desktop aren´t damaged by the following code
-			} else if ( this.element.networkState !== 2 || !$.browser.mozilla ) {
+			// if element isn't busy || opera can freeze and mozilla doesn't react on method load
+			// iPad & iPhone initially report networkState === 2 although they are idling
+			} else if ( this.element.networkState !== 2 || 'webkitPreservesPitch' in this.element ) {
 				this._trigger('mmAPIReady');
 			}
 		},

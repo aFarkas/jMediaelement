@@ -61,7 +61,7 @@
 		}
 	});
 	
-	//ToDo add onAPIReady/mmAPIReady
+	//ToDo add jmeReady/mmAPIReady
 	$.event.special.loadedmeta = {
 	    add: function( details ) {
 			var api = $(this).getJMEAPI();
@@ -155,7 +155,7 @@
 		getJMEVisual: function(){
 			return this.visualElem;
 		},
-		onAPIReady: function(fn, n){
+		jmeReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
 			if(this.isJMEReady()){
 				fn.call(this.element, e, e);
@@ -476,10 +476,8 @@
 		return ( full || !api || !api.name || !api.apis ) ? api : api.apis[api.name];
 	};
 	
-	$.fn.getMMAPI = $.fn.getJMEAPI;
-	
 	var noAPIMethods = {
-			onAPIReady: 1,
+			jmeReady: 1,
 			loadSrc: 1
 		}
 	;
@@ -501,7 +499,7 @@
 							ret = api[name].apply(api, args);
 						} else {
 							api.unAPIReady(name+'queue');
-							api.onAPIReady.call(api, function(){
+							api.jmeReady.call(api, function(){
 								api[name].apply(api, args);
 							}, name+'queue');
 						}
@@ -518,6 +516,11 @@
 	});
 	
 	$m.registerAPI(fnNames);
+	
+	// deprecated
+	$.fn.onAPIReady = $.fn.jmeReady;
+	$.fn.getMMAPI = $.fn.getJMEAPI;
+	
 	//plugin mechanism
 	$m.fn._extend = function(exts){
 		var names = [];

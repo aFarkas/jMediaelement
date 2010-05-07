@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v@VERSION | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -138,7 +138,9 @@
 					$.attr(elem, n, v);
 				});
 			} else if(name === 'preload'){
-				if(!preloadVals[value]){return;}
+				if(!preloadVals[value]){
+					value = 'auto';
+				}
 				elem.setAttribute(name, value);
 			}
 		}
@@ -603,22 +605,35 @@
 			return;
 		}
 		if(supported === 'noSource'){return;}
-		//returns false if player isn´t embeded
+		//_setAPIActive returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
 		} else if(apiData.apis[supported.name]._mmload){
 			apiData.apis[supported.name]._mmload(supported.src, $.attr(elem, 'poster'));
 		}
 	}
-		
+	
+	var showFallback = function(){
+		var fallback = $(this).hide().children(':not(source, track)').clone().insertAfter(this);
+		$(this).one('mediareset', function(){
+			 $(this).show();
+			 fallback.remove();
+		});
+	};
+	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
+		
+		if(opts.showFallback && $.support.mediaElements){
+			this.bind('totalerror', showFallback);
+		}
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase();
 			
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
+			opts.beforeEmbed(this, elemName, opts);
 			if(opts.removeControls){
 				$.attr(this, 'controls', false);
 			}
@@ -634,12 +649,6 @@
 				}
 			});
 			
-			if(opts.showFallback && $.support.mediaElements){
-				$(this).bind('totalerror', function(){
-					$(this).hide().children(':not(source, itext)').insertAfter(this);
-				});
-			}
-			
 			if(opts.debug || !$.support.mediaElements){
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
@@ -653,6 +662,7 @@
 					}
 				})
 			;
+			opts.afterEmbed(this, elemName, opts);
 		});
 	};
 	
@@ -660,7 +670,9 @@
 		debug: false,
 		removeControls: false,
 		showFallback: false,
-		apiOrder: []
+		apiOrder: [],
+		beforeEmbed: $.noop,
+		afterEmbed: $.noop
 	};
 	
 	// deprecated

@@ -49,6 +49,10 @@ a.ui-state-default .button-text {
 .timeline-slider {
 	top: .5em;
 }
+.media-controls a.ui-slider-handle {
+	padding: 0;
+	top: -0.26em;
+}
 .media-controls a.mute-unmute {
 	right: 125px;
 }

@@ -68,6 +68,10 @@ a.fullscreen-unsupported {
 .media-controls .ui-slider {
 	margin: 3px 15px 0;
 }
+.media-controls a.ui-slider-handle {
+	padding: 0;
+	margin-left: -0.6em;
+}
 .media-controls a.mute-unmute {
 	right: 155px;
 }

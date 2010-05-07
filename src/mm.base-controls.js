@@ -119,7 +119,7 @@
 				
 				mm
 					.bind('volumelevelchange', changeVolumeUI)
-					.onAPIReady(function(){
+					.jmeReady(function(){
 						
 						control[sliderMethod]('option', 'disabled', false);
 						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
@@ -162,35 +162,6 @@
 				;
 				
 			},
-			'current-time': function(control, mm, api, o){
-				var timeChange = ( o.currentTime.reverse ) ? 
-					function(e, evt){
-						control.html( api.apis[api.name]._format( duration - evt.time ));
-					} :
-					function(e, evt){
-						control.html(api.apis[api.name]._format(evt.time));
-					},
-					duration = Number.MIN_VALUE
-				;
-				
-				if(o.addThemeRoller){
-					control.addClass('ui-widget-content ui-corner-all');
-				}
-				control.html('00:00').attr('role', 'timer');
-				
-				if( o.currentTime.reverse ){
-					mm.bind('loadedmeta', function(e, evt){
-						duration = evt.duration || Number.MIN_VALUE;
-						timeChange(false, {time: 0});
-					});
-				}
-				mm
-					.bind('timechange', timeChange)
-					.bind('mediareset', function(){
-						control.html('00:00');
-					})
-				;
-			},
 			'media-controls': function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget ui-widget-header ui-corner-all');
@@ -213,7 +184,7 @@
 						calcTimer	= setTimeout(calcSlider, 0)
 					;
 					
-					mm.onAPIReady(function(){
+					mm.jmeReady(function(){
 						clearInterval(calcTimer);
 						setTimeout(calcSlider, 0);
 					});
@@ -227,6 +198,38 @@
 				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
 			}
 	;
+	
+	$.each(['current-time', 'remaining-time'], function(i, name){
+		controls[name] = function(control, mm, api, o){
+			var timeChange = ( name == 'remaining-time' ) ? 
+				function(e, evt){
+					control.html( api.apis[api.name]._format( duration - evt.time ));
+				} :
+				function(e, evt){
+					control.html(api.apis[api.name]._format(evt.time));
+				},
+				duration = Number.MIN_VALUE
+			;
+			
+			if(o.addThemeRoller){
+				control.addClass('ui-widget-content ui-corner-all');
+			}
+			control.html('00:00').attr('role', 'timer');
+			
+			if( name == 'remaining-time' ){
+				mm.bind('loadedmeta', function(e, evt){
+					duration = evt.duration || Number.MIN_VALUE;
+					timeChange(false, {time: 0});
+				});
+			}
+			mm
+				.bind('timechange', timeChange)
+				.bind('mediareset', function(){
+					control.html('00:00');
+				})
+			;
+		};
+	});
 	
 	//create Toggle Button UI
 	$.each(toggleModells, function(name, opts){
@@ -251,7 +254,7 @@
 			
 			mm
 				.bind(opts.evts, changeState)
-				.onAPIReady(changeState)
+				.jmeReady(changeState)
 			;
 			control.bind('ariaclick', function(e){
 				mm[opts.actionMethod]();
@@ -287,11 +290,14 @@
 	
 	function addWrapperBindings(wrapper, mm, api, o){
 		//classPrefix
-		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting',
+		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
 			removeStateClasses 	= function(){
 				wrapper.removeClass(stateClasses);
 			}
 		;
+		if( !mm.isPlaying() ){
+			wrapper.addClass(o.classPrefix+'idle');
+		}
 		wrapper.addClass(o.classPrefix+api.name);
 		mm
 			.bind({
@@ -306,8 +312,12 @@
 				removeStateClasses();
 				wrapper.addClass(o.classPrefix+e.type);
 			})
+			.bind('play', function(){
+				wrapper.removeClass(o.classPrefix+'idle');
+			})
 			.bind('pause ended mediareset', function(e){
 				removeStateClasses();
+				wrapper.addClass(o.classPrefix+'idle');
 			})
 			.bind('canplay', function(e){
 				wrapper.removeClass(o.classPrefix+'waiting');

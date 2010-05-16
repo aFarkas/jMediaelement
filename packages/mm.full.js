@@ -94,14 +94,23 @@
 						;
 					} else {
 						ret = [];
-						// safari without quicktime ignores source-tags, initially
-						$('source, a.source', elem).each(function(i){
+						$('source', elem).each(function(i){
 							ret.push({
 								src: $.attr(this, 'src'),
 								type: this.getAttribute('type'),
 								media: this.getAttribute('media')
 							});
 						});
+						// safari without quicktime ignores source-tags, initially
+						if(!ret.length){
+							$('a.source', elem).each(function(){
+								ret.push({
+									src: this.href,
+									type: this.getAttribute('type'),
+									media: this.getAttribute('data-media')
+								});
+							});
+						}
 					}
 					break;
 				case 'getConfig':

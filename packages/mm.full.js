@@ -94,7 +94,6 @@
 						;
 					} else {
 						ret = [];
-						// safari without quicktime ignores source-tags, initially
 						$('source', elem).each(function(i){
 							ret.push({
 								src: $.attr(this, 'src'),

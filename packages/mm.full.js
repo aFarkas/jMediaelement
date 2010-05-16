@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v0.9.2beta | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.0beta | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -14,6 +14,10 @@
 	// support test + document.createElement trick
 	$.support.video = !!($('<video />')[0].canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
+	
+	$('<source />');
+	$('<track />');
+	
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
 	
@@ -90,23 +94,14 @@
 						;
 					} else {
 						ret = [];
-						$('source', elem).each(function(i){
+						// safari without quicktime ignores source-tags, initially
+						$('source, a.source', elem).each(function(i){
 							ret.push({
 								src: $.attr(this, 'src'),
 								type: this.getAttribute('type'),
 								media: this.getAttribute('media')
 							});
 						});
-						// safari without quicktime ignores source-tags, initially
-						if(!ret.length){
-							$('a.source', elem).each(function(){
-								ret.push({
-									src: this.href,
-									type: this.getAttribute('type'),
-									media: this.getAttribute('data-media')
-								});
-							});
-						}
 					}
 					break;
 				case 'getConfig':
@@ -1178,13 +1173,19 @@
 			if(!this._videoFullscreen){return false;}
 			try {
 				this.element[fsMethods.enter]();
-			} catch(e){}
+			} catch(e){
+				return false;
+			}
+			return true;
 		},
 		exitFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
 				this.element[fsMethods.exit]();
-			} catch(e){}
+			} catch(e){
+				return false;
+			}
+			return true;
 		}
 	}, nativ));
 	
@@ -1423,9 +1424,10 @@
 				}
 				control.attr('role', 'toolbar');
 				function calcSlider(){
-					var space 		= control.innerWidth() + o.mediaControls.timeSliderAdjust,
+					var space 		= control.width() + o.mediaControls.timeSliderAdjust,
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
+					
 					$('> *', control).each(function(){
 						if(timeSlider[0] !== this && this.offsetWidth && $.curCSS(this, 'position') !== 'absolute' && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
 							occupied += $(this).outerWidth(true);
@@ -2563,10 +2565,11 @@
 				} else {
 					this.apiElem.video.fullscreen = true;
 				}
-				
+				return true;
 			},
 			exitFullScreen: function(){
 				this.apiElem.video.fullscreen = false;
+				return true;
 			}
 		}, vlcAPI)
 	);

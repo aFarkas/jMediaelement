@@ -168,9 +168,10 @@
 				}
 				control.attr('role', 'toolbar');
 				function calcSlider(){
-					var space 		= control.innerWidth() + o.mediaControls.timeSliderAdjust,
+					var space 		= control.width() + o.mediaControls.timeSliderAdjust,
 						occupied 	= timeSlider.outerWidth(true) - timeSlider.innerWidth()
 					;
+					
 					$('> *', control).each(function(){
 						if(timeSlider[0] !== this && this.offsetWidth && $.curCSS(this, 'position') !== 'absolute' && ( !o.excludeSel || !$(this).is(o.excludeSel) ) ){
 							occupied += $(this).outerWidth(true);

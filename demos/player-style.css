@@ -61,6 +61,7 @@ video {
 
 /* buttons general */
 .media-controls a.button {
+	overflow: hidden;
 	padding: 0.15em;
 }
 .media-controls a:focus {

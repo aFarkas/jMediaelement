@@ -51,8 +51,6 @@
 					})
 					.bind('useractive', function(){
 						$('div.media-controls', this).stop().animate({opacity: 1});
-						//prevent scrollIntoView:
-						this.scrollTop = 0;
 					})
 					.bind('userinactive', function(){
 						$('div.media-controls', this).stop().animate({opacity: 0});

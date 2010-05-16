@@ -33,6 +33,7 @@ video {
 	position: absolute;
 	top: .4em;
 	padding: 2px;
+	overflow: hidden;
 }
 .media-controls a:focus {
 	outline: 1px dotted #666;

@@ -739,7 +739,6 @@
 				jwPlayer: {
 					path: 'player.swf',
 					hideIcons: 'auto',
-					isStream: false,
 					vars: {},
 					attrs: {},
 					params: {

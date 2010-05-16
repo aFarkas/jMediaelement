@@ -271,8 +271,9 @@
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
 		_isSeekable: function(t){
-			var file = this.getCurrentSrc();
-			if(this._buffered === 100 || this.embedOpts.jwPlayer.isStream || (file.indexOf('http') !== 0 && file.indexOf('file') !== 0)){
+			var cfg = this.apiElem.getConfig() || {};
+			
+			if(this._buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
 				return true;
 			}
 			var dur = this.getDuration();
@@ -306,7 +307,9 @@
 			}
 			clearTimeout(this._seekrequestTimer);
 			unbind();
+			
 			if(this._isSeekable(t)){
+				console.log(t)
 				doSeek();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');

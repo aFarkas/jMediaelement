@@ -5,7 +5,7 @@
 		<title>Simple Controls Demo</title>
 		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
-		<link rel="stylesheet" href="holy-grail-player-style.css" />
+		<link rel="stylesheet" href="player-style-simple-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		
@@ -13,38 +13,21 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 		<!-- END:  ui-components -->
 		<!-- optional for a11y-slider -->
-		<script src="http://gist.github.com/raw/378712/a11y-slider%20for%20jquery%20ui"></script>
+		<script src="../plugins/utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
 		<script src="../packages/mm.full.min.js"></script>
-		<!-- IE Fix -->
-		<script>
-			if(!$.support.opacity){
-				var oldStyle = $.style;
-				$.style = function(elem, name, value){
-					var ret = oldStyle(elem, name, value);
-					if(name === 'opacity' && value == 1){
-						elem.style.filter = (elem.style.filter || '').replace('alpha(opacity=100)', '');
-					}
-					return ret;
-				};
-			}
-		</script>
+		
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
 				$('html').addClass('js-ready');			
-				$('div[data-controlwrapper]')
+				$('div.ui-media-player')
 					.jmeControl({
 						embed: {
-							//debug: true,
 							removeControls: true,
 							jwPlayer: {
 								path: '../mediaplayers/jw-player/player.swf'
 							}
-						},
-						// we use holy grail css
-						mediaControls: {
-							dynamicTimeslider: false
 						}
 					})
 				;
@@ -57,7 +40,7 @@
 	<body>
 		
 		 
-		<div class="ui-media-player" data-controlwrapper="controlwrapper">
+		<div class="ui-media-player">
 			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
 				<source src="media/bbb_trailer_mobile.m4v"></source>

@@ -1,25 +1,40 @@
-
 video {
 	display: block;
 	width: 510px;
 	height: 280px;
-	-moz-transition: opacity 0.5s;
-	-webkit-transition: opacity 0.5s;
-	-o-transition: opacity 0.5s;
-	transition: opacity 0.5s;
 }
 .ui-media-player {
 	position: relative;
 	overflow: hidden;
 	width: 510px;
+}
+/* vlc has no wmode, so we place controlbar not above videoas an video overlay */
+.ui-media-player.vlc {
+	padding-bottom: 40px;
+}
+.ui-media-player .video-box {
+	position: relative;
+	width: 510px;
+	height: 280px;
+}
+.video-box .media-state {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	/* preload waiting image */
 	background: url(media/loader.gif) -9000px -9000px no-repeat;
 }
-.ui-media-player.waiting {
+.idle .video-box .media-state {
+	background: url(media/play-icon.png) center no-repeat;
+}
+.ui-media-player.waiting .video-box .media-state {
 	background: url(media/loader.gif) center no-repeat;
 }
-.ui-media-player.waiting video,
-.ui-media-player.waiting .mm-video-box {
-	opacity: 0.5;
+.playing .video-box .media-state {
+	display: none;
 }
 .media-controls-wrapper {
 	position: absolute;
@@ -27,20 +42,18 @@ video {
 	width: 100%;
 }
 .media-controls {
-	display: none;
 	zoom: 1;
 	overflow: hidden;
 	margin: 0;
-	padding: 5px 0;
+	padding: 0.4em 11em 0.4em 3.8em;
 	/* ie opacity bug */
 	position: relative;
 	z-index: 999;
 }
-.js-ready .media-controls {
-	display: block;
-}
-.media-controls a.ui-state-default {
-	padding: 2px;
+
+/* buttons general */
+.media-controls a.button {
+	padding: 0.15em;
 }
 .media-controls a:focus {
 	outline: 1px dotted #666;
@@ -51,47 +64,88 @@ a.ui-state-default .button-text {
 	left: -9999px;
 	width: 3px;
 }
+/* position all controls, but not the timeline-slider */
+.media-controls a.button,
+.media-controls .volume-slider,
+.media-controls .player-display {
+	position: absolute;
+	zoom: 1;
+}
+.media-controls a.button {
+	top: 0.35em;
+}
+.media-controls .volume-slider {
+	top: 0.4em;
+}
+.media-controls .player-display {
+	top: 0.77em;
+}
+
+.media-controls a.play-pause {
+	left: 0.2em;
+}
+.media-controls .current-time {
+	left: 2.5em;
+}
+.media-controls a.fullscreen {
+	right: 0.2em;
+}
+.media-controls .volume-slider {
+	right: 1.4em;
+}
+.media-controls a.mute-unmute {
+	right: 7.3em;
+}
+.media-controls .duration {
+	right: 12.7em;
+}
+
+
 a.fullscreen-unsupported {
 	display: none;
 }
-.media-controls .ui-slider,
-.media-controls a.ui-state-default,
+
 .media-controls .player-display {
-	float: left;
-	margin: 0 2px;
-	zoom: 1;
-}
-.media-controls .player-display {
-	padding: 1px 3px 0;
+	padding: 0.08em 0.25em 0;
 	font-size: 70%;
 }
 .media-controls .ui-slider {
-	margin: 3px 15px 0;
+	margin: 3px 1em 0;
 }
 .media-controls a.ui-slider-handle {
 	padding: 0;
 	margin-left: -0.6em;
 }
-.media-controls a.mute-unmute {
-	right: 155px;
-}
-div.volume-slider {
-	width: 60px;
-}
-.toggle-subtitle {
-	right: 125px;
-}
-.toggle-zoom {
-	right: 95px;
-}
-.caption {
-	height: 3em;
-}
-.caption-box {
-	padding: 3px;
-	text-align: center;
+.media-controls div.volume-slider {
+	width: 4em;
 }
 .media-controls .ui-progressbar {
 	height: 0.8em;
 	opacity: 0.3;
+}
+
+/* on totoal error/showFallback: true */
+.totalerror .media-controls {
+	display: none !important;
+}
+.fallback {
+	position: relative;
+	zoom: 1;
+}
+.fallback-text {
+	position: absolute;
+	padding: 10px;
+	bottom: 0;
+	background: #000;
+	background: rgba(0, 0, 0, 0.8);
+	color: #fff;
+}
+.fallback-text p {
+	margin: 0 0 10px;
+}
+.fallback-text li {
+	list-style: none;
+}
+.fallback-text a {
+	color: #fff;
 }

@@ -72,9 +72,10 @@
             }
 			
             $('video, audio')
-			.mediaElementEmbed({
+			.jmeEmbed({
                 debug: ('debug' in params),
-                removeControls: true,
+                //removeControls: true,
+				showFallback: true,
                 jwPlayer: {
                     path: '../../mediaplayers/jw-player/player.swf',
 					params: {
@@ -90,7 +91,13 @@
 //				$(this).loadSrc(['../../demos/media/ANC_sketchV2n.mp3', '../../demos/media/ANC_sketchV2n.ogg']);
 //			});
                        
-            $('div[data-controlwrapper]').registerMMControl();
+            $('div[data-controlwrapper]').registerMMControl({
+				
+						mediaControls: {
+							dynamicTimeslider: true,
+							timeSliderAdjust: -10
+						}
+			});
             
              
              $('a.load-video').click(function(e){
@@ -142,6 +149,37 @@
     <body>       
 		<a href="../../demos/media/loader.gif" class="poster" style="display: none;"></a>
 		<div id="log"></div>
+		<button class="prepend">prepend video</button>
+		<script>
+			var videoHTML = '<div><video class="dynamic" poster="../../demos/media/bbb_watchtrailer.gif" controls="controls"> \
+					<source src="../../demos/media/bbb_trailer_mobile.m4v"></source> \
+					<source src="../../demos/media/bbb_trailer_400p.ogg"></source> \
+                    <a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a> \
+                    <a class="source" href="../../demos/media/bbb_trailer_mobile.m4v">title</a> \
+                </video></div>'
+			;
+			$('button.prepend').click(function(){
+				
+				$('body').prepend($.fixHTML5(videoHTML));
+				
+				$('video.dynamic')
+					.jmeEmbed({
+		                //removeControls: true,
+						showFallback: true,
+		                jwPlayer: {
+		                    path: '../../mediaplayers/jw-player/player.swf',
+							params: {
+								wmode: 'transparent'
+							}
+		                },
+						cortado: {
+							path: '../../mediaplayers/cortado/cortado.jar'
+						}
+		            });
+			});
+		</script>
+		
+		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
                 <audio controls="controls">
@@ -220,6 +258,7 @@
          	<a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
             <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video load-ogg">Load-ogg</a>
             <a href="../../demos/media/bbb_trailer_mobile.m4v" class="load-video">Load-m4v</a>
+			<a href="../../demos/media/hgfh.mghjfg4v" class="load-video">Load-unplayable</a>
 			<a href="#" class="enter-fs">enter fullscreen</a>
 			<a href="#" class="enter-fw">enter fullwindow</a>
 			

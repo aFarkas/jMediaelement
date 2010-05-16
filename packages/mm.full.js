@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v0.9.1beta | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v0.9.2beta | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -11,9 +11,33 @@
 		vID = new Date().getTime(),
 		doc	= document
 	;
+	// support test + document.createElement trick
 	$.support.video = !!($('<video />')[0].canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
 	$.support.mediaElements = ($.support.video && $.support.audio);
+	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	
+	// HTML5 shiv document.createElement does not work with dynamic inserted elements
+	// thanks to jdbartlett for this simple script
+	// see also http://jdbartlett.github.com/innershiv/
+	$.fixHTML5 = (function(){
+		var d, b;
+		return ($.support.dynamicHTML5) ? 
+			function(h){return h;} :
+			function(h) {
+				if (!d) {
+					b = document.body;
+					d = document.createElement('div');
+					d.style.display = 'none';
+				}
+				var e = d.cloneNode(false);
+				b.appendChild(e);
+				e.innerHTML = h;
+				b.removeChild(e);
+				return e.childNodes;
+			}
+		;
+	})();
 	
 	
 	var oldAttr 		= $.attr,
@@ -469,10 +493,13 @@
 				id 		= elem.id,
 				fn 		= function(apiElem){
 							apiData.apis[supported.name].apiElem = apiElem;
-							$(apiElem)
-								.addClass(apiData.nodeName)
-								.attr('tabindex', (!config.controls) ?  '-1' : '0')
-							;
+							$(apiElem).addClass(apiData.nodeName);
+							if(!config.controls){
+								$(apiElem).attr({
+									tabindex: '-1',
+									role: 'presentation'
+								});
+							}
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
 						},
@@ -532,7 +559,7 @@
 			return version;
 		},
 		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
-			elem = $('<div />').appendTo(elem)[0];
+			elem = $('<div />').prependTo(elem)[0];
 			var obj;
 			
 			if(navigator.plugins && navigator.plugins.length){ 
@@ -623,7 +650,6 @@
 	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
-		
 		if(opts.showFallback && $.support.mediaElements){
 			this.bind('totalerror', showFallback);
 		}
@@ -1420,6 +1446,51 @@
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);
 				}
+			},
+			'media-state': function(control, mm, api, o){
+				//classPrefix
+				var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
+					removeStateClasses 	= function(){
+						control.removeClass(stateClasses);
+					}
+				;
+				mm.jmeReady(function(){
+					if( !mm.isPlaying() ){
+						control.addClass(o.classPrefix+'idle');
+					} else {
+						control.addClass(o.classPrefix+'playing');
+					}
+				});
+				if( typeof o.mediaState.click === 'string' && mm[o.mediaState.click] ){
+					control.click(function(){
+						mm[o.mediaState.click]();
+					});
+				}
+				control.addClass(o.classPrefix+api.name);
+				mm
+					.bind({
+						apiActivated: function(e, d){
+							control.addClass(o.classPrefix+d.api);
+						},
+						apiDeActivated: function(e, d){
+							control.removeClass(o.classPrefix+d.api);
+						}
+					})
+					.bind('playing totalerror waiting', function(e){
+						removeStateClasses();
+						control.addClass(o.classPrefix+e.type);
+					})
+					.bind('play', function(){
+						control.removeClass(o.classPrefix+'idle');
+					})
+					.bind('pause ended mediareset', function(e){
+						removeStateClasses();
+						control.addClass(o.classPrefix+'idle');
+					})
+					.bind('canplay', function(e){
+						control.removeClass(o.classPrefix+'waiting');
+					})
+				;
 			}
 		},
 		toggleModells = {
@@ -1504,7 +1575,8 @@
 		ret.api = ret.mm.getJMEAPI(true) || ret.mm.jmeEmbed(o.embed).getJMEAPI(true);
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
-		} 
+		}
+		
 		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
 			ret.controlsgroup = jElm;
 			if( jElm[0] && !ret.api.controlWrapper &&  $.contains( jElm[0], ret.mm[0] ) ){
@@ -1513,45 +1585,15 @@
 			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
 			ret.api.controlBar = ret.controls.filter('.'+o.classPrefix+'media-controls');
 		}
+		if(!ret.api.mediaState && ret.controls){
+			ret.api.mediaState = ret.controls.filter('.'+o.classPrefix+'media-state'); 
+		}
 		return ret;
 	}
 	
 	
 	function addWrapperBindings(wrapper, mm, api, o){
-		//classPrefix
-		var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
-			removeStateClasses 	= function(){
-				wrapper.removeClass(stateClasses);
-			}
-		;
-		if( !mm.isPlaying() ){
-			wrapper.addClass(o.classPrefix+'idle');
-		}
-		wrapper.addClass(o.classPrefix+api.name);
-		mm
-			.bind({
-				apiActivated: function(e, d){
-					wrapper.addClass(o.classPrefix+d.api);
-				},
-				apiDeActivated: function(e, d){
-					wrapper.removeClass(o.classPrefix+d.api);
-				}
-			})
-			.bind('playing totalerror waiting', function(e){
-				removeStateClasses();
-				wrapper.addClass(o.classPrefix+e.type);
-			})
-			.bind('play', function(){
-				wrapper.removeClass(o.classPrefix+'idle');
-			})
-			.bind('pause ended mediareset', function(e){
-				removeStateClasses();
-				wrapper.addClass(o.classPrefix+'idle');
-			})
-			.bind('canplay', function(e){
-				wrapper.removeClass(o.classPrefix+'waiting');
-			})
-		;
+		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
 		if (!$.ui || !$.ui.keyCode) {return;}
 		wrapper
 			.bind('keydown', function(e){
@@ -1636,7 +1678,7 @@
 		addThemeRoller: true,
 		
 		mediaControls: {
-			dynamicTimeslider: true,
+			dynamicTimeslider: false,
 			timeSliderAdjust: 0,
 			excludeSel: false
 		},
@@ -1645,6 +1687,9 @@
 		timeSlider: {},
 		currentTime: {
 			reverse: false
+		},
+		mediaState: {
+			click: 'togglePlay'
 		}
 	};
 	
@@ -1688,7 +1733,7 @@
 	$.fn.registerMMControl = $.fn.jmeControl;
 	
 	$(function(){
-		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
+		sliderMethod = ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
 	});
 })(jQuery);/**!
  * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
@@ -1718,6 +1763,20 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport
 	;
+		
+	var regs = {
+			A: /&amp;/g,
+			a: /&/g,
+			e: /\=/g,
+			q: /\?/g
+		},
+		replaceVar = function(val){
+			return val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F');
+		}
+	;
+	
+	
+	
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
@@ -1773,7 +1832,7 @@
 				 
 				params.flashvars = [];
 				$.each(vars, function(name, val){
-					params.flashvars.push(name+'='+val);
+					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
@@ -2014,20 +2073,18 @@
 			}
 		},
 		canPlaySrc: function(media){
-			var ret 	= '', 
+			var ret 	= $m.fn.canPlaySrc.apply(this, arguments), 
 				index 	= -1,
 				src 	= media.src || media
 			;
 			
-			if( typeof src === 'string' ){
+			if( !ret && typeof src === 'string' ){
 				index = src.indexOf('youtube.com/');
 				if(index < 15 && index > 6){
 					ret = 'maybe';
 				}
 			}
-			if(!ret){
-				ret = $m.fn.canPlaySrc.apply(this, arguments);
-			}
+			
 			return ret;
 		}, 
 		play: function(){

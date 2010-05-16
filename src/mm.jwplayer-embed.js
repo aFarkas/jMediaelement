@@ -26,6 +26,20 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport
 	;
+		
+	var regs = {
+			A: /&amp;/g,
+			a: /&/g,
+			e: /\=/g,
+			q: /\?/g
+		},
+		replaceVar = function(val){
+			return val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F');
+		}
+	;
+	
+	
+	
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
@@ -81,7 +95,7 @@
 				 
 				params.flashvars = [];
 				$.each(vars, function(name, val){
-					params.flashvars.push(name+'='+val);
+					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));

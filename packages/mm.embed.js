@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v0.9.1beta | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v0.9.2beta | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -11,9 +11,33 @@
 		vID = new Date().getTime(),
 		doc	= document
 	;
+	// support test + document.createElement trick
 	$.support.video = !!($('<video />')[0].canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
 	$.support.mediaElements = ($.support.video && $.support.audio);
+	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	
+	// HTML5 shiv document.createElement does not work with dynamic inserted elements
+	// thanks to jdbartlett for this simple script
+	// see also http://jdbartlett.github.com/innershiv/
+	$.fixHTML5 = (function(){
+		var d, b;
+		return ($.support.dynamicHTML5) ? 
+			function(h){return h;} :
+			function(h) {
+				if (!d) {
+					b = document.body;
+					d = document.createElement('div');
+					d.style.display = 'none';
+				}
+				var e = d.cloneNode(false);
+				b.appendChild(e);
+				e.innerHTML = h;
+				b.removeChild(e);
+				return e.childNodes;
+			}
+		;
+	})();
 	
 	
 	var oldAttr 		= $.attr,
@@ -469,10 +493,13 @@
 				id 		= elem.id,
 				fn 		= function(apiElem){
 							apiData.apis[supported.name].apiElem = apiElem;
-							$(apiElem)
-								.addClass(apiData.nodeName)
-								.attr('tabindex', (!config.controls) ?  '-1' : '0')
-							;
+							$(apiElem).addClass(apiData.nodeName);
+							if(!config.controls){
+								$(apiElem).attr({
+									tabindex: '-1',
+									role: 'presentation'
+								});
+							}
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
 						},
@@ -532,7 +559,7 @@
 			return version;
 		},
 		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
-			elem = $('<div />').appendTo(elem)[0];
+			elem = $('<div />').prependTo(elem)[0];
 			var obj;
 			
 			if(navigator.plugins && navigator.plugins.length){ 
@@ -623,7 +650,6 @@
 	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
-		
 		if(opts.showFallback && $.support.mediaElements){
 			this.bind('totalerror', showFallback);
 		}
@@ -724,6 +750,20 @@
 		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
 		m 		= $.multimediaSupport
 	;
+		
+	var regs = {
+			A: /&amp;/g,
+			a: /&/g,
+			e: /\=/g,
+			q: /\?/g
+		},
+		replaceVar = function(val){
+			return val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F');
+		}
+	;
+	
+	
+	
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
@@ -779,7 +819,7 @@
 				 
 				params.flashvars = [];
 				$.each(vars, function(name, val){
-					params.flashvars.push(name+'='+val);
+					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));

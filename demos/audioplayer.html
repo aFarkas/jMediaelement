@@ -5,7 +5,7 @@
 		<title>Audioplayer Demo</title>
 		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/sunny/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
-		<link rel="stylesheet" href="holy-grail-player-style.css" />
+		<link rel="stylesheet" href="player-style-simple-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
 		
@@ -13,7 +13,7 @@
 		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.js"></script>
 		<!-- END:  ui-components -->
 		<!-- optional for a11y-slider -->
-		<script src="http://gist.github.com/raw/378712/a11y-slider%20for%20jquery%20ui"></script>
+		<script src="../plugins/utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
 		<script src="../packages/mm.full.js"></script>
 		
@@ -79,17 +79,13 @@
 			};
 			$(function(){
 				$('html').addClass('js-ready');
-				new MMPlaylist($('div[data-controlwrapper]'), {
+				new MMPlaylist($('div.ui-media-player'), {
 							embed: {
 								//debug: true,
 								removeControls: true,
 								jwPlayer: {
 									path: '../mediaplayers/jw-player/player.swf'
 								}
-							},
-							// we use holy grail css
-							mediaControls: {
-								dynamicTimeslider: false
 							}
 						})
 					;
@@ -101,7 +97,7 @@
 	<body>
 		
 		
-		<div class="ui-media-player" data-controlwrapper="controlwrapper">
+		<div class="ui-media-player">
 			<div class="player-errors ui-state-error">
 				Turn on your JavaScript
 			</div>

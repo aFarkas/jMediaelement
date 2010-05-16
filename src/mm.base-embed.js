@@ -11,9 +11,33 @@
 		vID = new Date().getTime(),
 		doc	= document
 	;
+	// support test + document.createElement trick
 	$.support.video = !!($('<video />')[0].canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
 	$.support.mediaElements = ($.support.video && $.support.audio);
+	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	
+	// HTML5 shiv document.createElement does not work with dynamic inserted elements
+	// thanks to jdbartlett for this simple script
+	// see also http://jdbartlett.github.com/innershiv/
+	$.fixHTML5 = (function(){
+		var d, b;
+		return ($.support.dynamicHTML5) ? 
+			function(h){return h;} :
+			function(h) {
+				if (!d) {
+					b = document.body;
+					d = document.createElement('div');
+					d.style.display = 'none';
+				}
+				var e = d.cloneNode(false);
+				b.appendChild(e);
+				e.innerHTML = h;
+				b.removeChild(e);
+				return e.childNodes;
+			}
+		;
+	})();
 	
 	
 	var oldAttr 		= $.attr,
@@ -469,10 +493,13 @@
 				id 		= elem.id,
 				fn 		= function(apiElem){
 							apiData.apis[supported.name].apiElem = apiElem;
-							$(apiElem)
-								.addClass(apiData.nodeName)
-								.attr('tabindex', (!config.controls) ?  '-1' : '0')
-							;
+							$(apiElem).addClass(apiData.nodeName);
+							if(!config.controls){
+								$(apiElem).attr({
+									tabindex: '-1',
+									role: 'presentation'
+								});
+							}
 							apiData.apis[supported.name]._init();
 							apiData.apis[supported.name]._trigger({type: 'apiActivated', api: supported.name});
 						},
@@ -532,7 +559,7 @@
 			return version;
 		},
 		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
-			elem = $('<div />').appendTo(elem)[0];
+			elem = $('<div />').prependTo(elem)[0];
 			var obj;
 			
 			if(navigator.plugins && navigator.plugins.length){ 
@@ -623,7 +650,6 @@
 	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
-		
 		if(opts.showFallback && $.support.mediaElements){
 			this.bind('totalerror', showFallback);
 		}

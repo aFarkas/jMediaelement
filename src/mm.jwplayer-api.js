@@ -225,20 +225,18 @@
 			}
 		},
 		canPlaySrc: function(media){
-			var ret 	= '', 
+			var ret 	= $m.fn.canPlaySrc.apply(this, arguments), 
 				index 	= -1,
 				src 	= media.src || media
 			;
 			
-			if( typeof src === 'string' ){
+			if( !ret && typeof src === 'string' ){
 				index = src.indexOf('youtube.com/');
 				if(index < 15 && index > 6){
 					ret = 'maybe';
 				}
 			}
-			if(!ret){
-				ret = $m.fn.canPlaySrc.apply(this, arguments);
-			}
+			
 			return ret;
 		}, 
 		play: function(){

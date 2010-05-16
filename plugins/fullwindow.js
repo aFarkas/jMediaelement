@@ -24,6 +24,21 @@
 
 (function($){
 	
+	$.fn.offsetAncestors = function(){
+		var ret 	= [],
+			bodyReg = /^body|html$/i
+		;
+		this.each(function(){
+			var elem = $(this).offsetParent()[0];
+			while( elem && !bodyReg.test(elem.nodeName) ){
+				ret.push(elem);
+				elem = $(elem).offsetParent()[0];
+			}
+		});
+		return this.pushStack(ret, 'offestAncestors');
+	};
+	
+	var zIndexReg = /zIndex/;
 	$.fn.storeInlineStyle = function(styles, name){
 		if(!styles && !name){
 			name = 'storedInlineStyle';
@@ -33,10 +48,13 @@
 		} else {
 			name = name || 'storedInlineStyle';
 		}
+		
 		return this.each(function(){
-			var data = $.data(this, name) || $.data(this, name, {}),
-				elemS = this.style
+			var data 	= $.data(this, name) || $.data(this, name, {}),
+				elemS 	= this.style,
+				elem 	= this
 			;
+			
 			if(!styles){
 				if(!data){return;}
 				$(this).css(data);
@@ -44,6 +62,10 @@
 			} else {
 				$.each(styles, function(prop, val){
 					data[prop] = elemS[prop];
+					//ie7 reports zIndex always as inline-style
+					if( prop === 'zIndex' && data[prop] !== '' && !$.support.style && !zIndexReg.test( elem.style.cssText ) ){
+						data[prop] = '';
+					}
 				});
 				$(this).css(styles);
 			}
@@ -52,16 +74,19 @@
 	
 	var videoBaseCSS = {
 			position: 'fixed',
-			zIndex: 9999,
+			zIndex: 99999,
 			width: 'auto',
 			height: 'auto'
+		},
+		parentsCss 	= {
+			zIndex: 99998
 		},
 		barCSS 	= {
 			bottom: 0,
 			left: 0,
 			right: 0,
 			position: 'fixed',
-			zIndex: 99999,
+			zIndex: 9999999,
 			width: 'auto'
 		},
 		stateCSS = {
@@ -70,7 +95,7 @@
 			right: 0,
 			top: 0,
 			position: 'fixed',
-			zIndex: 99998,
+			zIndex: 999995,
 			width: 'auto',
 			height: 'auto'
 		},
@@ -109,44 +134,40 @@
 	;
 	
 	var videoOverlay = (function(){
-		var trans = /transparent|rgba\(0, 0, 0, 0\)/,
-			overlay, isVisible
+		var trans 	= /transparent|rgba\(0, 0, 0, 0\)/,
+			overlay = $('<div class="fullwindow-overlay" />')
+						.css({
+							position: 'fixed',
+							display: 'none',
+							right: 0,
+							bottom: 0,
+							top: 0,
+							left: 0,
+							zIndex: 99990
+						}), 
+			isVisible
 		;
 		var pub = {
-			init: function(){
-				overlay = $('<div class="fullwindow-overlay" />')
-					.css({
-						position: 'fixed',
-						display: 'none',
-						right: 0,
-						bottom: 0,
-						top: 0,
-						left: 0,
-						zIndex: 9997
-					})
-					.appendTo('body')
-				;
-			},
 			show: function(video){
 				if(!overlay || isVisible){return;}
 				if( trans.test( overlay.css('backgroundColor') ) ){
 					var color = $.curCSS(video, 'backgroundColor');
 					overlay.css('backgroundColor', (!trans.test(color)) ? color :'#000');
 				}
-				overlay.show();
+				overlay.insertAfter(video).show();
 				isVisible = true;
 			},
 			hide: function(){
 				if(!overlay || !isVisible){return;}
-				overlay.hide();
+				overlay.hide().detach();
 				isVisible = false;
 			}
 		};
+		
 		return pub;
 	})();
 	
 	$(function(){
-		videoOverlay.init();
 		var div = $('<div style="position: fixed; visibility: hidden; height: 0; width: 0; margin: 0; padding: 0; border: none;" />').appendTo('body');
 		supportsFullWindow = ($.curCSS(div[0], 'position', true) === 'fixed');
 		div.remove();
@@ -174,6 +195,9 @@
 			;
 			
 			videoOverlay.show(this.element);
+			if( !$.support.style || o.debug ){
+				this.visualElem.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
+			}
 			
 			parent
 				.storeInlineStyle({
@@ -218,7 +242,9 @@
 			}
 			vidCss 	= getSize(rel);
 			videoCSS= $.extend({}, videoBaseCSS, vidCss);
-					
+			
+			
+				
 			this.visualElem
 				.addClass('displays-fullscreen')
 				.storeInlineStyle(videoCSS, 'fsstoredInlineStyle')
@@ -226,7 +252,7 @@
 			
 			doc.bind('keydown.jmefullscreen', function(e){
 				if(e.keyCode === 27){
-					that.exitFullWindow();
+					that.exitFullWindow(o);
 				}
 			});
 			//IE 7 triggers resize event on enterFullWindow
@@ -240,15 +266,17 @@
 			}, 0);
 			
 			$(this.element).addClass('displays-fullscreen');
+			
 			this._trigger('fullwindow', {isFullwindow: true});
 			$(this.element).triggerHandler('fullwindowresize', vidCss);
 			$(this.element).triggerHandler('resize');
 		},
-		exitFullWindow: function(){
+		exitFullWindow: function(o){
 			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				ctrlBar = data.controlBar || $([]),
-				state	= data.mediaState || $([])
+				state	= data.mediaState || $([]),
+				that 	= this
 			;
 			$('html, body')
 				.storeInlineStyle('fsstoredInlineStyle')
@@ -272,7 +300,11 @@
 			state.storeInlineStyle('fsstoredInlineStyle');
 			
 			videoOverlay.hide();
-			
+			if( !$.support.style || o.debug ){
+				setTimeout(function(){
+					that.visualElem.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
+				}, 0);
+			}
 			win.unbind('.jmefullscreen');
 			doc.unbind('.jmefullscreen');
 			$(this.element).removeClass('displays-fullscreen').unbind('.jmefullscreen');
@@ -314,7 +346,7 @@
 					video.enterFullScreen();
 				} else {
 					if(video.hasClass('displays-fullscreen')){
-						video.exitFullWindow();
+						video.exitFullWindow(o.fullscreen);
 					} else {
 						video.enterFullWindow(o.fullscreen);
 					}

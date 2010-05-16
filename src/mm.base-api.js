@@ -454,13 +454,19 @@
 			if(!this._videoFullscreen){return false;}
 			try {
 				this.element[fsMethods.enter]();
-			} catch(e){}
+			} catch(e){
+				return false;
+			}
+			return true;
 		},
 		exitFullScreen: function(){
 			if(!this._videoFullscreen){return false;}
 			try {
 				this.element[fsMethods.exit]();
-			} catch(e){}
+			} catch(e){
+				return false;
+			}
+			return true;
 		}
 	}, nativ));
 	

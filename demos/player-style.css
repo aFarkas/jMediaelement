@@ -41,6 +41,14 @@ video {
 	bottom: 0;
 	width: 100%;
 }
+/* IE7 z-index-bug */
+/* note: the fullscreen plugin manages the ie7-zIndex bug above the video-element, 
+ * but you have to manage it inside the common wrapper 
+ */
+.wraps-fullscreen,
+.wraps-fullscreen .media-controls-wrapper {
+	position: static;
+}
 .media-controls {
 	zoom: 1;
 	overflow: hidden;

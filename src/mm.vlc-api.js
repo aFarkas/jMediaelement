@@ -256,10 +256,11 @@
 				} else {
 					this.apiElem.video.fullscreen = true;
 				}
-				
+				return true;
 			},
 			exitFullScreen: function(){
 				this.apiElem.video.fullscreen = false;
+				return true;
 			}
 		}, vlcAPI)
 	);

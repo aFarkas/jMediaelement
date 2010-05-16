@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v0.9.2beta | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.0beta | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -14,6 +14,10 @@
 	// support test + document.createElement trick
 	$.support.video = !!($('<video />')[0].canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
+	
+	$('<source />');
+	$('<track />');
+	
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
 	
@@ -90,6 +94,7 @@
 						;
 					} else {
 						ret = [];
+						// safari without quicktime ignores source-tags, initially
 						$('source', elem).each(function(i){
 							ret.push({
 								src: $.attr(this, 'src'),

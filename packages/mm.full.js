@@ -20,6 +20,7 @@
 	
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	$.support.mediaLoop = ('loop' in $('<video />')[0]);
 	
 	// HTML5 shiv document.createElement does not work with dynamic inserted elements
 	// thanks to jdbartlett for this simple script
@@ -852,7 +853,7 @@
 			if(nuBubbleEvents[type]){
 				e.stopPropagation();
 			}
-			
+						
 			$.event.trigger( e, evt, this.element );
 		},
 		supportsFullScreen: function(){
@@ -905,6 +906,16 @@
 		},
 		unAPIReady: function(name){
 			$(this.element).unbind('mmAPIReady.'+name);
+		},
+		_adjustPluginLoop: function(pluginLoop){
+			var htmlLoop 	= $.attr(this.element, 'loop'),
+				api 		= this
+			;
+			if(htmlLoop !== pluginLoop){
+				setTimeout(function(){
+					api[ (htmlLoop) ? 'play' : 'pause' ]();
+				}, 0);
+			}
 		},
 		_format: $m.formatTime,
 		getFormattedDuration: function(){
@@ -1116,6 +1127,16 @@
 				.bind('play pause playing ended waiting', bubbleEvents)
 			;
 			
+			if( !$.support.mediaLoop  ){
+				$(this.element).bind('ended', function(){
+					if( $.attr(this, 'loop') ){
+						var elem = this;
+						setTimeout(function(){
+							( $.attr(elem, 'loop') && elem.play() );
+						}, 0);
+					}
+				});
+			}
 			//workaround for loadedmeta and particularly mmAPIReady event
 			if( this.element.error ){return;}
 			//jmeEmbed is called very late (after onload)
@@ -1792,12 +1813,14 @@
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
 			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
-				try {
-					obj = m.getPluginVersion('', {
-						description: obj.GetVariable("$version")
-					});
-					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
-				} catch(e){}
+				if(obj.GetVariable){
+					try {
+						obj = m.getPluginVersion('', {
+							description: obj.GetVariable("$version")
+						});
+						$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+					} catch(e){}
+				}
 			}
 		;
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
@@ -1938,6 +1961,7 @@
 					case 'COMPLETED':
 						api._isPlaystate = false;
 						type = 'ended';
+						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') )
 						break;
 					case 'BUFFERING':
 						type = 'waiting';
@@ -2115,7 +2139,7 @@
 				image: poster || false
 			};
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
-			if(this.isAPIActive && $.attr(this.element, 'autoplay')){
+			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
@@ -2130,7 +2154,6 @@
 		},
 		_isSeekable: function(t){
 			var cfg = this.apiElem.getConfig() || {};
-			
 			if(this._buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
 				return true;
 			}
@@ -2167,7 +2190,6 @@
 			unbind();
 			
 			if(this._isSeekable(t)){
-				console.log(t)
 				doSeek();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
@@ -2307,6 +2329,7 @@
 					elem = $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs, 'VLC Multimedia Plug-in' )
 				;
 				this._currentSrc = src;
+				this._loop = attrs.loop;
 				fn( elem );
 				elem = null;
 			},
@@ -2447,6 +2470,7 @@
 				}
 				if(states[state] === 'ended'){
 					vlc.playlist.stop();
+					api._adjustPluginLoop(api._loop);
 				}
 				if(state === 3){
 					interval.start(api);

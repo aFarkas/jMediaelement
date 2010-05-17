@@ -58,6 +58,7 @@
 					elem = $m.embedObject( this.visualElem[0], id, vlcAttr, params, activeXAttrs, 'VLC Multimedia Plug-in' )
 				;
 				this._currentSrc = src;
+				this._loop = attrs.loop;
 				fn( elem );
 				elem = null;
 			},

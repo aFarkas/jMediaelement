@@ -127,6 +127,7 @@
 				}
 				if(states[state] === 'ended'){
 					vlc.playlist.stop();
+					api._adjustPluginLoop(api._loop);
 				}
 				if(state === 3){
 					interval.start(api);

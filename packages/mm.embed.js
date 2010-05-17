@@ -20,6 +20,7 @@
 	
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	$.support.mediaLoop = ('loop' in $('<video />')[0]);
 	
 	// HTML5 shiv document.createElement does not work with dynamic inserted elements
 	// thanks to jdbartlett for this simple script
@@ -772,12 +773,14 @@
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
 			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
-				try {
-					obj = m.getPluginVersion('', {
-						description: obj.GetVariable("$version")
-					});
-					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
-				} catch(e){}
+				if(obj.GetVariable){
+					try {
+						obj = m.getPluginVersion('', {
+							description: obj.GetVariable("$version")
+						});
+						$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+					} catch(e){}
+				}
 			}
 		;
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){

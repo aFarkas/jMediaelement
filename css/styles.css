@@ -18,15 +18,11 @@ video {
 body { 
     font: 100.1% arial, helvetica, sans-serif;
 	max-width: 1200px;
-	width: 980px;
+	width: 800px;
 	min-width: 60em;
 	margin: auto;
     color: #000;
 	background: #fff;
-}
-
-html > body {
-	width: 100%;
 }
 
 code {
@@ -37,4 +33,6 @@ code {
 .demo-themeswitcher {
 	float: right;
 }
-
+p {
+	margin: 10px 0;
+}

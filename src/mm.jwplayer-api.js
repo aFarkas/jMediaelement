@@ -80,6 +80,7 @@
 					case 'COMPLETED':
 						api._isPlaystate = false;
 						type = 'ended';
+						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') )
 						break;
 					case 'BUFFERING':
 						type = 'waiting';
@@ -257,7 +258,7 @@
 				image: poster || false
 			};
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
-			if(this.isAPIActive && $.attr(this.element, 'autoplay')){
+			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
@@ -272,7 +273,6 @@
 		},
 		_isSeekable: function(t){
 			var cfg = this.apiElem.getConfig() || {};
-			
 			if(this._buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
 				return true;
 			}
@@ -309,7 +309,6 @@
 			unbind();
 			
 			if(this._isSeekable(t)){
-				console.log(t)
 				doSeek();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');

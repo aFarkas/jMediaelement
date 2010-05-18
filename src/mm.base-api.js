@@ -124,7 +124,7 @@
 			if(nuBubbleEvents[type]){
 				e.stopPropagation();
 			}
-			
+						
 			$.event.trigger( e, evt, this.element );
 		},
 		supportsFullScreen: function(){
@@ -177,6 +177,16 @@
 		},
 		unAPIReady: function(name){
 			$(this.element).unbind('mmAPIReady.'+name);
+		},
+		_adjustPluginLoop: function(pluginLoop){
+			var htmlLoop 	= $.attr(this.element, 'loop'),
+				api 		= this
+			;
+			if(htmlLoop !== pluginLoop){
+				setTimeout(function(){
+					api[ (htmlLoop) ? 'play' : 'pause' ]();
+				}, 0);
+			}
 		},
 		_format: $m.formatTime,
 		getFormattedDuration: function(){
@@ -388,6 +398,16 @@
 				.bind('play pause playing ended waiting', bubbleEvents)
 			;
 			
+			if( !$.support.mediaLoop  ){
+				$(this.element).bind('ended', function(){
+					if( $.attr(this, 'loop') ){
+						var elem = this;
+						setTimeout(function(){
+							( $.attr(elem, 'loop') && elem.play() );
+						}, 0);
+					}
+				});
+			}
 			//workaround for loadedmeta and particularly mmAPIReady event
 			if( this.element.error ){return;}
 			//jmeEmbed is called very late (after onload)

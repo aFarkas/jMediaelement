@@ -20,6 +20,7 @@
 	
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
+	$.support.mediaLoop = ('loop' in $('<video />')[0]);
 	
 	// HTML5 shiv document.createElement does not work with dynamic inserted elements
 	// thanks to jdbartlett for this simple script

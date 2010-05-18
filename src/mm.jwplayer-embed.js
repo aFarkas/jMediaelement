@@ -45,11 +45,14 @@
 			supportsMovieStar 	= function(obj){
 				$.support.flash9 = false;
 				try {
-					obj = m.getPluginVersion('', {
-						description: obj.GetVariable("$version")
-					});
-					$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+					if ('GetVariable' in obj) {
+						obj = m.getPluginVersion('', {
+							description: obj.GetVariable("$version")
+						});
+						$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+					}
 				} catch(e){}
+				
 			}
 		;
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){

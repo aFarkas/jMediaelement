@@ -1129,7 +1129,7 @@
 			
 			if( !$.support.mediaLoop  ){
 				$(this.element).bind('ended', function(){
-					if( $.attr(this, 'loop') ){
+					if( that.isAPIActive && $.attr(this, 'loop') ){
 						var elem = this;
 						setTimeout(function(){
 							( $.attr(elem, 'loop') && elem.play() );
@@ -1962,7 +1962,7 @@
 					case 'COMPLETED':
 						api._isPlaystate = false;
 						type = 'ended';
-						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') )
+						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') );
 						break;
 					case 'BUFFERING':
 						type = 'waiting';

@@ -400,7 +400,7 @@
 			
 			if( !$.support.mediaLoop  ){
 				$(this.element).bind('ended', function(){
-					if( $.attr(this, 'loop') ){
+					if( that.isAPIActive && $.attr(this, 'loop') ){
 						var elem = this;
 						setTimeout(function(){
 							( $.attr(elem, 'loop') && elem.play() );

@@ -80,7 +80,7 @@
 					case 'COMPLETED':
 						api._isPlaystate = false;
 						type = 'ended';
-						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') )
+						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') );
 						break;
 					case 'BUFFERING':
 						type = 'waiting';

@@ -269,7 +269,8 @@
 				'video/x-msvideo': ['avi'],
 				'video/x-ms-asf': ['asf', 'asx'],
 				'video/flv': ['flv', 'f4v'],
-				'video/3gpp': ['3gp','3gpp']
+				'video/3gpp': ['3gp','3gpp'],
+				'video/webm': ['webm']
 			}
 		}
 	;

@@ -145,8 +145,22 @@
 							left: 0,
 							zIndex: 99990
 						}), 
-			isVisible
+			isVisible, timer
 		;
+		
+		// IE7/IE8 retrigger
+		$(window).bind('resize', function(){
+			if(isVisible){
+				clearTimeout(timer);
+				timer = setTimeout(function(){
+					overlay.css({top: -1, left: -1, right: -1, bottom: -1});
+					setTimeout(function(){
+						overlay.css({top: 0, left: 0, right: 0, bottom: 0});
+					}, 1);
+				}, 100);
+			}
+		});
+		
 		var pub = {
 			show: function(video){
 				if(!overlay || isVisible){return;}
@@ -263,6 +277,7 @@
 					$(that.element).triggerHandler('fullwindowresize', vidCss);
 					$(that.element).triggerHandler('resize');
 				});
+				$(that.element).triggerHandler('fullwindowresize', vidCss);
 			}, 0);
 			
 			$(this.element).addClass('displays-fullscreen');

@@ -42,17 +42,17 @@
 		var e 	= {time: time};
 		
 		if(!timerange.entered){
-			var	i = timerange.lastIndex,
-				len 	= timerange.enterRanges.length,
-				createEvent = function(index){
-					e.rangeEnter = timerange.enterRanges[index];
-					e.rangeLeave = timerange.leaveRanges[index];
-					e.rangeIndex = index;
-					timerange.lastIndex = e.rangeIndex;
-					timerange.lastTime = timerange.enterRanges[index];
-					e.type = 'rangeenter';
-					timerange.entered = [ e.rangeEnter, e.rangeLeave, e.rangeIndex ];
-				}
+			var	i 					= timerange.lastIndex,
+				len 				= timerange.enterRanges.length,
+				createEvent 		= function(index){
+						e.rangeEnter = timerange.enterRanges[index];
+						e.rangeLeave = timerange.leaveRanges[index];
+						e.rangeIndex = index;
+						timerange.lastIndex = e.rangeIndex;
+						timerange.lastTime = timerange.enterRanges[index];
+						e.type = 'rangeenter';
+						timerange.entered = [ e.rangeEnter, e.rangeLeave, e.rangeIndex ];
+					}
 			;
 			if(timerange.lastTime > time){
 				while(i--){
@@ -70,7 +70,7 @@
 					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
 						createEvent(i);
 						break;
-					} else if(timerange.leaveRanges[i] > time){
+					} else if(timerange.leaveRanges[i] > time && timerange.enterRanges[i] < time){
 						timerange.lastIndex = i;
 						timerange.lastTime = timerange.leaveRanges[i];
 						break;
@@ -128,8 +128,7 @@
 			if(o.callback){
 				api.timeRanges[name].callback = o.callback;
 			}
-			
-			if( isFinite(o.enter) && isFinite(o.leave) ) {
+			if( typeof o.enter !== 'boolean' && isFinite(o.enter) && typeof o.leave !== 'boolean' &&  isFinite(o.leave) ) {
 				api.timeRanges[name].enterRanges.push(o.enter);
 				api.timeRanges[name].leaveRanges.push(o.leave);
 			}

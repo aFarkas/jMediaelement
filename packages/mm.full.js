@@ -665,7 +665,11 @@
 			
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
-			opts.beforeEmbed(this, elemName, opts);
+			$(this).trigger('jmeBeforeEmbed', {
+					options: opts,
+					nodeName: elemName
+				})
+			;
 			if(opts.removeControls){
 				$.attr(this, 'controls', false);
 			}
@@ -693,8 +697,12 @@
 						findInitFallback(this, opts);
 					}
 				})
+				.trigger('jmeEmbed', {
+					options: opts,
+					nodeName: elemName,
+					data: apiData
+				})
 			;
-			opts.afterEmbed(this, elemName, opts);
 		});
 	};
 	
@@ -702,9 +710,7 @@
 		debug: false,
 		removeControls: false,
 		showFallback: false,
-		apiOrder: [],
-		beforeEmbed: $.noop,
-		afterEmbed: $.noop
+		apiOrder: []
 	};
 	
 	// deprecated

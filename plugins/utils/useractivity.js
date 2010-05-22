@@ -71,7 +71,10 @@
 			data.trigger[name] = true;
 			
 			if( !data.bound ){
-				jElm.bind('mousemove.useractivity focusin.useractivity mouseenter.useractivity keydown.useractivity', setActive);
+				jElm
+					.bind('mouseleave.useractivity', setInactive)
+					.bind('mousemove.useractivity focusin.useractivity mouseenter.useractivity keydown.useractivity', setActive)
+				;
 				data.bound = true;
 			}
 		},

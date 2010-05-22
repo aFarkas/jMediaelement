@@ -2313,15 +2313,27 @@
 					return $.support.vlc;
 				}
 				$.support.vlc = false;
+				$.support.vlcWEBM = false;
 				var vlc = $m.getPluginVersion('VLC Multimedia Plug-in');
 				if(vlc[0] >= 0.9){
+					if(vlc[0] >= 1.1){
+						$.support.vlcWEBM = true;
+					}
 					$.support.vlc = true;
 				} else if(window.ActiveXObject){
 					try {
-						if(new ActiveXObject('VideoLAN.VLCPlugin.2')){
+						vlc = new ActiveXObject('VideoLAN.VLCPlugin.2');
+						if( vlc ){
+							if( vlc.VersionInfo && parseFloat( vlc.VersionInfo, 10 ) >= 1.1 ){
+								$.support.vlcWEBM = true;
+							}
 							$.support.vlc = true;
 						}
 					} catch(e){}
+				}
+				if( $.support.vlcWEBM ){
+					vlcMM.canPlayCodecs.push('VP8');
+					vlcMM.canPlayContainer.push('video/webm');
 				}
 				return $.support.vlc;
 			},

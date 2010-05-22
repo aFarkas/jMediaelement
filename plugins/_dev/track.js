@@ -1,13 +1,13 @@
 /*
- * ToDo: change itext-plugin to track plugin
- * 
  * 
  * 
  * HTML:
- * <a class="track" href="srtfile.srt" data-charset="ISO-8859-1" lang="de" data-enabled="enabled" data-sanitize="sanitize" data-role="textaudiodesc">name</a>
+ * <a class="track" href="srtfile.srt" lang="en" data-enabled="enabled" data-sanitize="sanitize" data-role="textaudiodesc">name</a>
  * 
  * API:
  * $('video, audio').track() getter of tracks
+ * 
+ * $('video, audio').getTrackContent(index|object, callback)
  * 
  * $('video, audio').enableTrack(index|object)
  * 
@@ -66,6 +66,24 @@
 			$(this.element).addTimeRange(object[0].href, false);
 			_data.trackDisplays.addClass('inactive-track-display').hide().empty();
 		},
+		getTrackContent: function(object, fn, _trackData){
+			object = (isFinite(object)) ? $('a.track', this.element).filter(':eq('+ object +')') : $(object);
+			_trackData = _trackData || $.data(object[0], 'jmeTrack') || $.data(object[0], 'jmeTrack', {load: false});
+			if( !_trackData.load ){
+				_trackData.load = 'loading';
+				$.ajax({
+					url: object[0].href,
+					dataType: 'text',
+					success: function(srt){
+						_trackData.load = 'loaded';
+						_trackData.captions = $.parseSrt(srt, (object[0].attributes[name] || {}).specified );
+						fn( _trackData.captions );
+					}
+				});
+			} else {
+				fn(trackData.captions);
+			}
+		},
 		enableTrack: function(object, _data){
 			var tracks 		= $('a.track', this.element),
 				that 		= this,
@@ -88,40 +106,35 @@
 			trackData.trackDisplay = ( object.is('[data-role=textaudiodesc]') ) ? _data.tadDisplay : _data.trackDisplay;
 			trackData.trackDisplay.removeClass('inactive-track-display').show();
 			if( !trackData.load ){
-				trackData.load = 'loading';
-				$.ajax({
-					url: object[0].href,
-					dataType: 'text',
-					success: function(srt){
-						trackData.load = 'loaded';
-						trackData.captions = $.parseSrt(srt, (object[0].attributes[name] || {}).specified );
+				this.getTrackContent(object, 
+					function(){
 						var captionChange = function (e){
-							e.target = mm[0];
-							e = $.extend({}, e, {
-								target: mm[0],
-								captions: trackData.captions,
-								caption: trackData.captions[e.rangeIndex],
-								type: (e.type === 'rangeenter') ? 'showCaption' : 'hideCaption'
+								e.target = mm[0];
+								e = $.extend({}, e, {
+									target: mm[0],
+									captions: trackData.captions,
+									caption: trackData.captions[e.rangeIndex],
+									type: (e.type === 'rangeenter') ? 'showCaption' : 'hideCaption'
+								});
+								if( e.type === 'showCaption' ){
+									trackData.trackDisplay.html( '<div>'+ e.caption.content +'</div>' );
+								} else {
+									trackData.trackDisplay[0].innerHTML = '';
+								}
+								mm.triggerHandler(e.type, e);
+							};
+							
+							$.each(trackData.captions, function(i, caption){
+								mm.addTimeRange(object[0].href, {
+									enter: caption.start,
+									leave: caption.end,
+									callback: captionChange,
+									activate: true
+								});
 							});
-							if( e.type === 'showCaption' ){
-								trackData.trackDisplay.html( '<div>'+ e.caption.content +'</div>' );
-							} else {
-								trackData.trackDisplay[0].innerHTML = '';
-							}
-							mm.triggerHandler(e.type, e);
-						};
-						
-						$.each(trackData.captions, function(i, caption){
-							mm.addTimeRange(object[0].href, {
-								enter: caption.start,
-								leave: caption.end,
-								callback: captionChange,
-								activate: true
-							});
-						});
-						
-					}
-				});
+					},
+					trackData
+				);
 			} else {
 				mm.addTimeRange(object[0].href, true);
 			}

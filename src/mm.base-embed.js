@@ -258,7 +258,8 @@
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
 				'audio/x-m4p': ['m4p'],
-				'audio/3gpp': ['3gp','3gpp']
+				'audio/3gpp': ['3gp','3gpp'],
+				'audio/webm': ['webm']
 			},
 			video: {
 				//ogm shouldn´t be used!

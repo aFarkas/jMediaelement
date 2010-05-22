@@ -54,6 +54,7 @@
 				}
 				if( $.support.vlcWEBM ){
 					vlcMM.canPlayCodecs.push('VP8');
+					vlcMM.canPlayCodecs.push('VP8.0');
 					vlcMM.canPlayContainer.push('video/webm');
 				}
 				return $.support.vlc;

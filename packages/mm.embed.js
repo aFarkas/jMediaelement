@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.0beta | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.0final | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -258,7 +258,8 @@
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
 				'audio/x-m4p': ['m4p'],
-				'audio/3gpp': ['3gp','3gpp']
+				'audio/3gpp': ['3gp','3gpp'],
+				'audio/webm': ['webm']
 			},
 			video: {
 				//ogm shouldn´t be used!

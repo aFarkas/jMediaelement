@@ -778,21 +778,24 @@
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
-			supportsMovieStar 	= function(obj){
+			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
-				try {
-					if ('GetVariable' in obj) {
-						obj = m.getPluginVersion('', {
-							description: obj.GetVariable("$version")
-						});
-						$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
-					}
-				} catch(e){}
+					try {
+						//opera needs typeof check do not use 'GetVariable' in obj
+						if (obj && typeof obj.GetVariable !== 'undefined') {
+							var version = obj.GetVariable("$version");
+							obj = m.getPluginVersion('', {
+								description: version
+							});
+							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
+						}
+					} catch (e) {}
 				
 			}
 		;
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result
+			
 			$.support.flash9 = true;
 			$(function(){
 				swf = $('<object />', swfAttr).appendTo('body');
@@ -838,7 +841,7 @@
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
-			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E'],
+			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'VP6', 'mp3', 'AAC'],
 			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
 		}
 	;

@@ -295,8 +295,7 @@
 	// newer webkits are compilant to the current w3c specification (progress is a simple event + buffered is a timerange-object)
 	// opera 10.5 hasn´t implemented the timerange-object yet <- no support
 	var fixProgressEvent = function(api){
-		var unboundNeedless,
-		 	getConcerningRange 			= function(){
+		var getConcerningRange 			= function(){
 				var time 	= api.element.currentTime,
 					buffer 	= api.element.buffered,
 					bufLen 	= buffer.length,
@@ -319,6 +318,7 @@
 				;
 				//current implementation -> chrome 5
 				if(this.buffered && this.buffered.length){
+					
 					dur = this.duration;
 					if(dur){
 						bufRange = getConcerningRange();
@@ -326,20 +326,18 @@
 						evt.relLoaded = bufRange.end / dur * 100;
 					}
 					api._trigger(evt);
-				//ff implementation implementation
+				//ff + safari implementation implementation
 				} else if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
 					if(e.originalEvent.lengthComputable && e.originalEvent.total){
 						evt.relStart = 0;
 						evt.relLoaded = e.originalEvent.loaded / e.originalEvent.total * 100;
 					}
-					//remove event
-					if(!unboundNeedless){
-						$(this).unbind((e.type === 'load') ? 'progress' : 'load', calculateProgress);
-						unboundNeedless = true;
-					}
+					api._trigger(evt);
+				} else if( this.readyState === 4 ){
+					evt.relStart = 0;
+					evt.relLoaded = 100;
 					api._trigger(evt);
 				}
-				
 			}
 		;
 		$(api.element).bind('progress load', calculateProgress);

@@ -24,6 +24,7 @@
 
 (function($){
 	
+	/* helper methods */
 	$.fn.offsetAncestors = function(){
 		var ret 	= [],
 			bodyReg = /^body|html$/i
@@ -187,13 +188,17 @@
 		div.remove();
 	});
 	
+	
+	/* 
+	 * extend jme api
+	 */
 	$.multimediaSupport.fn._extend({
 		supportsFullWindow: function(){
 			return supportsFullWindow;
 		},
 		enterFullWindow: function(o){
 			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
-			
+			o = o || {};
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
 				curDim 	= {
@@ -282,7 +287,7 @@
 			
 			$(this.element).addClass('displays-fullscreen');
 			
-			this._trigger('fullwindow', {isFullwindow: true});
+			this._trigger({type: 'fullwindow', isFullwindow: true});
 			$(this.element).triggerHandler('fullwindowresize', vidCss);
 			$(this.element).triggerHandler('resize');
 		},
@@ -323,11 +328,15 @@
 			win.unbind('.jmefullscreen');
 			doc.unbind('.jmefullscreen');
 			$(this.element).removeClass('displays-fullscreen').unbind('.jmefullscreen');
-			this._trigger('fullwindow', {isFullwindow: false});
+			this._trigger({type: 'fullwindow', isFullwindow: false});
 			$(this.element).triggerHandler('resize');
 		}
 	});
 	
+	
+	/* 
+	 * extend jme controls
+	 */
 	$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
 		if(!supportsFullWindow){
 			control.addClass('fullscreen-unsupported ui-disabled');
@@ -366,6 +375,7 @@
 						video.enterFullWindow(o.fullscreen);
 					}
 				}
+				return false;
 			})
 		;
 		changeState();

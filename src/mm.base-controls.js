@@ -286,7 +286,6 @@
 			}		
 			function changeState(){
 				var state = mm[opts.stateMethod]();
-				
 				if(state){
 					elems.text.text(elems.names[1]);
 					elems.title.attr('title', elems.titleText[1]);

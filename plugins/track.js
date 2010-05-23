@@ -5,7 +5,6 @@
  * <a class="track" href="srtfile.srt" lang="en" data-enabled="enabled" data-sanitize="sanitize" data-role="textaudiodesc">name</a>
  * 
  * API:
- * $('video, audio').track() getter of tracks
  * 
  * $('video, audio').getTrackContent(index|object, callback)
  * 
@@ -36,7 +35,14 @@
  */
 
 (function($){
-	
+	var fwCSS = {
+		position: 'fixed',
+		bottom: 0,
+		left: 0,
+		right: 0,
+		width: 'auto',
+		zIndex: 999996
+	};
 	//enable tracks
 	$(document).bind('jmeEmbed', function(e, data){
 		data = data.data;
@@ -50,21 +56,47 @@
 		if( activeTracks[0] ){
 			mm.enableTrack(activeTracks[0], data);
 		}
-		
+		//add fullwindow support
+		mm.bind({
+			fullwindow: function(e, evt){
+				if( !evt.isFullwindow ){
+					//restore old css
+					data.trackDisplay
+						.storeInlineStyle('fsstoredCaption')
+						.removeClass('track-in-fullscreen')
+					;
+				} else {
+					//store pre css
+					data.trackDisplay
+						.storeInlineStyle(fwCSS, 'fsstoredCaption')
+						.addClass('track-in-fullscreen')
+					;
+				}
+			},
+			fullwindowresize: function(e, evt){
+				//position tracksiplay to bottom
+				data.trackDisplay.css({
+					left: evt.left,
+					right: evt.right,
+					bottom: evt.bottom
+				});
+			}
+		});
 	});
 	
+	/*
+	 * extend the api
+	 */
 	$.multimediaSupport.fn._extend({
-		track: function(){
-			return $('a.track', this.element);
-		},
 		disableTrack: function(object, _data){
 			object = (isFinite(object)) ? tracks.filter(':eq('+ object +')') : $(object);
 			if( !_data ){
-				_data = mm.data('mediaElemSupport');
+				_data = $.data(this.element, 'mediaElemSupport');
 			}
 			object.removeAttr('data-enabled');
 			$(this.element).addTimeRange(object[0].href, false);
 			_data.trackDisplays.addClass('inactive-track-display').hide().empty();
+			this._trigger('trackChange', {track: object, enabled: false});
 		},
 		getTrackContent: function(object, fn, _trackData){
 			object = (isFinite(object)) ? $('a.track', this.element).filter(':eq('+ object +')') : $(object);
@@ -88,7 +120,8 @@
 			var tracks 		= $('a.track', this.element),
 				that 		= this,
 				mm 			= $(this.element),
-				trackData
+				trackData,
+				found
 			;
 			if( !_data ){
 				_data = mm.data('mediaElemSupport');
@@ -98,10 +131,13 @@
 			tracks
 				.filter('[data-enabled]')
 				.each(function(){
-					that.disableTrack(this, _data);
+					if(this !== object[0]){
+						that.disableTrack(this, _data);
+					}
 				})
 			;
 			if( !object[0] ){return;}
+			
 			trackData = $.data(object[0], 'jmeTrack') || $.data(object[0], 'jmeTrack', {load: false});
 			trackData.trackDisplay = ( object.is('[data-role=textaudiodesc]') ) ? _data.tadDisplay : _data.trackDisplay;
 			trackData.trackDisplay.removeClass('inactive-track-display').show();
@@ -138,9 +174,59 @@
 			} else {
 				mm.addTimeRange(object[0].href, true);
 			}
-			
+			object.attr('data-enabled', 'enabled');
+			this._trigger('trackChange', {track: object, enabled: true, trackData: trackData});
 		}
 	});
+	
+	/*
+	 * extend jme controls
+	 */
+	
+	$.fn.jmeControl.addControl('toggle-track', function(control, mm, data, o){
+		var elems = $.fn.jmeControl.getBtn(control),
+			tracks 		= $('a.track', this.element),
+			changeState = function(){
+				var enabled = tracks.filter('[data-enabled]');
+				if( enabled[0] ){
+					elems.text.text(elems.names[1]);
+					elems.title.attr('title', elems.titleText[1]);
+					elems.icon
+						.addClass('ui-icon-document')
+						.removeClass('ui-icon-document-b')
+					;
+				} else {
+					elems.text.text(elems.names[0]);
+					elems.title.attr('title', elems.titleText[0]);
+					elems.icon
+						.addClass('ui-icon-document-b')
+						.removeClass('ui-icon-document')
+					;
+				}
+			}
+		;
+		
+		if(o.addThemeRoller){
+			control.addClass('ui-state-default ui-corner-all');
+		}
+		if( !tracks[0] ){
+			control.addClass(o.classPrefix +'no-track');
+		}
+		control
+			.bind('ariaclick', function(){
+				var enabled = tracks.filter('[data-enabled]');
+				if(enabled[0]){
+					mm.disableTrack(enabled);
+				} else if( tracks[0] ) {
+					mm.enableTrack(tracks[0]);
+				}
+				return false;
+			})
+		;
+		changeState();
+		mm.bind('trackChange', changeState);
+	});
+	
 	
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1

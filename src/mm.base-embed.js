@@ -585,7 +585,7 @@
 				obj.setAttribute('name', id);
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){
-				obj = '<object';
+				obj = '<object style="width: 100%; height: 100%;" width="100%" height="100%"';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';
 				});
@@ -608,13 +608,11 @@
 				obj = null;
 			});
 //			vlc in ie is a little stupid here
-//			don´t use the style property!
 			setTimeout(function(){
-				if(!obj || !obj.setAttribute){return;}
-				obj.setAttribute('width', '100%');
-				obj.setAttribute('height', '100%');
+				if( !obj || !obj.style ){return;}
+				obj.style.width = '100%';
+				obj.style.height = '100%';
 			}, 0);
-			obj.tabIndex = -1;
 			return obj;
 		}
 	});

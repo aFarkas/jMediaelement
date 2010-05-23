@@ -454,7 +454,7 @@
 			}
 		},
 		_isPlaying: function(){
-			return (!this.element.paused && this.element.readyState > 2 && !this.error && !this.ended);
+			return (!this.element.paused && this.element.readyState > 2 && !this.element.error && !this.element.ended);
 		},
 		getDuration: function(){
 			return this.element.duration;

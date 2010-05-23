@@ -10,7 +10,7 @@
 		var timer;
 		function testReady(){
 			try{
-				if(api.apiElem.input && api.apiElem.input.state !== undefined){
+				if( api.apiElem.input && api.apiElem.input.state !== undefined ){
 					queueEvent('mmAPIReady', api);
 				} else {
 					return;

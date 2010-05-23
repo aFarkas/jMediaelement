@@ -20,8 +20,9 @@
 			pluginspage: 'http://www.videolan.org',
 			version: 'VideoLAN.VLCPlugin.2',
 			progid: 'VideoLAN.VLCPlugin.2',
-			events: 'True',
-			type: 'application/x-vlc-plugin'
+			type: 'application/x-vlc-plugin',
+			events: 'True'
+			
 		},
 		activeXAttrs 	= {
 			classid: 'clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921'
@@ -35,7 +36,9 @@
 				}
 				$.support.vlc = false;
 				$.support.vlcWEBM = false;
+				
 				var vlc = $m.getPluginVersion('VLC Multimedia Plug-in');
+				
 				if(vlc[0] >= 0.9){
 					if(vlc[0] >= 1.1){
 						$.support.vlcWEBM = true;
@@ -44,6 +47,7 @@
 				} else if(window.ActiveXObject){
 					try {
 						vlc = new ActiveXObject('VideoLAN.VLCPlugin.2');
+						
 						if( vlc ){
 							if( vlc.VersionInfo && parseFloat( vlc.VersionInfo, 10 ) >= 1.1 ){
 								$.support.vlcWEBM = true;
@@ -56,12 +60,13 @@
 					vlcMM.canPlayCodecs.push('VP8');
 					vlcMM.canPlayCodecs.push('VP8.0');
 					vlcMM.canPlayContainer.push('video/webm');
+					vlcMM.canPlayContainer.push('audio/webm');
 				}
 				return $.support.vlc;
 			},
 			_embed: function(src, id, attrs, fn){
 				var opts 	= this.embedOpts.vlc,
-					vlcAttr = $.extend({}, opts.attrs, {data: src}, defaultAttrs),
+					vlcAttr = $.extend( ( window.ActiveXObject ) ? {} : {data: src}, opts.attrs, defaultAttrs),
 					params 	= $.extend({}, opts.params, {
 						Src: src,
 						ShowDisplay: 'True',
@@ -73,6 +78,13 @@
 				this._currentSrc = src;
 				this._loop = attrs.loop;
 				fn( elem );
+				if( !attrs.autoplay && window.ActiveXObject ){
+					try {
+						elem.playlist.playItem( elem.playlist.add(src, " ", ":no-video-title-show") );
+						elem.playlist.items.clear();
+						elem.playlist.stop();
+					} catch(e){}
+				}
 				elem = null;
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'theora', 'vorbis', 'VP6', 'mp3', 'AAC'],

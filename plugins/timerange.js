@@ -70,9 +70,11 @@
 					if(timerange.enterRanges[i] <= time && timerange.leaveRanges[i] >= time){
 						createEvent(i);
 						break;
-					} else if(timerange.leaveRanges[i] > time && timerange.enterRanges[i] < time){
-						timerange.lastIndex = i;
-						timerange.lastTime = timerange.leaveRanges[i];
+					} else if(timerange.leaveRanges[i] > time){
+						if(timerange.enterRanges[i] < time){
+							timerange.lastIndex = i;
+							timerange.lastTime = timerange.leaveRanges[i];
+						}
 						break;
 					}
 				} 
@@ -156,7 +158,7 @@
 	$.fn.addTimeRange.defaults = {
 		enter: false,
 		leave: false,
-		callback: $.noop,
+		callback: false,
 		resort: false,
 		activate: true
 	};

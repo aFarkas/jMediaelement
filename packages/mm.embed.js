@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.0final | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.0 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.

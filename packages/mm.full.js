@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.0final | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.0 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1128,6 +1128,7 @@
 					}
 				})
 				.bind('play pause playing ended waiting', bubbleEvents)
+				// firefox also loads video without calling load-method, if autoplay is true and media pack has changed
 				.bind('play playing', function(){
 					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
 						try{

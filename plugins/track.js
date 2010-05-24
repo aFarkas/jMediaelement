@@ -159,7 +159,6 @@
 								}
 								mm.triggerHandler(e.type, e);
 							};
-							
 							$.each(trackData.captions, function(i, caption){
 								mm.addTimeRange(object[0].href, {
 									enter: caption.start,

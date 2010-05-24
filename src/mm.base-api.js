@@ -217,7 +217,6 @@
 			this._trigger('mediareset');
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				
 				this._mmload(canPlaySrc, poster);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
@@ -394,6 +393,14 @@
 					}
 				})
 				.bind('play pause playing ended waiting', bubbleEvents)
+				// firefox also loads video without calling load-method, if autoplay is true and media pack has changed
+				.bind('play playing', function(){
+					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
+						try{
+							that.element.pause();
+						} catch(e){}
+					}
+				})
 			;
 			
 			if( !$.support.mediaLoop  ){

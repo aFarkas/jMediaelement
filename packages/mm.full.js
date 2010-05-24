@@ -952,7 +952,6 @@
 			this._trigger('mediareset');
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				
 				this._mmload(canPlaySrc, poster);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
@@ -1129,6 +1128,13 @@
 					}
 				})
 				.bind('play pause playing ended waiting', bubbleEvents)
+				.bind('play playing', function(){
+					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
+						try{
+							that.element.pause();
+						} catch(e){}
+					}
+				})
 			;
 			
 			if( !$.support.mediaLoop  ){
@@ -1946,6 +1952,7 @@
 				if(obj.duration){
 					e.duration = obj.duration;
 					e.timeProgress = obj.position / obj.duration * 100;
+					api._timeProgress = e.timeProgress;
 				}
 				api._trigger(e);
 			},
@@ -2008,6 +2015,7 @@
 						$.extend(evt, {
 							relLoaded: obj.total / obj.loaded * 100
 						});
+						
 						api._buffered = evt.relLoaded;
 					}
 					api._trigger(evt);
@@ -2020,12 +2028,16 @@
 				BUFFER: function(obj){
 					var api = getAPI(obj.id);
 					if(!api){return;}
+					
+					if( api._timeProgress && obj.percentage + api._startBuffer + 1 < api._timeProgress ){
+						api._startBuffer = api._timeProgress;
+					}
 					var evt = {
 						type: 'progresschange',
-						relLoaded: obj.percentage,
+						relLoaded: obj.percentage + api._startBuffer,
 						relStart: 0
 					};
-					api._buffered = obj.percentage;
+					api._buffered = evt.relLoaded;
 					api._trigger(evt);
 				},
 				STATE: function(obj){
@@ -2091,7 +2103,13 @@
 	
 	var jwAPI = {
 		_init: function(){
-			this._buffered = this._buffered || 0;
+			this._resetStates();
+		},
+		_resetStates: function(){
+			this._buffered = 0;
+			this._startBuffer = 0;
+			this._timeProgress = 0;
+			this.currentPos = 0;
 		},
 		_reInitCount: 0,
 		_reInitTimer: false,
@@ -2104,7 +2122,7 @@
 				}, 0);
 			}
 			this._reInitCount++;
-			
+			this._resetStates();
 			if(!this._reInitTimer){
 				this._reInitTimer = true;
 				setTimeout(function(){
@@ -2145,6 +2163,7 @@
 				file: src,
 				image: poster || false
 			};
+			this._resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');

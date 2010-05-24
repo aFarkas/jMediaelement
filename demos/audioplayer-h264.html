@@ -45,7 +45,7 @@
 						})
 						.bind('ended', function(){
 							var list 		= $('li.playlist-item', that.playList),
-								curIndex 	= list.index('.ui-state-active')
+								curIndex 	= list.index( list.filter('.ui-state-active') )
 							;
 							that.loadIndex( (list.length <= curIndex + 1) ? 0 : curIndex + 1);
 						})

@@ -82,24 +82,6 @@
 		parentsCss 	= {
 			zIndex: 99998
 		},
-		barCSS 	= {
-			bottom: 0,
-			left: 0,
-			right: 0,
-			position: 'fixed',
-			zIndex: 9999999,
-			width: 'auto'
-		},
-		stateCSS = {
-			bottom: 0,
-			left: 0,
-			right: 0,
-			top: 0,
-			position: 'fixed',
-			zIndex: 999995,
-			width: 'auto',
-			height: 'auto'
-		},
 		bodyCSS = {
 			overflow: 'hidden'
 		},
@@ -134,7 +116,7 @@
 		supportsFullWindow
 	;
 	
-	var videoOverlay = (function(){
+	var windowOverlay = (function(){
 		var trans 	= /transparent|rgba\(0, 0, 0, 0\)/,
 			overlay = $('<div class="fullwindow-overlay" />')
 						.css({
@@ -165,7 +147,7 @@
 		var pub = {
 			show: function(video){
 				if(!overlay || isVisible){return;}
-				if( trans.test( overlay.css('backgroundColor') ) ){
+				if( trans.test( overlay.css('backgroundColor') ) && overlay.css('backgroundImage') == 'none' ){
 					var color = $.curCSS(video, 'backgroundColor');
 					overlay.css('backgroundColor', (!trans.test(color)) ? color :'#000');
 				}
@@ -189,6 +171,75 @@
 	});
 	
 	
+	var defaultOverlayCSS = {
+		position: 'fixed',
+		zIndex: 999996
+	};
+	
+	$.fn.videoOverlay = function(o){
+		o = $.extend(true, {}, $.fn.videoOverlay.defaults, o);
+		if( !o.video ){return this;}
+		o.video = $(o.video);
+		var overlayCSS 	= $.extend({}, defaultOverlayCSS, o.startCSS),
+			dynPos		= o.position
+		;
+		if( !$.isFunction( o.position ) ){
+			$.each(o.position, function(styleName, posval){
+				overlayCSS[styleName] = posval;
+			});
+			o.position = function(css){
+				var ret = {};
+				for(var name in dynPos){
+					ret[name] = css[name];
+				}
+				return ret;
+			};
+		}
+		
+		return this.each(function(){
+			var overlay = $(this);
+			o.video
+				.bind({
+					fullwindow: function(e, evt){
+						if( !evt.isFullwindow ){
+							//restore old css
+							overlay
+								.storeInlineStyle('fsstoredOverlay')
+								.removeClass(o.fullscreenClass)
+							;
+						} else {
+							//store pre css
+							overlay
+								.storeInlineStyle(overlayCSS, 'fsstoredOverlay')
+								.addClass(o.fullscreenClass)
+							;
+						}
+					},
+					fullwindowresize: function(e, evt){
+						overlay.css( o.position(evt) );
+					}
+				})
+			;
+		});
+	};
+	
+	$.fn.videoOverlay.defaults = {
+		video: false,
+		fullscreenClass: 'videooverlay-infullscreen',
+		startCSS: {
+//			height: 'auto',
+//			width: 'auto'
+		},
+		position: {
+//			bottom: 0,
+//			left: 0,
+//			right: 0,
+//			top: 0,
+//			width: 0,
+//			height: 0
+		}
+	};
+	
 	/* 
 	 * extend jme api
 	 */
@@ -198,7 +249,7 @@
 		},
 		enterFullWindow: function(o){
 			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
-			o = o || {};
+			o = $.extend({}, $.fn.jmeControl.defaults.fullscreen, o);
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
 				curDim 	= {
@@ -213,7 +264,7 @@
 				videoCSS
 			;
 			
-			videoOverlay.show(this.element);
+			windowOverlay.show(this.element);
 			if( !$.support.style || o.debug ){
 				this.visualElem.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
 			}
@@ -236,28 +287,36 @@
 			
 			ctrlBar.addClass('controls-fullscreenvideo');
 			if(o.posMediaCtrl){
-				ctrlBar.storeInlineStyle(barCSS, 'fsstoredInlineStyle');
-				if(o.constrainMediaCtrl){
-					$(this.element)
-						.bind('fullwindowresize.jmefullscreen', function(e, data){
-							barCSS.bottom = data.bottom;
-							barCSS.left = data.left;
-							barCSS.right = data.right;
-							ctrlBar.css(barCSS);
-						})
-					;
-				}
+				ctrlBar.videoOverlay({
+					fullscreenClass: 'controls-fullscreenvideo',
+					video: this.element,
+					startCSS: {
+						width: 'auto'
+					},
+					position: {
+						bottom: 0,
+						left: 0,
+						right: 0
+					}
+				});
 			}
 			
 			if(o.posMediaState){
-				state.storeInlineStyle(stateCSS, 'fsstoredInlineStyle');
-				if(o.constrainMediaCtrl){
-					$(this.element)
-						.bind('fullwindowresize.jmefullscreen', function(e, data){
-							state.css($.extend({}, data));
-						})
-					;
-				}
+				state.videoOverlay({
+					video: this.element,
+					startCSS: {
+						width: 'auto',
+						height: 'auto'
+					},
+					position: {
+						bottom: 0,
+						left: 0,
+						right: 0,
+						top: 0,
+						wdith: 0,
+						height: 0
+					}
+				});
 			}
 			vidCss 	= getSize(rel);
 			videoCSS= $.extend({}, videoBaseCSS, vidCss);
@@ -294,8 +353,6 @@
 		exitFullWindow: function(o){
 			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
-				ctrlBar = data.controlBar || $([]),
-				state	= data.mediaState || $([]),
 				that 	= this
 			;
 			$('html, body')
@@ -312,14 +369,8 @@
 			if(data.controlWrapper){
 				data.controlWrapper.removeClass('wraps-fullscreen');
 			}
-			
-			ctrlBar
-				.storeInlineStyle('fsstoredInlineStyle')
-				.removeClass('controls-fullscreenvideo')
-			;
-			state.storeInlineStyle('fsstoredInlineStyle');
-			
-			videoOverlay.hide();
+						
+			windowOverlay.hide();
 			if( !$.support.style || o.debug ){
 				setTimeout(function(){
 					that.visualElem.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
@@ -337,6 +388,24 @@
 	/* 
 	 * extend jme controls
 	 */
+	$.fn.jmeControl.addControl('video-box', function(control, video, data, o){
+		control.videoOverlay({
+			video: video,
+			startCSS: {
+				width: 'auto',
+				height: 'auto',
+				zIndex: 99998
+			},
+			position: {
+				bottom: 0,
+				left: 0,
+				right: 0,
+				top: 0,
+				wdith: 0,
+				height: 0
+			}
+		});
+	});
 	$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
 		if(!supportsFullWindow){
 			control.addClass('fullscreen-unsupported ui-disabled');
@@ -384,7 +453,6 @@
 	
 	$.fn.jmeControl.defaults.fullscreen = {
 		posMediaCtrl: true,
-		constrainMediaCtrl: true,
 		posMediaState: true
 	};
 	

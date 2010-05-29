@@ -1,3 +1,7 @@
+/*
+ * This script is a very simple utility to include predefined control-markup for rapid development with jme.
+ * Feel free to extend and change this markup for your needs.
+ */
 (function($){
 	
 	var playerControls = '<div class="media-controls-wrapper"> \
@@ -10,13 +14,14 @@
 								</div> \
 								<span class="duration player-display"></span> \
 								<a class="mute-unmute button"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></a> \
-								<div class="volume-slider"><span class="ui-handle-label">volume control</span></div> \
-								<a class="fullscreen button"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></a> \
-							</div> \
-						</div>'
+								<div class="volume-slider"><span class="ui-handle-label">volume control</span></div>'
 	;
 	
-	
+	if( $.fn.enterFullWindow ){
+		playerControls += '<a class="fullscreen button"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></a>';
+	}
+							
+	playerControls += '</div></div>';
 	
 	$.fn.jmeEmbedControls = function(o){
 		return this.each(function(){

@@ -109,7 +109,7 @@ a.ui-state-default .button-text {
 	right: 12.7em;
 }
 
-
+.ui-handle-label,
 a.fullscreen-unsupported {
 	display: none;
 }

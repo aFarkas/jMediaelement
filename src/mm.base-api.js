@@ -94,6 +94,12 @@
 				case 'totalerror':
 					this.totalerror = true;
 					break;
+				case 'mute':
+					this._muteState = e.isMuted;
+					break;
+				case 'volumelevelchange':
+					this._volumelevelState = e.volumelevel;
+					break;
 				case 'mediareset':
 					this.loadedmeta = false;
 					this.totalerror = false;
@@ -105,15 +111,17 @@
 			if(!this.isAPIReady && !noAPIEvents[type]){
 				this._trigger('mmAPIReady');
 			}
+			
 			if(e.type === 'progresschange'){
 				//firefox buffer bug
 				if(isFinite( this._bufferLoaded ) && isFinite( e.relLoaded ) && this._bufferLoaded >= e.relLoaded){return;}
 				this._bufferLoaded = e.relLoaded;
-				e.relStart = e.relStart || 0;
-				if(this._concerningBufferStart !== e.relStart){
-					this._concerningBufferStart = e.relStart;
-					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
-				}
+				//should we support multiple buffer? if not remove relStart
+//				e.relStart = e.relStart || 0;
+//				if(this._concerningBufferStart !== e.relStart){
+//					this._concerningBufferStart = e.relStart;
+//					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
+//				}
 			}
 			
 			e.target = this.element;
@@ -295,15 +303,15 @@
 	// opera 10.5 hasn´t implemented the timerange-object yet <- no support
 	var fixProgressEvent = function(api){
 		var getConcerningRange 			= function(){
-				var time 	= api.element.currentTime,
-					buffer 	= api.element.buffered,
-					bufLen 	= buffer.length,
-					ret 	= {}
+				var time 		= api.element.currentTime || 0,
+					buffered 	= api.element.buffered,
+					bufLen 		= buffered.length,
+					ret 		= {}
 				;
 				
 				for(var i = 0; i < bufLen; i++){
-					ret.start = buffer.start(i);
-					ret.end = buffer.end(i);
+					ret.start = buffered.start(i);
+					ret.end = buffered.end(i);
 					if(ret.start <= time && ret.end >= time){
 						break;
 					}
@@ -315,6 +323,7 @@
 				var evt = {type: 'progresschange'}, 
 					dur, bufRange
 				;
+				console.log(this.readyState)
 				//current implementation -> chrome 5
 				if(this.buffered && this.buffered.length){
 					
@@ -332,14 +341,34 @@
 						evt.relLoaded = e.originalEvent.loaded / e.originalEvent.total * 100;
 					}
 					api._trigger(evt);
-				} else if( this.readyState === 4 ){
+				} 
+				
+				if( !evt.relLoaded && this.readyState === 4 ){
 					evt.relStart = 0;
 					evt.relLoaded = 100;
 					api._trigger(evt);
 				}
-			}
+				return evt.relLoaded;
+			},
+			progressInterval = function(){
+						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100 || api.element.readyState >= 4 ){
+							clearTimeout(timer);
+						}
+					},
+			timer
 		;
 		$(api.element).bind('progress load', calculateProgress);
+		
+		//iPad does not have a progress event
+		if( api.element.buffered ){
+			$(api.element).bind('play waiting', function(){
+				clearTimeout(timer);
+				if( api.isAPIActive ) {
+					timer = setInterval(progressInterval, 333);
+					progressInterval();
+				}
+			});
+		} 
 	};
 	
 	//add API for native MM-Support
@@ -357,6 +386,21 @@
 						data = jQuery.makeArray( data );
 						data.unshift( e );
 						$.event.trigger( e, data, parent, true );
+					}
+				},
+				//bug: firefox loadingerror
+				loadingTimer 		= false,
+				triggerLoadingErr 	= function(e){
+					clearInterval(loadingTimer);
+					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 ) {
+						if(e === true){
+							//this will abort and start the error handling
+							that.element.load();
+						} else {
+							loadingTimer = setTimeout(function(){
+								triggerLoadingErr(true);
+							}, ( e === 'initial' ) ? 8000 : 4000);
+						}
 					}
 				}
 			;
@@ -401,7 +445,9 @@
 						} catch(e){}
 					}
 				})
+				.bind('mediareset', triggerLoadingErr)
 			;
+			triggerLoadingErr( 'initial' );
 			
 			if( !$.support.mediaLoop  ){
 				$(this.element).bind('ended', function(){
@@ -422,7 +468,7 @@
 					duration: this.element.duration
 				});
 			// if element isn't busy || opera can freeze and mozilla doesn't react on method load
-			// iPad & iPhone initially report networkState === 2 although they are idling
+			// bug: iPad & iPhone initially report networkState === 2 although they are idling
 			} else if ( this.element.networkState !== 2 || 'webkitPreservesPitch' in this.element ) {
 				this._trigger('mmAPIReady');
 			}

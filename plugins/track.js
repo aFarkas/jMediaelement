@@ -35,14 +35,7 @@
  */
 
 (function($){
-	var fwCSS = {
-		position: 'fixed',
-		bottom: 0,
-		left: 0,
-		right: 0,
-		width: 'auto',
-		zIndex: 999996
-	};
+	
 	//enable tracks
 	$(document).bind('jmeEmbed', function(e, data){
 		data = data.data;
@@ -57,31 +50,20 @@
 			mm.enableTrack(activeTracks[0], data);
 		}
 		//add fullwindow support
-		mm.bind({
-			fullwindow: function(e, evt){
-				if( !evt.isFullwindow ){
-					//restore old css
-					data.trackDisplay
-						.storeInlineStyle('fsstoredCaption')
-						.removeClass('track-in-fullscreen')
-					;
-				} else {
-					//store pre css
-					data.trackDisplay
-						.storeInlineStyle(fwCSS, 'fsstoredCaption')
-						.addClass('track-in-fullscreen')
-					;
+		data.trackDisplay
+			.videoOverlay({
+				fullscreenClass: 'track-in-fullscreen',
+				video: mm,
+				startCSS: {
+					width: 'auto'
+				},
+				position: {
+					bottom: 0,
+					left: 0,
+					right: 0
 				}
-			},
-			fullwindowresize: function(e, evt){
-				//position tracksiplay to bottom
-				data.trackDisplay.css({
-					left: evt.left,
-					right: evt.right,
-					bottom: evt.bottom
-				});
-			}
-		});
+			})
+		;
 	});
 	
 	/*

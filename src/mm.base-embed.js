@@ -437,6 +437,14 @@
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
+				if( data.apis[oldActive] ){
+					if( data.apis[oldActive]._volumelevelState !== undefined ){
+						$(element).volumelevel(data.apis[oldActive]._volumelevelState);
+					}
+					if( data.apis[oldActive]._muteState !== undefined ){
+						$(element).muted(data.apis[oldActive]._muteState);
+					}
+				}
 			}
 			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){

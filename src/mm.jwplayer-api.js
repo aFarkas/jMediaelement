@@ -21,7 +21,7 @@
 				var api = obj.state && getAPI(obj.id);
 				if(!api){return;}
 				api._trigger('play');
-				api._isPlaystate = true;
+				api._$isPlaystate = true;
 			}
 		},
 		Model: {
@@ -54,11 +54,11 @@
 				}
 				
 				
-				api.currentPos = obj.position;
+				api._$currentPos = obj.position;
 				if(obj.duration){
 					e.duration = obj.duration;
 					e.timeProgress = obj.position / obj.duration * 100;
-					api._timeProgress = e.timeProgress;
+					api._$timeProgress = e.timeProgress;
 				}
 				api._trigger(e);
 			},
@@ -75,11 +75,11 @@
 						type = 'playing';
 						break;
 					case 'PAUSED':
-						api._isPlaystate = false;
+						api._$isPlaystate = false;
 						type = 'pause';
 						break;
 					case 'COMPLETED':
-						api._isPlaystate = false;
+						api._$isPlaystate = false;
 						type = 'ended';
 						api._adjustPluginLoop( (api.apiElem.getConfig().repeat == 'single') );
 						break;
@@ -122,7 +122,7 @@
 							relLoaded: obj.total / obj.loaded * 100
 						});
 						
-						api._buffered = evt.relLoaded;
+						api._$buffered = evt.relLoaded;
 					}
 					api._trigger(evt);
 				}
@@ -135,15 +135,15 @@
 					var api = getAPI(obj.id);
 					if(!api){return;}
 					
-					if( api._timeProgress && obj.percentage + api._startBuffer + 1 < api._timeProgress ){
-						api._startBuffer = api._timeProgress;
+					if( api._$timeProgress && obj.percentage + api._$startBuffer + 1 < api._$timeProgress ){
+						api._$startBuffer = api._$timeProgress;
 					}
 					var evt = {
 						type: 'progresschange',
-						relLoaded: obj.percentage + api._startBuffer,
+						relLoaded: obj.percentage + api._$startBuffer,
 						relStart: 0
 					};
-					api._buffered = evt.relLoaded;
+					api._$buffered = evt.relLoaded;
 					api._trigger(evt);
 				},
 				STATE: function(obj){
@@ -152,7 +152,7 @@
 						var api = getAPI(obj.id);
 						if(!api){return;}
 						api._trigger('playing');
-						api._isPlaystate = true;
+						api._$isPlaystate = true;
 					}
 				}
 			}
@@ -166,14 +166,14 @@
 		//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
 		if(api.isAPIReady){
 			if(!api.apiElem.sendEvent){
-				api._reInit();
+				api._$reInit();
 				return;
 			} else {
 				setTimeout(function(){
 					if( api._lastLoad ){
 						api._mmload(api._lastLoad.file, api._lastLoad.image);
 					}
-					if(api._isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
+					if(api._$isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
 						api.play();
 					}
 				}, 20);
@@ -199,7 +199,7 @@
 				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
 					api.apiElem.sendEvent('PLAY', 'true');
 					api.apiElem.sendEvent('PLAY', 'false');
-				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster && !api.currentPos ){
+				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
 					api.currentTime(0);
 				}
 			}
@@ -209,31 +209,31 @@
 	
 	var jwAPI = {
 		_init: function(){
-			this._resetStates();
+			this._$resetStates();
 		},
-		_resetStates: function(){
-			this._buffered = 0;
-			this._startBuffer = 0;
-			this._timeProgress = 0;
-			this.currentPos = 0;
+		_$resetStates: function(){
+			this._$buffered = 0;
+			this._$startBuffer = 0;
+			this._$timeProgress = 0;
+			this._$currentPos = 0;
 		},
-		_reInitCount: 0,
-		_reInitTimer: false,
-		_reInit: function(){
+		_$reInitCount: 0,
+		_$reInitTimer: false,
+		_$reInit: function(){
 			var that = this;
-			if(this._reInitCount < 5){
+			if(this._$reInitCount < 5){
 				this.visualElem[0].style.overflow = 'visible';
 				setTimeout(function(){
 					that.visualElem[0].style.overflow = 'hidden';
 				}, 0);
 			}
-			this._reInitCount++;
-			this._resetStates();
-			if(!this._reInitTimer){
-				this._reInitTimer = true;
+			this._$reInitCount++;
+			this._$resetStates();
+			if(!this._$reInitTimer){
+				this._$reInitTimer = true;
 				setTimeout(function(){
-					that._reInitCount = 0;
-					that._reInitTimer = false;
+					that._$reInitCount = 0;
+					that._$reInitTimer = false;
 				}, 20000);
 			}
 		},
@@ -254,7 +254,7 @@
 		}, 
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');
-			this._isPlaystate = true;
+			this._$isPlaystate = true;
 			this._trigger('play');
 		},
 		pause: function(){
@@ -269,7 +269,7 @@
 				file: src,
 				image: poster || false
 			};
-			this._resetStates();
+			this._$resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');
@@ -286,18 +286,18 @@
 		},
 		_isSeekable: function(t){
 			var cfg = this.apiElem.getConfig() || {};
-			if(this._buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
+			if(this._$buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
 				return true;
 			}
 			var dur = this.getDuration();
 			if(!dur){
 				return false;
 			}
-			return (t / dur * 100 < this._buffered);
+			return (t / dur * 100 < this._$buffered);
 		},
 		currentTime: function(t){
 			if(!isFinite(t)){
-				return this.currentPos || 0;
+				return this._$currentPos || 0;
 			}
 			var api 			= this,
 				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
@@ -307,7 +307,7 @@
 					if(!wantsPlaying){
 						api.apiElem.sendEvent('PLAY', 'false');
 					}
-					api.currentPos = t;
+					api._$currentPos = t;
 					api._trigger({type: 'timechange', time: t});
 				},
 				unbind 			= function(){

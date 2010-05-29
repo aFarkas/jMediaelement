@@ -1066,7 +1066,6 @@
 				var evt = {type: 'progresschange'}, 
 					dur, bufRange
 				;
-				console.log(this.readyState)
 				//current implementation -> chrome 5
 				if(this.buffered && this.buffered.length){
 					

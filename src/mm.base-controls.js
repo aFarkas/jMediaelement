@@ -192,6 +192,20 @@
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);
 				}
+				if(o.mediaControls.fullWindowOverlay && $.fn.videoOverlay ){
+					control.videoOverlay({
+						fullscreenClass: o.classPrefix +'controls-fullscreenvideo',
+						video: mm,
+						startCSS: {
+							width: 'auto'
+						},
+						position: {
+							bottom: 0,
+							left: 0,
+							right: 0
+						}
+					});
+				}
 			},
 			'media-state': function(control, mm, api, o){
 				//classPrefix
@@ -237,6 +251,23 @@
 						control.removeClass(o.classPrefix+'waiting');
 					})
 				;
+				if( o.mediaState.fullWindowOverlay && $.fn.videoOverlay ){
+					control.videoOverlay({
+						video: mm,
+						startCSS: {
+							width: 'auto',
+							height: 'auto'
+						},
+						position: {
+							bottom: 0,
+							left: 0,
+							right: 0,
+							top: 0,
+							wdith: 0,
+							height: 0
+						}
+					});
+				}
 			}
 		},
 		toggleModells = {
@@ -425,7 +456,8 @@
 		mediaControls: {
 			dynamicTimeslider: false,
 			timeSliderAdjust: 0,
-			excludeSel: false
+			excludeSel: false,
+			fullWindowOverlay: true
 		},
 		progressbar: {},
 		volumeSlider: {},
@@ -434,7 +466,8 @@
 			reverse: false
 		},
 		mediaState: {
-			click: 'togglePlay'
+			click: 'togglePlay',
+			fullWindowOverlay: true
 		}
 	};
 	

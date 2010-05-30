@@ -5,13 +5,7 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * 
  * API:
- * $('video').enterFullWindow(options) - enters fullWindow
- * Options:
- * - posMediaCtrl: true
- * - constrainMediaCtrl: true
- * - posMediaState: true
- *		
- *	
+ * $('video').enterFullWindow() - enters fullWindow
  * $('video').exitFullWindow() - exits fullWindow
  * $('video').supportsFullWindow() - is fullwindow / position fixed supported (feature detection, not browser sniffing!)
  * 
@@ -59,7 +53,7 @@
 			if(!styles){
 				if(!data){return;}
 				$(this).css(data);
-				data = {};
+				$.data(this, name, {});
 			} else {
 				$.each(styles, function(prop, val){
 					data[prop] = elemS[prop];
@@ -247,9 +241,8 @@
 		supportsFullWindow: function(){
 			return supportsFullWindow;
 		},
-		enterFullWindow: function(o){
+		enterFullWindow: function(debug){
 			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
-			o = $.extend({}, $.fn.jmeControl.defaults.fullscreen, o);
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
 				curDim 	= {
@@ -257,25 +250,15 @@
 					height: this.visualElem.height()
 				},
 				rel 	= curDim.width / curDim.height,
-				ctrlBar = data.controlBar || $([]),
-				state	= data.mediaState || $([]),
-				parent  = this.visualElem.parent(),
 				vidCss,
 				videoCSS
 			;
 			
 			windowOverlay.show(this.element);
-			if( !$.support.style || o.debug ){
+			if( !$.support.style || debug === true ){
 				this.visualElem.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
 			}
-			
-			parent
-				.storeInlineStyle({
-					height: parent.height(),
-					width: parent.width()
-				}, 'fsstoredInlineStyle')
-			;
-			
+						
 			$('html, body')
 				.addClass('contains-fullscreenvideo')
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
@@ -285,44 +268,9 @@
 				data.controlWrapper.addClass('wraps-fullscreen');
 			}
 			
-			ctrlBar.addClass('controls-fullscreenvideo');
-			if(o.posMediaCtrl){
-				ctrlBar.videoOverlay({
-					fullscreenClass: 'controls-fullscreenvideo',
-					video: this.element,
-					startCSS: {
-						width: 'auto'
-					},
-					position: {
-						bottom: 0,
-						left: 0,
-						right: 0
-					}
-				});
-			}
-			
-			if(o.posMediaState){
-				state.videoOverlay({
-					video: this.element,
-					startCSS: {
-						width: 'auto',
-						height: 'auto'
-					},
-					position: {
-						bottom: 0,
-						left: 0,
-						right: 0,
-						top: 0,
-						wdith: 0,
-						height: 0
-					}
-				});
-			}
 			vidCss 	= getSize(rel);
 			videoCSS= $.extend({}, videoBaseCSS, vidCss);
 			
-			
-				
 			this.visualElem
 				.addClass('displays-fullscreen')
 				.storeInlineStyle(videoCSS, 'fsstoredInlineStyle')
@@ -330,7 +278,7 @@
 			
 			doc.bind('keydown.jmefullscreen', function(e){
 				if(e.keyCode === 27){
-					that.exitFullWindow(o);
+					that.exitFullWindow(debug);
 				}
 			});
 			//IE 7 triggers resize event on enterFullWindow
@@ -350,7 +298,7 @@
 			$(this.element).triggerHandler('fullwindowresize', vidCss);
 			$(this.element).triggerHandler('resize');
 		},
-		exitFullWindow: function(o){
+		exitFullWindow: function(debug){
 			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this
@@ -363,15 +311,13 @@
 			this.visualElem
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('displays-fullscreen')
-				.parent()
-				.storeInlineStyle('fsstoredInlineStyle')
 			;
 			if(data.controlWrapper){
 				data.controlWrapper.removeClass('wraps-fullscreen');
 			}
 						
 			windowOverlay.hide();
-			if( !$.support.style || o.debug ){
+			if( !$.support.style || debug === true ){
 				setTimeout(function(){
 					that.visualElem.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
 				}, 0);
@@ -388,72 +334,63 @@
 	/* 
 	 * extend jme controls
 	 */
-	$.fn.jmeControl.addControl('video-box', function(control, video, data, o){
-		control.videoOverlay({
-			video: video,
-			startCSS: {
-				width: 'auto',
-				height: 'auto',
-				zIndex: 99998
-			},
-			position: {
-				bottom: 0,
-				left: 0,
-				right: 0,
-				top: 0,
-				wdith: 0,
-				height: 0
-			}
+	if ($.fn.jmeControl) {
+		$.fn.jmeControl.addControl('video-box', function(control, video, data, o){
+			control.videoOverlay({
+				video: video,
+				startCSS: {
+					width: 'auto',
+					height: 'auto',
+					zIndex: 99998
+				},
+				position: {
+					bottom: 0,
+					left: 0,
+					right: 0,
+					top: 0,
+					wdith: 0,
+					height: 0
+				}
+			});
 		});
-	});
-	$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
-		if(!supportsFullWindow){
-			control.addClass('fullscreen-unsupported ui-disabled');
-			return;
-		}
-		var elems 		= $.fn.jmeControl.getBtn(control),
-			changeState = function(){
-				if(video.hasClass('displays-fullscreen')){
+		$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
+			if (!supportsFullWindow) {
+				control.addClass('fullscreen-unsupported ui-disabled');
+				return;
+			}
+			var elems = $.fn.jmeControl.getBtn(control), changeState = function(){
+				if (video.hasClass('displays-fullscreen')) {
 					elems.text.text(elems.names[1]);
 					elems.title.attr('title', elems.titleText[1]);
-					elems.icon
-						.addClass('ui-icon-circle-zoomout')
-						.removeClass('ui-icon-circle-zoomin')
-					;
-				} else {
+					elems.icon.addClass('ui-icon-circle-zoomout').removeClass('ui-icon-circle-zoomin');
+				}
+				else {
 					elems.text.text(elems.names[0]);
 					elems.title.attr('title', elems.titleText[0]);
-					elems.icon
-						.addClass('ui-icon-circle-zoomin')
-						.removeClass('ui-icon-circle-zoomout')
-					;
+					elems.icon.addClass('ui-icon-circle-zoomin').removeClass('ui-icon-circle-zoomout');
 				}
+			};
+			if (o.addThemeRoller) {
+				control.addClass('ui-state-default ui-corner-all');
 			}
-		;
-		if(o.addThemeRoller){
-			control.addClass('ui-state-default ui-corner-all');
-		}
-		control
-			.bind('ariaclick', function(){
-				if(data.name !== 'nativ' && video.supportsFullScreen()){
+			control.bind('ariaclick', function(){
+				if (data.name !== 'nativ' && video.supportsFullScreen()) {
 					video.enterFullScreen();
-				} else {
-					if(video.hasClass('displays-fullscreen')){
+				}
+				else {
+					if (video.hasClass('displays-fullscreen')) {
 						video.exitFullWindow(o.fullscreen);
-					} else {
+					}
+					else {
 						video.enterFullWindow(o.fullscreen);
 					}
 				}
 				return false;
-			})
-		;
-		changeState();
-		video.bind('fullwindow', changeState);
-	});
-	
-	$.fn.jmeControl.defaults.fullscreen = {
-		posMediaCtrl: true,
-		posMediaState: true
-	};
-	
+			});
+			changeState();
+			video.bind('fullwindow', changeState);
+		});
+		
+		$.fn.jmeControl.defaults.fullscreen = {};
+	}
 })(jQuery);

@@ -53,7 +53,6 @@
 					});
 				}
 				
-				
 				api._$currentPos = obj.position;
 				if(obj.duration){
 					e.duration = obj.duration;
@@ -97,12 +96,13 @@
 		Controller: {
 			VOLUME: function(obj){
 				var api = getAPI(obj.id);
-				if(!api){return;}
+				if(!api ||  api._$lastMuteState !== api.muted() ){return;}
 				api._trigger({type: 'volumelevelchange', volumelevel: obj.percentage});
 			},
 			MUTE: function(obj){
 				var api = getAPI(obj.id);
 				if(!api){return;}
+				api._$lastMuteState = obj.state;
 				api._trigger({type: 'mute', isMuted: obj.state});
 			}
 		}
@@ -194,6 +194,7 @@
 		
 		//preload workaround
 		setTimeout(function(){
+			api._$lastMuteState = api.muted();
 			var cfg = $.attr(api.element, 'getConfig');
 			if(!cfg.autoplay){
 				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){

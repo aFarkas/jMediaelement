@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.0.1 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.0.2 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1542,6 +1542,20 @@
 					$(window).bind('resize', calcSlider);
 					mm.bind('resize emchange', calcSlider);
 				}
+				if(o.mediaControls.fullWindowOverlay && $.fn.videoOverlay ){
+					control.videoOverlay({
+						fullscreenClass: o.classPrefix +'controls-fullscreenvideo',
+						video: mm,
+						startCSS: {
+							width: 'auto'
+						},
+						position: {
+							bottom: 0,
+							left: 0,
+							right: 0
+						}
+					});
+				}
 			},
 			'media-state': function(control, mm, api, o){
 				//classPrefix
@@ -1587,6 +1601,23 @@
 						control.removeClass(o.classPrefix+'waiting');
 					})
 				;
+				if( o.mediaState.fullWindowOverlay && $.fn.videoOverlay ){
+					control.videoOverlay({
+						video: mm,
+						startCSS: {
+							width: 'auto',
+							height: 'auto'
+						},
+						position: {
+							bottom: 0,
+							left: 0,
+							right: 0,
+							top: 0,
+							wdith: 0,
+							height: 0
+						}
+					});
+				}
 			}
 		},
 		toggleModells = {
@@ -1775,7 +1806,8 @@
 		mediaControls: {
 			dynamicTimeslider: false,
 			timeSliderAdjust: 0,
-			excludeSel: false
+			excludeSel: false,
+			fullWindowOverlay: true
 		},
 		progressbar: {},
 		volumeSlider: {},
@@ -1784,7 +1816,8 @@
 			reverse: false
 		},
 		mediaState: {
-			click: 'togglePlay'
+			click: 'togglePlay',
+			fullWindowOverlay: true
 		}
 	};
 	
@@ -2001,7 +2034,6 @@
 					});
 				}
 				
-				
 				api._$currentPos = obj.position;
 				if(obj.duration){
 					e.duration = obj.duration;
@@ -2045,12 +2077,13 @@
 		Controller: {
 			VOLUME: function(obj){
 				var api = getAPI(obj.id);
-				if(!api){return;}
+				if(!api ||  api._$lastMuteState !== api.muted() ){return;}
 				api._trigger({type: 'volumelevelchange', volumelevel: obj.percentage});
 			},
 			MUTE: function(obj){
 				var api = getAPI(obj.id);
 				if(!api){return;}
+				api._$lastMuteState = obj.state;
 				api._trigger({type: 'mute', isMuted: obj.state});
 			}
 		}
@@ -2142,6 +2175,7 @@
 		
 		//preload workaround
 		setTimeout(function(){
+			api._$lastMuteState = api.muted();
 			var cfg = $.attr(api.element, 'getConfig');
 			if(!cfg.autoplay){
 				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){

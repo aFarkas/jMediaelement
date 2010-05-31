@@ -109,6 +109,7 @@ a.ui-state-default .button-text {
 	right: 12.7em;
 }
 
+.media-label,
 .ui-handle-label,
 a.fullscreen-unsupported {
 	display: none;

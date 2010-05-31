@@ -82,7 +82,8 @@ a.ui-state-default .button-text {
 	margin-right: 5px;
 }
 
-
+.ui-handle-label,
+.media-label,
 a.fullscreen-unsupported {
 	display: none;
 }

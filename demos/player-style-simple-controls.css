@@ -67,6 +67,8 @@ div.volume-slider {
 	height: 0.8em;
 }
 
+.ui-handle-label,
+.media-label,
 .js-on .player-errors {
 	display: none;
 }

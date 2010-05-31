@@ -1396,6 +1396,7 @@
 					38: true
 				},
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
+		labelID 		= 0,
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
@@ -1557,6 +1558,19 @@
 					});
 				}
 			},
+			'media-label': function(control, mm, data, o){
+				if( !data.controlWrapper || data.controlWrapper.attr('role') ){return;}
+				var id = control.attr('id');
+				if(!id){
+					labelID++;
+					id = o.classPrefix+'media-label-'+ labelID;
+					control.attr('id', id);
+				}
+				data.controlWrapper.attr({
+					role: 'group',
+					'aria-labelledby': id
+				});
+			},
 			'media-state': function(control, mm, api, o){
 				//classPrefix
 				var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
@@ -1704,15 +1718,10 @@
 		}
 		
 		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
-			ret.controlsgroup = jElm;
 			if( jElm[0] && !ret.api.controlWrapper &&  $.contains( jElm[0], ret.mm[0] ) ){
 				ret.api.controlWrapper = jElm;
 			}
 			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
-			ret.api.controlBar = ret.controls.filter('.'+o.classPrefix+'media-controls');
-		}
-		if(!ret.api.mediaState && ret.controls){
-			ret.api.mediaState = ret.controls.filter('.'+o.classPrefix+'media-state'); 
 		}
 		return ret;
 	}
@@ -1802,7 +1811,6 @@
 		embed: $.fn.jmeEmbed.defaults,
 		classPrefix: '',
 		addThemeRoller: true,
-		
 		mediaControls: {
 			dynamicTimeslider: false,
 			timeSliderAdjust: 0,

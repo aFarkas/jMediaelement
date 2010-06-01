@@ -73,7 +73,7 @@
 			if( !data.bound ){
 				jElm
 					.bind('mouseleave.useractivity', setInactive)
-					.bind('mousemove.useractivity focusin.useractivity mouseenter.useractivity keydown.useractivity', setActive)
+					.bind('mousemove.useractivity focusin.useractivity mouseenter.useractivity keydown.useractivity keyup.useractivity', setActive)
 				;
 				data.bound = true;
 			}

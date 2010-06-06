@@ -18,7 +18,7 @@ quick-starter utility 'jmeEmbedControls'.
 API-Plugins like fullwindow/fullscreen, captions...
 
 II. Getting started
-ToDo
+ToDo, till then go to http://protofunc.com/jme/
 
 III. License
 The jme-JavaScript is licensed under MIT & GPL Version 2. The 

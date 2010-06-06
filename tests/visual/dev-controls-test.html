@@ -74,10 +74,7 @@
                 //removeControls: true,
 				showFallback: true,
                 jwPlayer: {
-                    path: '../../mediaplayers/jw-player/player.swf',
-					params: {
-						wmode: 'transparent'
-					}
+                    path: '../../mediaplayers/jw-player/player.swf'
                 },
 				cortado: {
 					path: '../../mediaplayers/cortado/cortado.jar'
@@ -100,7 +97,7 @@
              
              $('a.load-video').click(function(e){
 	             e.preventDefault();
-	             $(this).closest('div.test-wrapper').find('video, audio').attr('poster', $('a.poster')[0].href).loadSrc(this.href);
+	             $(this).closest('div.test-wrapper').find('video, audio').loadSrc(this.href);
              });
 			 
 			 $('a.enter-fs').click(function(e){
@@ -163,15 +160,13 @@
 			});
 		</script>
 
-		
         <div class="test-wrapper">
             <div class="ui-media-player" data-controlwrapper="controlwrapper">
                 <audio controls="controls">
-					<source src="../../demos/media/swazzrokk_v1.mp3" />
+                	<source src="../../demos/media/swazzrokk_v1.mp3" />
 					<source src="../../demos/media/swazzrokk_v1.ogg" />
 					<p>Fallback-Content</p>
                 </audio>
-				
 				
                 <div class="media-controls ui-widget ui-widget-header ui-corner-all">
                     <a class="play-pause">

@@ -263,7 +263,7 @@
 				left: win.scrollLeft()
 			};
 			
-			windowOverlay.show(this.element);
+			
 			if( !$.support.style || debug === true ){
 				ancestors = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : this.visualElem;
 				ancestors.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
@@ -274,8 +274,11 @@
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
 			;
 			
-			if(data.controlWrapper){
+			if(data.controlWrapper && data.controlWrapper[0]){
 				data.controlWrapper.addClass('wraps-fullscreen');
+				windowOverlay.show(data.controlWrapper[0]);
+			} else {
+				windowOverlay.show(this.element);
 			}
 			
 			vidCss 	= getSize(rel);

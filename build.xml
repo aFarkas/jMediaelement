@@ -2,7 +2,7 @@
 
     <property description="Folder for all jMediaelement packages and min target" name="dist" value="./packages" />
 
-	<property name="version" value="1.1.0RC" />
+	<property name="version" value="1.1.0" />
     <property name="mediafull" value="${dist}/mm.full.js" />
     <property name="mediafullmin" value="${dist}/mm.full.min.js" />
 	

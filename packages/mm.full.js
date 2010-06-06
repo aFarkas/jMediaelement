@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.1.0RC | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.1.0 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -2370,6 +2370,7 @@
 			};
 			this._$resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
+			
 			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');
 			} else {

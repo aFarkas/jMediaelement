@@ -272,6 +272,7 @@
 			};
 			this._$resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
+			
 			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
 				this.apiElem.sendEvent('PLAY', 'true');
 			} else {

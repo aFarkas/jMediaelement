@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Simple Controls Demo</title>
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/redmond/jquery-ui.css"/>
+		<link rel="stylesheet" href="css/styles.css" />
+		<link rel="stylesheet" href="css/player-controls.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- ui-components: you only need slider + progressbar -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"></script>
+		<!-- END:  ui-components -->
+		<!-- optional for a11y-slider -->
+		<script src="../utils/a11y-slider.ext.js"></script>
+		<!-- END: for a11y-slider -->
+		
+		<!-- full jme script -->
+		<script src="../packages/mm.full.js"></script>
+		
+		<!-- jmeEmbedControls: good for rapid development and quick start -->
+		<script src="../utils/jmeEmbedControls.js"></script>
+		
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				$('div.ui-media-player').jmeEmbedControls();
+			});
+		</script>
+		
+	</head>
+	<body>
+		<h1>Demo for jmeEmbedControls</h1>
+		
+		<h2>Videoplayer</h2>
+		<div class="ui-media-player">
+			<span class="media-label">video: big buck bunny</span>
+			<video poster="media/bbb_watchtrailer.gif" controls="controls">
+				<source src="media/bbb_trailer_mobile.m4v" />
+				<source src="media/bbb_trailer_400p.ogg" type="video/ogg" />
+			</video>
+		</div>
+		
+		<hr />
+		<h2>Audioplayer</h2>
+		
+		<div class="ui-media-player">
+			<!-- class for labelling a player good for a11y -->
+			<span class="media-label">audioplayer</span>
+			
+			<audio controls="controls">
+				<source src="media/swazzrokk_v1.mp3" type="audio/mpeg" />
+				<source src="media/swazzrokk_v1.ogg" type="audio/ogg" />
+			</audio>
+			
+		</div>
+		
+<hr />
+		
+				
+<h1>How to</h1>
+<h2>I. Include the JS- and CSS-File:</h2>
+<code>
+&lt;!-- the jquery ui theme is not mandatory --&gt;
+&lt;link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/redmond/jquery-ui.css"/&gt;
+&lt;link rel="stylesheet" href="css/player-controls.css" /&gt;
+
+&lt;script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"&gt;&lt;/script&gt;	
+&lt;!-- you only need slider & progressbar widget from jquery ui --&gt;
+&lt;script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"&gt;&lt;/script&gt;
+&lt;script src="../packages/mm.full.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- good for rapid development and quick start --&gt;
+&lt;script src="../utils/jmeEmbedControls.js"&gt;&lt;/script&gt;
+</code>
+		<h2>II. call jmeEmbedControls on the wrapper element on Document Ready</h2>
+		<p>jmeEmbedControls makes your HTML5 media elements cross browser and will append some Control-Elements inside of the wrapper element.</p>
+<code>
+$(function(){
+	$('div.ui-media-player').jmeEmbedControls();
+});
+</code>
+		<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player:</p>
+<code>
+$(function(){
+	$('div.ui-media-player').jmeEmbedControls({
+		embed: {
+			jwPlayer: {
+				path: 'path-to/player.swf'
+			}
+		}
+	});
+});
+</code>
+<h2>Use HTML5 media elements</h2>
+<p>jme uses a Markup-API to enable custom stylable controls, by using predefined HTML-Classes (i.e. play-pause for a play-pause Toggle-button or current-time for a current-time display).</p>
+<p>The uitility 'jmeEmbedControls' will append some of these controls. Note, that you can change them/this file for your needs.</p>
+<p>You find a full list of control classes in the <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-documentation</a>.</p>
+<code>
+&lt;div class="ui-media-player"&gt;
+	&amp;lt;video poster="media/bbb_watchtrailer.gif" controls="controls""&amp;gt;
+		&amp;lt;source src="media/bbb_trailer_mobile.m4v" /&amp;gt;
+		&amp;lt;source src="media/bbb_trailer_400p.ogg" /&amp;gt;
+	&amp;lt;/video&amp;gt;
+&lt;/div&gt;	
+</code>
+		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+	</body>
+</html>

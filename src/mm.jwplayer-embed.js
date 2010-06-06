@@ -6,10 +6,16 @@
  */
 
 (function($){
+	
+	var swfAttr = {type: 'application/x-shockwave-flash'},
+		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
+		m 		= $.multimediaSupport
+	;
+	
 	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				jwPlayer: {
-					path: 'player.swf',
+					path: m.jsPath + 'player.swf',
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
@@ -21,10 +27,7 @@
 			}
 		)
 	;
-	var swfAttr = {type: 'application/x-shockwave-flash'},
-		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
-		m 		= $.multimediaSupport
-	;
+	
 		
 	var regs = {
 			A: /&amp;/g,
@@ -93,11 +96,15 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
+				if( !cfg.controls && this.nodeName !== 'audio' && params.wmode === undefined ){
+					params.wmode = 'transparent';
+				}
+				
 				if( (!cfg.controls && opts.hideIcons && params.wmode === 'transparent') || opts.hideIcons === true ){
 					vars.icons = 'false';
 					vars.showicons = 'false';
 				}
-				 
+				
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));

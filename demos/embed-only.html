@@ -3,53 +3,66 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Simple Controls Demo</title>
-		<link rel="stylesheet" href="../css/styles.css" />
-		<link rel="stylesheet" href="holy-grail-player-style.css" />
+		<link rel="stylesheet" href="css/styles.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		
+		<!-- jmeEmbed - plugin -->
 		<script src="../packages/mm.embed.min.js"></script>
 		
 		<script>
-			$('html').addClass('js-on');
 			$(function(){
-				$('video, audio')
-					.jmeEmbed({
-						showFallback: true,
-						jwPlayer: {
-							path: '../mediaplayers/jw-player/player.swf'
-						}
-					})
-				;
-				
+				$('video, audio').jmeEmbed();
 			});
-			
 		</script>
 	</head>
 	<body>
-		
-		 
-		<div class="ui-media-player">
-			
-			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-				<source src="media/bbb_trailer_mobile.m4v" />
-				<source src="media/bbb_trailer_400p.ogg" />
-				
-				<div class="fallback">
-					<img src="media/bbb_watchtrailer.gif" alt="" />
-					<div class="fallback-text">
-						<p>Please use a modern browser or install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
-						<ul>
-							<li><a class="source" href="media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
-							<li><a class="source" href="media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
-						</ul>
-					</div>
-				</div>
-			</video>
-		</div>
+		<h1>Embedonly Demo with quick and lightweight jmeEmbed</h1>
+		<h2>Video-Demo</h2>
+		<video poster="media/bbb_watchtrailer.gif" controls="controls"">
+			<source src="media/bbb_trailer_mobile.m4v" />
+			<source src="media/bbb_trailer_400p.ogg" />
+		</video>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
-		<!--
-		<button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-		-->	
+		
+		<hr />
+		
+		<h2>Audio-Demo</h2>
+		<audio controls="controls">
+			<source src="media/swazzrokk_v1.mp3" type="audio/mpeg" />
+			<source src="media/swazzrokk_v1.ogg" type="audio/ogg" />
+		</audio>
+<hr />
+
+<h2>How to</h2>
+<h3>I. Include the JS-File:</h3>
+<code>
+&lt;script src="../packages/mm.embed.min.js"&gt;&lt;/script&gt;
+</code>
+		<h3>II. call jmeEmbed on Document Ready</h3>
+		<p>jmeEmbed makes your  HTML5 media elements cross browser and if you have included mm.full.*.js it also initializes the DOM-API.</p>
+<code>
+$(function(){
+	$('video, audio').jmeEmbed();
+});
+</code>
+		<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player:</p>
+<code>
+$(function(){
+	$('video, audio').jmeEmbed({
+		jwPlayer: {
+			path: 'path-to/player.swf'
+		}
+	});
+});
+</code>
+<h3>Use HTML5 media elements</h3>
+<code>
+&lt;video poster="media/bbb_watchtrailer.gif" controls="controls""&gt;
+	&lt;source src="media/bbb_trailer_mobile.m4v" /&gt;
+	&lt;source src="media/bbb_trailer_400p.ogg" /&gt;
+&lt;/video&gt;	
+</code>
+	
 	</body>
 </html>

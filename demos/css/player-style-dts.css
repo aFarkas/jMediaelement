@@ -17,7 +17,7 @@ video {
 	width: 510px;
 	height: 280px;
 }
-.video-box .media-state {
+.media-state {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -25,29 +25,34 @@ video {
 	height: 100%;
 	cursor: pointer;
 	/* preload waiting image */
-	background: url(media/loader.gif) -9000px -9000px no-repeat;
+	background: url(../media/loader.gif) -9000px -9000px no-repeat;
 }
-.idle .video-box .media-state {
-	background: url(media/play-icon.png) center no-repeat;
+.idle .media-state {
+	background: url(../media/play-icon.png) center no-repeat;
 }
-.ui-media-player.waiting .video-box .media-state {
-	background: url(media/loader.gif) center no-repeat;
+.ui-media-player.waiting .media-state {
+	background: url(../media/loader.gif) center no-repeat;
 }
-.playing .video-box .media-state {
+.playing .media-state {
 	display: none;
 }
+/* 
+ * escaped for development mode
+
+.media-controls-wrapper,
+.media-controls {
+	display: none;
+}
+.js-on .media-controls-wrapper,
+.js-on .media-controls {
+	display: block;
+}
+
+ */
 .media-controls-wrapper {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
-}
-/* IE7 z-index-bug */
-/* note: the fullscreen plugin manages the ie7-zIndex bug above the video-element, 
- * but you have to manage it inside the common wrapper 
- */
-.wraps-fullscreen,
-.wraps-fullscreen .media-controls-wrapper {
-	position: static;
 }
 .media-controls {
 	overflow: hidden;
@@ -131,4 +136,16 @@ a.fullscreen-unsupported {
 }
 .fallback-text a {
 	color: #fff;
+}
+
+
+/*
+ * fullscreen plugin
+ */
+
+.wraps-fullscreen .media-state {
+	z-index: 99999;
+}
+.wraps-fullscreen .media-controls-wrapper {
+	z-index: 999999;
 }

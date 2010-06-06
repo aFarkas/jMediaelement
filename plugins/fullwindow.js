@@ -126,7 +126,7 @@
 		;
 		
 		// IE7/IE8 retrigger
-		$(window).bind('resize', function(){
+		win.bind('resize', function(){
 			if(isVisible){
 				clearTimeout(timer);
 				timer = setTimeout(function(){
@@ -141,16 +141,19 @@
 		var pub = {
 			show: function(video){
 				if(!overlay || isVisible){return;}
-				if( trans.test( overlay.css('backgroundColor') ) && overlay.css('backgroundImage') == 'none' ){
+				var bgCol = overlay.css('backgroundColor'),
+					bgImg = overlay.css('backgroundImage')
+				;
+				if( (!bgCol || trans.test( bgCol ) ) && ( !bgImg || bgImg == 'none' ) ){
 					var color = $.curCSS(video, 'backgroundColor');
-					overlay.css('backgroundColor', (!trans.test(color)) ? color :'#000');
+					overlay.css('backgroundColor', ( color && !trans.test(color) ) ? color :'#000');
 				}
 				overlay.insertAfter(video).show();
 				isVisible = true;
 			},
 			hide: function(){
 				if(!overlay || !isVisible){return;}
-				overlay.hide().detach();
+				overlay.hide().css('backgroundColor', '').detach();
 				isVisible = false;
 			}
 		};
@@ -250,13 +253,20 @@
 					height: this.visualElem.height()
 				},
 				rel 	= curDim.width / curDim.height,
+				ancestors,
 				vidCss,
 				videoCSS
 			;
 			
+			data._$fullwindowScrollPosition = {
+				top: win.scrollTop(),
+				left: win.scrollLeft()
+			};
+			
 			windowOverlay.show(this.element);
 			if( !$.support.style || debug === true ){
-				this.visualElem.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
+				ancestors = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : this.visualElem;
+				ancestors.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
 			}
 						
 			$('html, body')
@@ -301,7 +311,8 @@
 		exitFullWindow: function(debug){
 			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
-				that 	= this
+				that 	= this,
+				ancestors
 			;
 			$('html, body')
 				.storeInlineStyle('fsstoredInlineStyle')
@@ -319,14 +330,21 @@
 			windowOverlay.hide();
 			if( !$.support.style || debug === true ){
 				setTimeout(function(){
-					that.visualElem.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
+					ancestors = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : that.visualElem;
+					ancestors.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
 				}, 0);
 			}
 			win.unbind('.jmefullscreen');
 			doc.unbind('.jmefullscreen');
 			$(this.element).removeClass('displays-fullscreen').unbind('.jmefullscreen');
+			
 			this._trigger({type: 'fullwindow', isFullwindow: false});
 			$(this.element).triggerHandler('resize');
+			if( data._$fullwindowScrollPosition ){
+				win.scrollTop( data._$fullwindowScrollPosition.top );
+				win.scrollLeft( data._$fullwindowScrollPosition.left );
+				data._$fullwindowScrollPosition = false;
+			}
 		}
 	});
 	

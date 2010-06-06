@@ -20,10 +20,10 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-				$('html').addClass('js-ready');			
 				$('div.ui-media-player')
 					.jmeControl({
 						embed: {
+							showFallback: true,
 							removeControls: true,
 							jwPlayer: {
 								path: '../mediaplayers/jw-player/player.swf'
@@ -31,7 +31,7 @@
 						}
 					})
 				;
-				
+							
 			});
 			
 		</script>
@@ -44,11 +44,10 @@
 			<span class="media-label">video: big buck bunny</span>
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" id="video-1">
 				<source src="media/bbb_trailer_mobile.m4v" />
-				<source src="media/bbb_trailer_400p.ogg" type="video/ogg" />
 				<div class="fallback">
 					<img src="media/bbb_watchtrailer.gif" alt="" />
 					<div class="fallback-text">
-						<p>Please use a modern browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+						<p>Please use a webkit browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
 						<ul>
 							<li><a class="source" href="media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
 							<li><a class="source" href="media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
@@ -69,8 +68,5 @@
 			</div>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
-		<!--
-		<button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-		-->	
 	</body>
 </html>

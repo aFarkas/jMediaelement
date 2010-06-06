@@ -24,7 +24,8 @@
 			timechange: 1,
 			progresschange: 1,
 			mmAPIReady: 1,
-			jmeflashRefresh: 1
+			jmeflashRefresh: 1,
+			ended: 1
 		},
 		fsMethods		= {}
 	;
@@ -72,8 +73,6 @@
 	    }
 	};
 	
-	
-
 	//extend fn
 	$.extend($m.fn, {
 		_trigger: function(e){
@@ -152,7 +151,7 @@
 			return this.currentTime() / dur * 100; 
 		},
 		getMediaAPI: function(){
-			return this.mediaAPI;
+			return this.name;
 		},
 		togglePlay: function(){
 			this[(this.isPlaying()) ? 'pause' : 'play']();
@@ -203,13 +202,14 @@
 		getFormattedTime: function(){
 			return this._format(this.currentTime());
 		},
-		loadSrc: function(srces, poster){
+		loadSrc: function(srces, poster, mediaName){
 			if(srces){
 				$.attr(this.element, 'srces', srces);
 				srces = $.isArray(srces) ? srces : [srces];
 			} else {
 				srces = $.attr(this.element, 'srces');
 			}
+			
 			if(poster !== undefined){
 				if(poster){
 					$.attr(this.element, 'poster', poster);
@@ -219,6 +219,14 @@
 			} else {
 				poster = $.attr(this.element, 'poster');
 			}
+			
+			if( mediaName !== undefined ){
+				var data = $.data(this.element, 'mediaElemSupport');
+				if( data.controlWrapper && data.controlWrapper.mediaLabel ){
+					data.controlWrapper.mediaLabel.text(mediaName);
+				}
+			}
+			
 			this._isResetting = true;
 			
 			var canPlaySrc = this.canPlaySrces(srces);
@@ -382,7 +390,7 @@
 					var parent = this.parentNode || this.ownerDocument;
 					if ( !e.isPropagationStopped() && parent ) {
 						e.bubbles = true;
-						data = jQuery.makeArray( data );
+						data = $.makeArray( data );
 						data.unshift( e );
 						$.event.trigger( e, data, parent, true );
 					}
@@ -391,14 +399,14 @@
 				loadingTimer 		= false,
 				triggerLoadingErr 	= function(e){
 					clearInterval(loadingTimer);
-					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 ) {
+					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 && ( $.support.flash9 || $.support.vlc ) ) {
 						if(e === true){
 							//this will abort and start the error handling
 							that.element.load();
 						} else {
 							loadingTimer = setTimeout(function(){
 								triggerLoadingErr(true);
-							}, ( e === 'initial' ) ? 8000 : 4000);
+							}, ( e === 'initial' ) ? 20000 : 9000);
 						}
 					}
 				}
@@ -435,7 +443,7 @@
 						});
 					}
 				})
-				.bind('play pause playing ended waiting', bubbleEvents)
+				.bind('play pause playing waiting', bubbleEvents)
 				// firefox also loads video without calling load-method, if autoplay is true and media pack has changed
 				.bind('play playing', function(){
 					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
@@ -553,7 +561,9 @@
 	
 	var noAPIMethods = {
 			jmeReady: 1,
-			loadSrc: 1
+			getJMEVisual: 1,
+			jmeReady: 1,
+			isJMEReady: 1
 		}
 	;
 	$m.registerAPI = function(names){

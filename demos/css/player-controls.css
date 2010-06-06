@@ -2,36 +2,34 @@ video {
 	display: block;
 	width: 432px;
 	height: 240px;
-	-moz-transition: opacity 0.5s;
-	-webkit-transition: opacity 0.5s;
-	-o-transition: opacity 0.5s;
-	transition: opacity 0.5s;
 }
 
 .ui-media-player {
+	position: relative;
 	width: 432px;
-	background: url(media/loader.gif) -9000px -9000px no-repeat;
 }
-.ui-media-player.waiting:not(.jwPlayer) {
-	background: url(media/loader.gif) center no-repeat;
-}
-.ui-media-player.waiting:not(.jwPlayer) video {
-	opacity: 0.5;
-}
+/*
+ * escaped for development mode
+
 .media-controls {
 	display: none;
+}
+.js-on .media-controls {
+	display: block;
+}
+
+ */
+.media-controls {
 	height: 2em;
 	zoom: 1;
 	position: relative;
 	margin: 5px 0 0;
-	padding: 0 165px 0 45px;
-}
-.js-ready .media-controls {
-	display: block;
+	padding: 0 210px 0 85px;
+	z-index: 9; /* IE opacity: bug */
 }
 .media-controls a.ui-state-default {
 	position: absolute;
-	top: .4em;
+	top: .32em;
 	padding: 2px;
 	overflow: hidden;
 }
@@ -57,6 +55,20 @@ a.ui-state-default .button-text {
 .media-controls a.mute-unmute {
 	right: 125px;
 }
+.player-display {
+	overflow: hidden;
+	position: absolute;
+	top: 9px;
+	width: 35px;
+	font-size: 12px;
+	text-align: center;
+}
+.duration {
+	right: 155px;
+}
+.current-time {
+	left: 35px;
+}
 div.volume-slider {
 	position: absolute;
 	top: .5em;
@@ -67,33 +79,30 @@ div.volume-slider {
 	height: 0.8em;
 }
 
-.ui-handle-label,
+.handle-label,
 .media-label,
 .js-on .player-errors {
 	display: none;
 }
-/*
- * playlist
- */
-.playlist {
-	margin: 5px 0 0;
-	padding: 5px;
-}
-.playlist ul {
-	list-style: none;
-}
-.playlist .src {
+.media-state {
+	position: absolute;
 	display: none;
-}
-.playlist li {
-	margin: 2px 0;
-	padding: 2px 5px;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
 	cursor: pointer;
+	background: url(../media/loader.gif) -9000px -9000px no-repeat;
 }
-.playlist a:focus,
-.playlist a:active {
-	text-decoration: underline !important;
+.idle .media-state {
+	display: block;
+	background: url(../media/play-icon.png) center no-repeat;
 }
+.waiting .media-state {
+	display: block;
+	background: url(../media/loader.gif) center no-repeat;
+}
+
 /* on totoal error/showFallback: true */
 .totalerror .media-controls {
 	display: none !important;
@@ -118,4 +127,38 @@ div.volume-slider {
 }
 .fallback-text a {
 	color: #fff;
+}
+
+/*
+ * fullscreen plugin
+ */
+
+.wraps-fullscreen .media-state {
+	z-index: 99999;
+}
+.wraps-fullscreen .media-controls-wrapper {
+	z-index: 999999;
+}
+
+/*
+ * playlist example (audioplayer.html)
+ */
+.playlist {
+	margin: 5px 0 0;
+	padding: 5px;
+}
+.playlist ul {
+	list-style: none;
+}
+.playlist .src {
+	display: none;
+}
+.playlist li {
+	margin: 2px 0;
+	padding: 2px 5px;
+	cursor: pointer;
+}
+.playlist a:focus,
+.playlist a:active {
+	text-decoration: underline !important;
 }

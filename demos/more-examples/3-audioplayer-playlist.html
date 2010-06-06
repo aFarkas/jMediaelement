@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Audioplayer Demo</title>
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/sunny/jquery-ui.css"/>
+		<link rel="stylesheet" href="../css/styles.css" />
+		<link rel="stylesheet" href="../css/player-controls.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
+		
+		<!-- ui-components -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.js"></script>
+		<!-- END:  ui-components -->
+		<!-- optional for a11y-slider -->
+		<script src="../../utils/a11y-slider.ext.js"></script>
+		<!-- END: for a11y-slider -->
+		<script src="../../packages/mm.full.js"></script>
+		
+		<!-- adds playlist markup- and dom-api -->
+		<script src="../../plugins/playlist.js"></script>
+		
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				$('div.ui-media-player').jmeControl();
+			});
+			
+		</script>
+		
+	</head>
+	<body>
+		<h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
+		
+		<div class="ui-media-player">
+			<span class="media-label">audioplayer <span class="media-name"></span></span>
+			<div class="player-errors ui-state-error">
+				Turn on your JavaScript
+			</div>
+			<audio autoplay="autoplay"></audio>
+			
+			<div class="media-controls">
+				<a class="play-pause"><span class="ui-icon"> </span><span class="button-text">play / pause</span></a>
+				<span class="current-time player-display">00:00</span>
+				<div class="timeline-slider">
+					<span class="handle-label">play position</span>
+					<div class="progressbar"></div>
+				</div>
+				<span class="duration player-display">00:00</span>
+				<a class="mute-unmute"><span class="ui-icon"> </span><span class="button-text">mute / unmute</span></a>
+				<div class="volume-slider"><span class="handle-label">volume control</span></div>
+			</div>
+			
+			<div class="playlist">
+				<ul>
+					<li class="playlist-item" data-srces="../media/swazzrokk_v1.mp3,../media/swazzrokk_v1.ogg">
+						swazzrokk
+					</li>
+					<li class="playlist-item" data-srces="../media/ANC_sketchV2n.mp3,../media/ANC_sketchV2n.ogg">
+						anc
+					</li>
+					<li class="playlist-item" data-srces="../media/chefsachesketch.mp3,../media/chefsachesketch.ogg">
+						chefsache
+					</li>
+				</ul>
+			</div>
+		</div>
+		<p>(c) copyright BaszT</p>
+	</body>
+</html>

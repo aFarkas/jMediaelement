@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <title>Controls Demo</title>
-        <link rel="stylesheet" href="../../css/styles.css" />
-        <link rel="stylesheet" href="../../demos/player-style-simple-controls.css" />
+        <link rel="stylesheet" href="../../demos/css/styles.css" />
+        <link rel="stylesheet" href="../../demos/css/player-controls.css" />
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
         <!-- ui-components -->
         <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js">
@@ -89,14 +89,14 @@
 //			});
             
 			        
-            $('div[data-controlwrapper]').registerMMControl({
-				
-						mediaControls: {
-							dynamicTimeslider: true,
-							timeSliderAdjust: -10
-						}
+            $('div[data-controlwrapper]').jmeControl({
+				mediaControls: {
+					dynamicTimeslider: true,
+					timeSliderAdjust: -10
+				}
 			});
             
+			$('button.play-pause').jmeControl();
              
              $('a.load-video').click(function(e){
 	             e.preventDefault();
@@ -123,6 +123,8 @@
 				 media.enterFullWindow();
 				 //media.play();
              }); 
+			 
+			 
 			            
         });
         </script>
@@ -252,8 +254,8 @@
             </p>
         </div>
 	
-        <!--
+        
         <button class="play-pause" data-controls="video-1"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></button>
-        -->
+       
     </body>
 </html>

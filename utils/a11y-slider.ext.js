@@ -41,7 +41,7 @@
 					minWidth: min
 				})
 			;
-			$('.ui-handle-label', this.element)
+			$('.handle-label', this.element)
 				.hide()
 				.each(function(i){
 					var id = this.id;

@@ -38,7 +38,7 @@
 	        }
 		};
 	}
-	var split 			= /\s*\/\s*|\s*\|\s*/,
+	var split 			= /\s*\/\s*|\s*\|\s*|\s*\,\s*/g,
 		moveKeys 		= {
 					40: true,
 					37: true,
@@ -210,16 +210,32 @@
 			},
 			'media-label': function(control, mm, data, o){
 				if( !data.controlWrapper || data.controlWrapper.attr('role') ){return;}
-				var id = control.attr('id');
+				var id 			= control.attr('id'),
+					mediaName 	= $('.'+o.classPrefix+'media-name', control)
+				;
 				if(!id){
 					labelID++;
 					id = o.classPrefix+'media-label-'+ labelID;
 					control.attr('id', id);
 				}
+				data.controlWrapper.mediaLabel = (mediaName[0]) ? mediaName : control;
 				data.controlWrapper.attr({
 					role: 'group',
 					'aria-labelledby': id
 				});
+			},
+			fallback: function(control, mm, api, o){
+				if( o.embed.showFallback || !$.support.mediaElements ){return;}
+				var fallback 		= control.clone(true),
+					showFallback 	= function(){
+						mm.after(fallback).hide();
+						$(this).one('mediareset', function(){
+							 mm.show();
+							 fallback.detach();
+						});
+					}
+				;
+				mm.bind('totalerror', showFallback);
 			},
 			'media-state': function(control, mm, api, o){
 				//classPrefix
@@ -342,6 +358,8 @@
 				}
 			}
 			
+			changeState();
+			
 			mm
 				.bind(opts.evts, changeState)
 				.jmeReady(changeState)
@@ -379,6 +397,27 @@
 	
 	function addWrapperBindings(wrapper, mm, api, o){
 		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
+		
+		if( $.fn.videoOverlay ){
+			wrapper
+				.videoOverlay({
+					video: mm,
+					startCSS: {
+						width: 'auto',
+						height: 'auto',
+						zIndex: 99998
+					},
+					position: {
+						bottom: 0,
+						left: 0,
+						right: 0,
+						top: 0,
+						width: 0,
+						height: 0
+					}
+				})
+			;
+		}
 		if (!$.ui || !$.ui.keyCode) {return;}
 		wrapper
 			.bind('keydown', function(e){
@@ -435,6 +474,7 @@
 		o.controlSel = o.controlSel.join(', ');
 		function registerControl(){
 			var elems = getElems(this, o);
+			if( !elems.api ){return;}
 			elems.api.controls = elems.api.controls || [];
 			if(!elems.api){return;}
 			elems.controls.each(function(){
@@ -458,14 +498,14 @@
 	
 	$.fn.jmeControl.defaults = {
 		//common
-		embed: $.fn.jmeEmbed.defaults,
+		embed: {removeControls: true},
 		classPrefix: '',
 		addThemeRoller: true,
 		mediaControls: {
 			dynamicTimeslider: false,
 			timeSliderAdjust: 0,
 			excludeSel: false,
-			fullWindowOverlay: true
+			fullWindowOverlay: false
 		},
 		progressbar: {},
 		volumeSlider: {},
@@ -475,7 +515,7 @@
 		},
 		mediaState: {
 			click: 'togglePlay',
-			fullWindowOverlay: true
+			fullWindowOverlay: false
 		}
 	};
 	

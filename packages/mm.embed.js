@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.0.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.1.0RC | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -43,6 +43,55 @@
 			}
 		;
 	})();
+	
+	
+	
+	var cssShow 		= { left: "0px", position: "absolute", visibility: "hidden", display:"block" },
+		getHiddenDim 	= function(jElm, ancestorFrom){
+			var parent 	= ancestorFrom.parentNode,
+				body 	= document.body,
+				ret 	= {width: 0, height: 0}
+			;
+			while(parent && parent !== body){
+				if( $.curCSS(parent, 'display') === 'none' ){
+					$.swap( parent, cssShow, function(){
+						ret.height = jElm.height();
+						ret.width = jElm.width();
+						if( !ret.width && !ret.height ){
+							ret = getHiddenDim(jElm, parent);
+						}
+					} );
+					if( ret.width || ret.height ){
+						break;
+					}
+				}
+				
+				parent = parent.parentNode;
+			}
+			return ret;
+		}
+	;
+	
+	$.fn.getDimensions = function(){
+		var ret = {width: 0, height: 0};
+		if(this[0]){
+			var elmS = this[0].style;
+			// assume that inline style is correct
+			// enables 100% feature with inline-style
+			ret.height = elmS.height;
+			ret.width = elmS.width;
+			
+			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
+				ret.height = this.height();
+				ret.width = this.width();
+				if( !ret.width && !ret.height ){
+					ret = getHiddenDim(this, this[0]);
+				}
+			}
+		}
+		return ret;
+	};
+	
 	
 	
 	var oldAttr 		= $.attr,
@@ -277,6 +326,12 @@
 	;
 	
 	$.extend(m, {
+		jsPath: (function(){
+			var scripts = $('script'),
+				path = scripts[scripts.length - 1].src.split('?')[0]
+			;
+			return path.slice(0, path.lastIndexOf("/") + 1);
+		})(),
 		registerMimetype: function(elemName, mimeObj){
 			if(arguments.length === 1){
 				$.each(mimeTypes, function(name){
@@ -426,11 +481,7 @@
 						data.apis[supType].visualElem.css({display: ''});
 					} else {
 						data.apis[supType].visualElem
-							.css({
-								width: data.apis[oldActive].visualElem.width(),
-								height: data.apis[oldActive].visualElem.height(),
-								visibility: ''
-							})
+							.css( $.extend({visibility: ''}, data.apis[oldActive].visualElem.getDimensions())  )
 						;
 					}
 				}
@@ -526,7 +577,7 @@
 				id = apiData.nodeName +'-'+vID;
 				elem.id = id;
 			}
-			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative; overflow: hidden;" />').insertBefore(elem);
+			apiData.apis[supported.name].visualElem = $('<div class="media-element-box mm-'+ apiData.nodeName +'-box" style="position: relative;" />').insertBefore(elem);
 			
 			if(label){
 				apiData.apis[supported.name].visualElem.attr({
@@ -539,16 +590,12 @@
 				apiData.apis[supported.name].visualElem
 					.css({
 						height: 0,
-						width: 0,
-						overflow: 'hidden'
+						width: 0
 					})
 				;
 			} else {
 				apiData.apis[supported.name].visualElem
-					.css({
-							width: jElm.width(),
-							height: jElm.height()
-					})
+					.css( jElm.getDimensions() )
 				;
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
@@ -574,6 +621,7 @@
 			return version;
 		},
 		embedObject: function(elem, id, attrs, params, activeXAttrs, pluginName){
+			elem.style.overflow = 'hidden';
 			elem = $('<div />').prependTo(elem)[0];
 			var obj;
 			
@@ -591,9 +639,13 @@
 				});
 				obj.setAttribute('id', id);
 				obj.setAttribute('name', id);
+				if(params.wmode === 'transparent'){
+					obj.style.minHeight = '1px';
+					obj.style.minHeight = '1px';
+				} 
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){
-				obj = '<object style="width: 100%; height: 100%;" width="100%" height="100%"';
+				obj = '<object style="width: 100%; height: 100%; width="100%" height="100%"';
 				$.each($.extend({}, attrs, activeXAttrs), function(name, val){
 					obj += ' '+ name +'="'+ val +'"';
 				});
@@ -749,10 +801,16 @@
  */
 
 (function($){
+	
+	var swfAttr = {type: 'application/x-shockwave-flash'},
+		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
+		m 		= $.multimediaSupport
+	;
+	
 	$.extend($.fn.jmeEmbed.defaults, 
 			{
 				jwPlayer: {
-					path: 'player.swf',
+					path: m.jsPath + 'player.swf',
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
@@ -764,10 +822,7 @@
 			}
 		)
 	;
-	var swfAttr = {type: 'application/x-shockwave-flash'},
-		aXAttrs = {classid: 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'},
-		m 		= $.multimediaSupport
-	;
+	
 		
 	var regs = {
 			A: /&amp;/g,
@@ -836,11 +891,15 @@
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
 				
+				if( !cfg.controls && this.nodeName !== 'audio' && params.wmode === undefined ){
+					params.wmode = 'transparent';
+				}
+				
 				if( (!cfg.controls && opts.hideIcons && params.wmode === 'transparent') || opts.hideIcons === true ){
 					vars.icons = 'false';
 					vars.showicons = 'false';
 				}
-				 
+				
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));

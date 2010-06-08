@@ -32,9 +32,9 @@
 			var elem 		= $(this.element),
 				data 		= getPlayList(this.element),
 				addAutoplay = function(){
-					if( !setAutoplay && !noAutoplay ){
+					if( !setAutoplay && ( !noAutoplay || elem.hasClass('autoplay-next') ) ){
 						elem.attr('autoplay', true);
-						noAutoplay = true;
+						setAutoplay = true;
 					}
 				},
 				setAutoplay
@@ -49,9 +49,11 @@
 				.one('play.playlist', addAutoplay)
 				.bind('ended.playlist', function(){
 					//opera is not responding
-					setTimeout(function(){
-						elem.loadNextPlaylistItem();
-					}, 1);
+					if( elem.hasClass('autoload-next') || elem.hasClass('autoplay-next') ){
+						setTimeout(function(){
+							elem.loadNextPlaylistItem();
+						}, 0);
+					}
 				})
 			;
 						

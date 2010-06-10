@@ -103,10 +103,10 @@
 			 $('a.enter-fs').click(function(e){
 	             e.preventDefault();
 	             var media = $(this).closest('div.test-wrapper').find('video, audio');
-				 if(media.attr('supportsFullScreen')){
+				 if(media.supportsFullScreen()){
 				 	media.enterFullScreen();
 				 } else {
-				 	alert('not supported, try right click/doubble-click on video');
+				 	alert('versuche rechts klick');
 				 }
              });
 			 $('a.toggle-loop').click(function(e){
@@ -233,7 +233,7 @@
                 </div>
 				 <div class="remaining-time">
                 </div>
-				
+				<a class="fullscreen">fullscreen</a>
 				<a class="toggle-track" href="#">toggle track on / toggle track off</a>
             </div>
 			<a class="toggle-loop" href="#">toggle loop</a>

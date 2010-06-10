@@ -375,7 +375,7 @@
 			});
 		});
 		$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
-			if (!supportsFullWindow) {
+			if ( !supportsFullWindow && !video.supportsFullScreen() ) {
 				control.addClass('fullscreen-unsupported ui-disabled');
 				return;
 			}
@@ -395,23 +395,25 @@
 				control.addClass('ui-state-default ui-corner-all');
 			}
 			control.bind('ariaclick', function(){
-				if (data.name !== 'nativ' && video.supportsFullScreen()) {
-					video.enterFullScreen();
+				var isFullscreen = video.hasClass('displays-fullscreen');
+				
+				if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
+					return;
 				}
-				else {
-					if (video.hasClass('displays-fullscreen')) {
-						video.exitFullWindow(o.fullscreen);
-					}
-					else {
-						video.enterFullWindow(o.fullscreen);
-					}
+				if ( isFullscreen ) {
+					video.exitFullWindow(o.fullscreen);
+				} else {
+					video.enterFullWindow(o.fullscreen);
 				}
+				
 				return false;
 			});
 			changeState();
 			video.bind('fullwindow', changeState);
 		});
 		
-		$.fn.jmeControl.defaults.fullscreen = {};
+		$.fn.jmeControl.defaults.fullscreen = {
+			tryFullScreen: true
+		};
 	}
 })(jQuery);

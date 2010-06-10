@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.1.0 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.1.1 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -831,7 +831,7 @@
 		fsMethods.exit = 'exitFullScreen';
 	} else {
 		$.each(['webkit', 'moz', 'o', 'ms'], function(i, name){
-			if(name+'EnterFullScreen' in video && video[name+'SupportsFullscreen']){
+			if(name+'EnterFullScreen' in video && name+'SupportsFullscreen' in video){
 				$.support.videoFullscreen = true;
 				fsMethods.enter = name+'EnterFullScreen';
 				fsMethods.exit = name+'ExitFullScreen';

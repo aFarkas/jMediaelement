@@ -36,7 +36,7 @@
 		fsMethods.exit = 'exitFullScreen';
 	} else {
 		$.each(['webkit', 'moz', 'o', 'ms'], function(i, name){
-			if(name+'EnterFullScreen' in video && video[name+'SupportsFullscreen']){
+			if(name+'EnterFullScreen' in video && name+'SupportsFullscreen' in video){
 				$.support.videoFullscreen = true;
 				fsMethods.enter = name+'EnterFullScreen';
 				fsMethods.exit = name+'ExitFullScreen';

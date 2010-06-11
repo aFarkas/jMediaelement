@@ -396,8 +396,9 @@
 	
 	
 	function addWrapperBindings(wrapper, mm, api, o){
+		if(wrapper.data('jmePlayer')){return;}
 		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
-		
+		wrapper.data('jmePlayer', {mediaelement: mm, api: api});
 		if( $.fn.videoOverlay ){
 			wrapper
 				.videoOverlay({
@@ -488,7 +489,7 @@
 					}
 				});
 			});
-			if(elems.api.controlWrapper && elems.api.controlWrapper[0]){
+			if( elems.api.controlWrapper && elems.api.controlWrapper[0] ){
 				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, o);
 			}
 		}

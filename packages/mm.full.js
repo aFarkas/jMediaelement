@@ -55,10 +55,18 @@
 			while(parent && parent !== body){
 				if( $.curCSS(parent, 'display') === 'none' ){
 					$.swap( parent, cssShow, function(){
+						var styles = false;
+						if( $.curCSS(parent, 'display', true) === 'none' ){
+							styles = $.attr(parent, 'style');
+							$.attr(parent, 'style', styles+'; display: block !important;');
+						}
 						ret.height = jElm.height();
 						ret.width = jElm.width();
 						if( !ret.width && !ret.height ){
 							ret = getHiddenDim(jElm, parent);
+						}
+						if( styles !== false ){
+							$.attr(parent, 'style', styles);
 						}
 					} );
 					if( ret.width || ret.height ){
@@ -84,6 +92,7 @@
 			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
 				ret.height = this.height();
 				ret.width = this.width();
+				
 				if( !ret.width && !ret.height ){
 					ret = getHiddenDim(this, this[0]);
 				}
@@ -1808,8 +1817,9 @@
 	
 	
 	function addWrapperBindings(wrapper, mm, api, o){
+		if(wrapper.data('jmePlayer')){return;}
 		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
-		
+		wrapper.data('jmePlayer', {mediaelement: mm, api: api});
 		if( $.fn.videoOverlay ){
 			wrapper
 				.videoOverlay({
@@ -1900,7 +1910,7 @@
 					}
 				});
 			});
-			if(elems.api.controlWrapper && elems.api.controlWrapper[0]){
+			if( elems.api.controlWrapper && elems.api.controlWrapper[0] ){
 				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, o);
 			}
 		}

@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Simple Controls Demo</title>
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
+		<link rel="stylesheet" href="../css/styles.css" />
+		<link rel="stylesheet" href="../css/player-controls.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- ui-components -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+		<!-- END:  ui-components -->
+		<!-- optional for a11y-slider -->
+		<script src="../../utils/a11y-slider.ext.js"></script>
+		<!-- END: for a11y-slider -->
+		<script src="../../packages/mm.full.js"></script>
+		
+		<!-- useractivity -->
+		<script src="../../utils/useractivity.js"></script>
+		
+		<!-- good for rapid development and quick start -->
+		<script src="../../utils/jmeEmbedControls.js"></script>
+		
+		<style>
+			#dialog .media-controls-wrapper {
+				position: absolute;
+				bottom: 0;
+				width: 100%;
+			}
+		</style>
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				
+				
+				
+				$('#tabs').tabs({
+					select: function(event, ui) {
+						//pause all videos
+						$('video').pause();
+						//start current tabvideo
+						$(ui.panel).find('video').play();
+					}
+				});
+				
+				// Dialog			
+				$('#dialog').dialog({
+					autoOpen: false,
+					width: 600,
+					height: 400,
+					minWidth: 360,
+					minHeight: 280,
+					beforeclose: function(e, ui){
+						$('#dialog video').pause();
+					},
+					open: function(){
+						$('#dialog video').play();
+					}
+				});
+				
+				// Dialog Link
+				$('#dialog_link').click(function(){
+					$('#dialog').dialog('open');
+					return false;
+				});
+				
+				$('div.ui-media-player').jmeEmbedControls();
+				
+				$('#dialog div.ui-media-player')
+					//useractive/userinactive event is provided by utils/useractivity.js plugin
+					.bind('useractive', function(){
+						$('div.media-controls', this).stop().animate({opacity: 1});
+					})
+					.bind('userinactive', function(){
+						$('div.media-controls', this).stop().animate({opacity: 0});
+					})
+					.find('div.media-controls')
+					.css('opacity', 0)
+				;
+				
+			});
+		</script>
+		
+	</head>
+	<body>
+		<h1>Demo for jme DOM-API mixed with UI Widgets</h1>
+		<h2>Big Buck Bunny Videos</h2>
+		<div id="tabs">
+			<ul>
+				<li><a href="#tabs-1">ogg and mp4</a></li>
+				<li><a href="#tabs-2">mp4 only</a></li>
+				<li><a href="#tabs-3">with resizeable dialog (mp4 only)</a></li>
+			</ul>
+			<div id="tabs-1">
+				Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+				<div class="ui-media-player">
+					<span class="media-label">video: big buck bunny</span>
+					<video poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
+						<source src="../media/bbb_trailer_mobile.m4v" />
+						<source src="../media/bbb_trailer_400p.ogg" type="video/ogg" />
+						<div class="fallback">
+							<img src="../media/bbb_watchtrailer.gif" alt="" />
+							<div class="fallback-text">
+								<p>Please use a modern browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+								<ul>
+									<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+									<li><a class="source" href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
+								</ul>
+							</div>
+						</div>
+					</video>
+				</div>
+				<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+			</div>
+			<div id="tabs-2">
+				Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.
+				<div class="ui-media-player">
+					<span class="media-label">video: big buck bunny</span>
+					<video poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
+						<source src="../media/bbb_trailer_mobile.m4v" />
+						<div class="fallback">
+							<div class="fallback-text">
+								<p>Please install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+								<ul>
+									<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+								</ul>
+							</div>
+
+						</div>
+					</video>
+				</div>
+
+			</div>
+			<div id="tabs-3">
+				Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.
+				<button id="dialog_link">open dialog</button>
+				<div id="dialog">
+					<div class="ui-media-player" style="width: 100%; height: 100%;">
+						<span class="media-label">video: big buck bunny</span>
+						<video style="width: 100%; height: 100%;" poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
+							<source src="../media/bbb_trailer_mobile.m4v" />
+							<div class="fallback">
+								<div class="fallback-text">
+									<p>Please install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+									<ul>
+										<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+									</ul>
+								</div>
+							</div>
+						</video>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</body>
+</html>

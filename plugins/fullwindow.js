@@ -210,6 +210,7 @@
 								.storeInlineStyle(overlayCSS, 'fsstoredOverlay')
 								.addClass(o.fullscreenClass)
 							;
+							
 						}
 					},
 					fullwindowresize: function(e, evt){

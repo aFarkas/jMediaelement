@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Simple Controls Demo</title>
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
+		<link rel="stylesheet" href="../css/styles.css" />
+		<link rel="stylesheet" href="../css/player-controls.css" />
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- ui-components -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+		<!-- END:  ui-components -->
+		
+		<!-- for a11y-slider -->
+		<script src="../../utils/a11y-slider.ext.js"></script>
+		<!-- END: for a11y-slider -->
+		
+		<script src="../../packages/mm.full.min.js"></script>
+		
+		<script src="../../plugins/playlist.js"></script>
+		
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				$('div.ui-media-player').jmeControl();
+			});
+			
+		</script>
+		
+	</head>
+	<body>
+		<h1>Demo with playlist-plugin and youtube videos</h1>
+		<div class="ui-media-player">
+			<span class="media-label" style="display: none;">video: <span class="media-name">html5 videos from youtube</span></span>
+			<div class="video-box">
+				<video>
+					<div class="fallback">
+						<div class="fallback-text">
+							<p>Please install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+							
+						</div>
+					</div>
+				</video>
+				<div class="media-state"></div>
+			</div>
+			<div class="media-controls ui-widget ui-widget-header ui-corner-all">
+				<a class="play-pause" title="play / pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></a>
+				<span class="current-time player-display" title="current position">00:00</span>
+				<div class="timeline-slider">
+					<span class="handle-label">play position</span>
+					<span class="ui-slider-handle" title="play position"></span>
+					<div class="progressbar"></div>
+				</div>
+				<span class="duration player-display" title="duration">00:00</span>
+				<a class="mute-unmute" title="mute / unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></a>
+				<div class="volume-slider"><span class="handle-label">volume control</span><span class="ui-slider-handle" title="volume control"></span></div>
+			</div>
+			<div class="playlist">
+				<ul>
+					<li>
+						<a class="src" href="http://www.youtube.com/watch?v=siOHh0uzcuY">
+							<img src="http://i4.ytimg.com/vi/siOHh0uzcuY/default.jpg" alt="" />
+							 Introduction to HTML 5
+						</a>
+					</li>
+					<li>
+						<a class="src" href="http://www.youtube.com/watch?v=xIxDJof7xxQ">
+							<img src="http://i1.ytimg.com/vi/xIxDJof7xxQ/default.jpg" alt="" />
+							  HTML 5: Features you want desperately but still can't
+						</a>
+					</li>
+					<li>
+						<a class="src" href="http://www.youtube.com/watch?v=poHqoBKiSeY">
+							<img src="http://i1.ytimg.com/vi/poHqoBKiSeY/default.jpg" alt="" />
+								WebM Open Video Playback in HTML5 - Google I/O 2010
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+	</body>
+</html>

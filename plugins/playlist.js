@@ -1,6 +1,32 @@
 (function($){
 	//helpers for api
 	var split 		= /\s*\|\s*|\s*\,\s*/g,
+		//ToDo: use playlistItemSel instead
+		getItems 	= function(playlist){
+			return $('a.src, [data-srces]', playlist);
+		},
+		getItemProps = function(item){
+			// || $.trim( item.text() )
+			var img 	= $('img', item),
+				props 	= {
+					label: item.attr('data-label') || $.trim( item.text() ),
+					srces: {
+						src: item[0].href
+					},
+					poster: (img[0]) ? img[0].src : item.attr('data-poster')
+				},
+				type
+			;
+			if( props.srces.src ){
+				type = item.attr('type');
+				if( type ){
+					props.srces.type = type;
+				}
+			} else {
+				props.srces = (item.attr('data-srces') || '').split(split);
+			}
+			return props;
+		},
 		getPlayList = function( elem ){
 			var data = $.data(elem, 'mediaElemSupport');
 			if( !data.playlist ){
@@ -10,7 +36,7 @@
 		},
 		loadPrevNext =  function(api, dir){
 			var data = getPlayList(api.element);
-			var items =  $('[data-srces]', data.playlist),
+			var items =  getItems(data.playlist),
 				index = items.index( items.filter('.ui-state-active') ) + dir
 			;
 			if( index >= items.length || index < 0 ){
@@ -26,6 +52,8 @@
 			}
 		}
 	;
+	
+	
 		
 	$.multimediaSupport.fn._extend({
 		playlist: function(list, noAutoplay){
@@ -47,6 +75,7 @@
 			elem
 				.unbind('.playlist')
 				.one('play.playlist', addAutoplay)
+				// ToDo: should delay ended event instead
 				.bind('ended.playlist', function(){
 					//opera is not responding
 					if( elem.hasClass('autoload-next') || elem.hasClass('autoplay-next') ){
@@ -58,7 +87,7 @@
 			;
 						
 			data.playlist
-				.delegate('[data-srces]', 'ariaclick', function(e){
+				.delegate('a.src, [data-srces]', 'ariaclick', function(e){
 					addAutoplay();
 					elem.loadPlaylistItem(this);
 					e.preventDefault();
@@ -70,7 +99,7 @@
 			});
 			// if we have no source, load and play ui-state-active marked or first playlist-item
 			if( !elem.attr('srces').length ){
-				var items 		= $('[data-srces]', data.playlist),
+				var items 		= getItems(data.playlist),
 					activeItem 	= items.filter('.ui-state-active')
 				;
 				if( !activeItem[0] ){
@@ -83,21 +112,22 @@
 			item = $(item);
 			
 			var data = getPlayList(this.element);
-			_items = _items || $('[data-srces]', data.playlist);
+			_items = _items || getItems(data.playlist);
 			
 			var oldItem  = _items
 					.filter('.ui-state-active')
 					.removeClass('ui-state-active'),
 				newItem  = $(this),
-				srces = item.attr('data-srces')
+				itemProps = getItemProps(item)
 			;
-			if(srces){
-				srces = srces.split(split);
+			
+			if(itemProps){
 				item.addClass('ui-state-active');
-				this.loadSrc(srces, item.attr('data-poster'), item.attr('data-label') || $.trim( item.text() ) );
+				this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
 				this._trigger({
 					type: 'playlistitemchange',
 					items: _items, 
+					props: itemProps,
 					currentIndex: _items.index( item ),
 					currentItem: item, 
 					previousItem: oldItem
@@ -116,7 +146,7 @@
 	$.fn.jmeControl.addControl('playlist', function(playlist, element, api, o){
 		
 		element.playlist( playlist, !o.playlist.autoplay );
-		var items = $('[data-srces]', playlist);
+		var items = getItems(playlist);
 		//add themeroller classes
 		if(o.addThemeRoller){
 			playlist.addClass('ui-corner-all  ui-widget-header');

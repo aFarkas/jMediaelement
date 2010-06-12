@@ -56,7 +56,10 @@
 				if( $.curCSS(parent, 'display') === 'none' ){
 					$.swap( parent, cssShow, function(){
 						var styles = false;
+						// if !important is used
 						if( $.curCSS(parent, 'display', true) === 'none' ){
+							//for IE6/7 we need to remove inline-style first
+							parent.style.display = '';
 							styles = $.attr(parent, 'style');
 							$.attr(parent, 'style', styles+'; display: block !important;');
 						}

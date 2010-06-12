@@ -386,18 +386,19 @@
 	};
 	
 	// ff flash refreshbug https://bugzilla.mozilla.org/show_bug.cgi?id=90268 
-	if($.browser.mozilla){
-		$.extend(jwAPI, {
-			isJMEReady: function(){
-				var ret = false;
-				if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
-					this.apiElem.getConfig();
-					ret = true;					
-				}
-				return ret;
+	// opera also has some problems here
+	$.extend(jwAPI, {
+		isJMEReady: function(){
+			var ret = false;
+			if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
+				// seems stupid, but helps :-)
+				( $.browser.mozilla && this.apiElem.getConfig() );
+				ret = true;					
 			}
-		});
-	}
+			return ret;
+		}
+	});
+	
 	
 	$m.add('jwPlayer', 'video', jwAPI);
 	$m.add('jwPlayer', 'audio', jwAPI);

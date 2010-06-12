@@ -84,6 +84,10 @@ div.volume-slider {
 .js-on .player-errors {
 	display: none;
 }
+.video-box {
+	position: relative;
+	width: 100%;
+}
 .media-state {
 	position: absolute;
 	display: none;
@@ -150,13 +154,21 @@ div.volume-slider {
 .playlist ul {
 	list-style: none;
 }
-.playlist .src {
-	display: none;
-}
+
 .playlist li {
 	margin: 2px 0;
 	padding: 2px 5px;
 	cursor: pointer;
+}
+.playlist a.src {
+	overflow: hidden;
+	zoom: 1;
+	display: block;
+}
+.playlist img {
+	float: left;
+	display: block;
+	margin: 1px 4px 1px 0;
 }
 .playlist a:focus,
 .playlist a:active {

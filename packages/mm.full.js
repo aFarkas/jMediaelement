@@ -56,7 +56,10 @@
 				if( $.curCSS(parent, 'display') === 'none' ){
 					$.swap( parent, cssShow, function(){
 						var styles = false;
+						// if !important is used
 						if( $.curCSS(parent, 'display', true) === 'none' ){
+							//for IE6/7 we need to remove inline-style first
+							parent.style.display = '';
 							styles = $.attr(parent, 'style');
 							$.attr(parent, 'style', styles+'; display: block !important;');
 						}
@@ -1162,7 +1165,7 @@
 				return evt.relLoaded;
 			},
 			progressInterval = function(){
-						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100 || api.element.readyState >= 4 ){
+						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100  ){
 							clearTimeout(timer);
 						}
 					},
@@ -2494,18 +2497,19 @@
 	};
 	
 	// ff flash refreshbug https://bugzilla.mozilla.org/show_bug.cgi?id=90268 
-	if($.browser.mozilla){
-		$.extend(jwAPI, {
-			isJMEReady: function(){
-				var ret = false;
-				if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
-					this.apiElem.getConfig();
-					ret = true;					
-				}
-				return ret;
+	// opera also has some problems here
+	$.extend(jwAPI, {
+		isJMEReady: function(){
+			var ret = false;
+			if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
+				// seems stupid, but helps :-)
+				( $.browser.mozilla && this.apiElem.getConfig() );
+				ret = true;					
 			}
-		});
-	}
+			return ret;
+		}
+	});
+	
 	
 	$m.add('jwPlayer', 'video', jwAPI);
 	$m.add('jwPlayer', 'audio', jwAPI);

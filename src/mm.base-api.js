@@ -358,7 +358,7 @@
 				return evt.relLoaded;
 			},
 			progressInterval = function(){
-						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100 || api.element.readyState >= 4 ){
+						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100  ){
 							clearTimeout(timer);
 						}
 					},

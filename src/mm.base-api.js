@@ -368,7 +368,7 @@
 		
 		//iPad does not have a progress event
 		if( api.element.buffered ){
-			$(api.element).bind('play waiting', function(){
+			$(api.element).bind('play waiting loadstart', function(){
 				clearTimeout(timer);
 				if( api.isAPIActive ) {
 					timer = setInterval(progressInterval, 333);
@@ -563,7 +563,8 @@
 			jmeReady: 1,
 			getJMEVisual: 1,
 			jmeReady: 1,
-			isJMEReady: 1
+			isJMEReady: 1,
+			playlist: 1
 		}
 	;
 	$m.registerAPI = function(names){

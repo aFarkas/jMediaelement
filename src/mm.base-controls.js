@@ -47,13 +47,16 @@
 				},
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
 		labelID 		= 0,
+		lastValue 		= 0,
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
 				function changeTimeState(e, ui){
-					if(ui.timeProgress !== undefined && !stopSlide){
+					var time = parseInt( ui.timeProgress, 10 );
+					if(ui.timeProgress !== undefined && !stopSlide && lastValue !== time ){
 						control[sliderMethod]('value', ui.timeProgress);
+						lastValue = time;
 					}
 				}
 				
@@ -70,6 +73,7 @@
 					.bind('timechange', changeTimeState)
 					.bind('mediareset', function(){
 						control[sliderMethod]('value', 0);
+						lastValue = 0;
 						changeDisabledState();
 					})
 					.bind('ended', function(){
@@ -85,6 +89,7 @@
 					.bind('slidestop', function(e, ui){
 						stopSlide = false;
 					})
+					
 					.bind('slide', function(e, ui){
 						if(e.originalEvent && api.apis[api.name].isAPIReady){
 							api.apis[api.name].relCurrentTime(ui.value);
@@ -121,7 +126,6 @@
 				mm
 					.bind('volumelevelchange', changeVolumeUI)
 					.jmeReady(function(){
-						
 						control[sliderMethod]('option', 'disabled', false);
 						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
 					})

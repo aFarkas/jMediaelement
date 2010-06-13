@@ -1175,7 +1175,7 @@
 		
 		//iPad does not have a progress event
 		if( api.element.buffered ){
-			$(api.element).bind('play waiting', function(){
+			$(api.element).bind('play waiting loadstart', function(){
 				clearTimeout(timer);
 				if( api.isAPIActive ) {
 					timer = setInterval(progressInterval, 333);
@@ -1370,7 +1370,8 @@
 			jmeReady: 1,
 			getJMEVisual: 1,
 			jmeReady: 1,
-			isJMEReady: 1
+			isJMEReady: 1,
+			playlist: 1
 		}
 	;
 	$m.registerAPI = function(names){
@@ -1471,13 +1472,16 @@
 				},
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
 		labelID 		= 0,
+		lastValue 		= 0,
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
 				function changeTimeState(e, ui){
-					if(ui.timeProgress !== undefined && !stopSlide){
+					var time = parseInt( ui.timeProgress, 10 );
+					if(ui.timeProgress !== undefined && !stopSlide && lastValue !== time ){
 						control[sliderMethod]('value', ui.timeProgress);
+						lastValue = time;
 					}
 				}
 				
@@ -1494,6 +1498,7 @@
 					.bind('timechange', changeTimeState)
 					.bind('mediareset', function(){
 						control[sliderMethod]('value', 0);
+						lastValue = 0;
 						changeDisabledState();
 					})
 					.bind('ended', function(){
@@ -1509,6 +1514,7 @@
 					.bind('slidestop', function(e, ui){
 						stopSlide = false;
 					})
+					
 					.bind('slide', function(e, ui){
 						if(e.originalEvent && api.apis[api.name].isAPIReady){
 							api.apis[api.name].relCurrentTime(ui.value);
@@ -1545,7 +1551,6 @@
 				mm
 					.bind('volumelevelchange', changeVolumeUI)
 					.jmeReady(function(){
-						
 						control[sliderMethod]('option', 'disabled', false);
 						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
 					})
@@ -2378,9 +2383,11 @@
 		},
 		_mmload: function(src, poster){
 			this._lastLoad = {
-				file: src,
-				image: poster || false
+				file: src
 			};
+			if(poster){
+				this._lastLoad.image = poster;
+			}
 			this._$resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			

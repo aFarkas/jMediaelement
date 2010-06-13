@@ -1,27 +1,32 @@
 (function($){
 	//helpers for api
 	var split 		= /\s*\|\s*|\s*\,\s*/g,
-		//ToDo: use playlistItemSel instead
-		getItems 	= function(playlist){
-			return $('a.src, [data-srces]', playlist);
-		},
+		itemSel 	= 'li',
 		getItemProps = function(item){
-			// || $.trim( item.text() )
 			var img 	= $('img', item),
 				props 	= {
-					label: item.attr('data-label') || $.trim( item.text() ),
-					srces: {
-						src: item[0].href
-					},
+					label: item.attr('data-label'),
+					srces: [],
 					poster: (img[0]) ? img[0].src : item.attr('data-poster')
 				},
-				type
+				srces 	= $('a', item),
+				nameElem
 			;
-			if( props.srces.src ){
-				type = item.attr('type');
-				if( type ){
-					props.srces.type = type;
-				}
+			
+			if(!props.label){
+				nameElem = $('span:first', item);
+				props.label = $.trim( ( ( nameElem[0] ) ? nameElem : item ).text() );
+			}
+			
+			if( srces.length ){
+				$.each(srces, function(i, src){
+					props.srces[i] = {src: this.href};
+					var type = $.attr(src, 'type');
+					if( type ){
+						props.srces[i].type = type;
+					}
+				});
+				
 			} else {
 				props.srces = (item.attr('data-srces') || '').split(split);
 			}
@@ -34,13 +39,12 @@
 			}
 			return data;
 		},
-		loadPrevNext =  function(api, dir){
-			var data = getPlayList(api.element);
-			var items =  getItems(data.playlist),
+		loadPrevNext =  function(api, list, dir, autoplay){
+			var items =  $(itemSel, list),
 				index = items.index( items.filter('.ui-state-active') ) + dir
 			;
 			if( index >= items.length || index < 0 ){
-				if( !data.playlist.hasClass('loop') ){return;}
+				if( !list.hasClass('loop') ){return;}
 				if( index >= items.length ){
 					index = 0;
 				} else {
@@ -48,77 +52,198 @@
 				}
 			}
 			if ( items[index] ) {
-				api.loadPlaylistItem(items[index], items);
+				list.loadPlaylistItem(items[index], items, autoplay);
 			}
+		},
+		createItemString = function(_i, item){
+			if( !$.isArray(item.srces) ){
+				item.srces = [item.srces];
+			}
+			
+			if( typeof item === 'string' ){
+				 item = {src:  item};
+			}
+			
+			var domItem = '<li';
+			if(item.poster){
+				domItem += ' data-poster="'+ item.poster +'"';
+			}
+			
+			if( item.name ){
+				domItem += ' data-label="'+ item.name +'"><span>'+item.name+'</span>';
+			}
+			
+			for(var i = 0, len = item.srces.length; i < len; i++){
+				if(typeof item.srces[i] === 'string'){
+					item.srces[i] = {src: item.srces[i]};
+				}
+				domItem += ' <a href="'+item.srces[i].src +'"';
+				
+				if( item.srces[i].type ){
+					domItem += ' type="'+ item.srces[i].type +'"';
+				}
+				
+				domItem += '>'+item.srces[i].src +'</a>';
+			}
+			
+			domItem += '</li>';
+			return domItem;
+		},
+		createJDOMList = function(list){
+			if(!list.length){return $([]);}
+			//getItemProps,
+			var domList = '<ul class="playlist">';
+			for(var i = 0, len = list.length; i < len; i++){
+				domList += createItemString(i, list[i]);
+			}
+			
+			domList += '</ul>';
+			
+			return $(domList);
+			
 		}
 	;
 	
-	
+	$.each(['activatePlaylist', 'loadPlaylistItem', 'loadNextPlaylistItem', 'loadPreviousPlaylistItem'], function(i, name){
+		var _name = '_'+ name;
+
+		$.fn[name] = function(){
+			var args = arguments;
+			return this.each(function(){
+				var jme 	= $.data(this, 'playlistFor'),
+					api
+				;
+				if( jme ){
+					args = Array.prototype.slice.call(args, 0);
+					args.unshift(this);
+					api = jme.getJMEAPI();
+					if( name !== 'activatePlaylist' ){
+						jme.activatePlaylist( this );
+					}
+				} else {
+					api = $(this).getJMEAPI();
+				}
+
+				if( api ){
+					api[_name].apply(api, args);
+				}
+			});
+		};
+	});
 		
 	$.multimediaSupport.fn._extend({
-		playlist: function(list, noAutoplay){
-			var elem 		= $(this.element),
-				data 		= getPlayList(this.element),
-				addAutoplay = function(){
-					if( !setAutoplay && ( !noAutoplay || elem.hasClass('autoplay-next') ) ){
-						elem.attr('autoplay', true);
-						setAutoplay = true;
-					}
-				},
-				setAutoplay
-			;
-			if( !list ){
-				return data.playlist;
-			}
-			data.playlist.remove();
+		_activatePlaylist: function(list){
+			list = $(list);
+			var data = getPlayList(this.element);
+			if( data.playlist[0] === list[0] || list.hasClass('active-playlist')){return;}
+			var oldList = data.playlist.removeClass('active-playlist');
+			$(itemSel, data.playlist).removeClass('ui-state-active');
+			if(!list[0]){
+				list = data.playlist;
+			}			
 			data.playlist = list;
-			elem
-				.unbind('.playlist')
-				.one('play.playlist', addAutoplay)
-				// ToDo: should delay ended event instead
-				.bind('ended.playlist', function(){
-					//opera is not responding
-					if( elem.hasClass('autoload-next') || elem.hasClass('autoplay-next') ){
-						setTimeout(function(){
-							elem.loadNextPlaylistItem();
-						}, 0);
-					}
-				})
+			list.addClass('active-playlist');
+			
+			// if we have no source, load and play ui-state-active marked or first playlist-item
+			var items 		= $(itemSel, list),
+				activeItem 	= items.filter('.ui-state-active')
 			;
-						
-			data.playlist
-				.delegate('a.src, [data-srces]', 'ariaclick', function(e){
-					addAutoplay();
-					elem.loadPlaylistItem(this);
-					e.preventDefault();
-				})
-			;
+			
+			if( !activeItem[0] ){
+				activeItem = items;
+			}
+			
+			$(this.element).pause();
+			this._loadPlaylistItem(list, activeItem[0], items);
+			
 			this._trigger({
 				type: 'playlistchange',
-				playlist: data.playlist
+				playlist: list,
+				oldPlaylist: oldList
 			});
-			// if we have no source, load and play ui-state-active marked or first playlist-item
-			if( !elem.attr('srces').length ){
-				var items 		= getItems(data.playlist),
-					activeItem 	= items.filter('.ui-state-active')
-				;
-				if( !activeItem[0] ){
-					activeItem = items;
-				}
-				this.loadPlaylistItem(activeItem[0], items);
-			}
 		},
-		loadPlaylistItem: function(item, _items){
+		playlist: function(list, _addThemeRoller, activate){
+			var elem 		= $(this.element);
+			if( !list ){
+				return getPlayList(this.element).playlist;
+			}
+			
+			if( $.isArray(list) ){
+				list = createJDOMList( list );
+			} else {
+				list = $( list );
+			}
+			
+			if(activate || !$.attr(this.element, 'srces').length ){
+				this._activatePlaylist(list);
+			}
+			
+			if( !list.data('playlistFor') ) {
+				var items = $(itemSel, list);
+				elem
+					// ToDo: should delay ended event instead
+					.bind('ended.playlist', function(){
+						var autoplay = list.hasClass('autoplay-next');
+						if( list.hasClass('active-playlist') && ( autoplay || list.hasClass('autoload-next') ) ){
+							//opera is not responding
+							setTimeout(function(){
+								elem.loadNextPlaylistItem(list, autoplay);
+							}, 0);
+						}
+					})
+				;
+							
+				list
+					.delegate(itemSel, 'ariaclick', function(e){
+						list.loadPlaylistItem(this, undefined, true);
+						e.preventDefault();
+					})
+				;
+				
+				
+				if(_addThemeRoller){
+					list.addClass('ui-corner-all  ui-widget-header');
+					items.addClass('ui-state-default ui-widget-content ui-corner-all');
+				}
+				
+				if( !items.attr('role') ){
+					items
+						.attr({
+							role: 'button',
+							tabindex: '0'
+						})
+						.find('a')
+						.attr({
+							role: 'presentation',
+							tabindex: '-1'
+						})
+					;
+				}
+				
+				
+				list.data('playlistFor', elem);
+				
+				this._trigger({
+					type: 'playlistcreated',
+					playlist: list
+				});
+			}
+			
+			
+			return list;
+		},
+		_loadPlaylistItem: function(list, item, _items, _autoplay){
+			if(!_items){
+				_items = $(itemSel, list);
+			}
+			_items = $(_items);
 			item = $(item);
-			
-			var data = getPlayList(this.element);
-			_items = _items || getItems(data.playlist);
-			
+
 			var oldItem  = _items
 					.filter('.ui-state-active')
 					.removeClass('ui-state-active'),
-				newItem  = $(this),
-				itemProps = getItemProps(item)
+				itemProps = getItemProps(item),
+				elem 	= $(this.element)
 			;
 			
 			if(itemProps){
@@ -132,31 +257,25 @@
 					currentItem: item, 
 					previousItem: oldItem
 				});
+				if( _autoplay ){
+					setTimeout(function(){
+						elem.play();
+					}, 0);
+				}
+						
 			}
 		},
-		loadNextPlaylistItem: function(){
-			loadPrevNext(this, 1);
+		_loadNextPlaylistItem: function(list, autoplay){
+			loadPrevNext(this, list, 1, autoplay);
 		},
-		loadPreviousPlaylistItem: function(){
-			loadPrevNext(this, -1);
+		_loadPreviousPlaylistItem: function(list, autoplay){
+			loadPrevNext(this, list, -1, autoplay);
 		}
 	});
 	
-	$.fn.jmeControl.defaults.playlist = {autoplay: true};
+	$.fn.jmeControl.defaults.playlist = {};
 	$.fn.jmeControl.addControl('playlist', function(playlist, element, api, o){
 		
-		element.playlist( playlist, !o.playlist.autoplay );
-		var items = getItems(playlist);
-		//add themeroller classes
-		if(o.addThemeRoller){
-			playlist.addClass('ui-corner-all  ui-widget-header');
-			items.addClass('ui-state-default ui-widget-content ui-corner-all');
-		}
-		if( items.attr('tabindex') === undefined && !items.attr('role') ){
-			items.attr({
-				role: 'button',
-				tabindex: '0'
-			});
-		}
+		element.playlist( playlist, o.addThemeRoller, o.playlist.activate );
 	});
 })(jQuery);

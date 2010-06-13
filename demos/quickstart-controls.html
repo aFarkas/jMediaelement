@@ -25,7 +25,7 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-				$('div.ui-media-player').jmeEmbedControls();
+				$('div.media-player').jmeEmbedControls();
 			});
 		</script>
 		
@@ -34,7 +34,7 @@
 		<h1>Demo for jmeEmbedControls</h1>
 		
 		<h2>Videoplayer</h2>
-		<div class="ui-media-player">
+		<div class="media-player">
 			<span class="media-label">video: big buck bunny</span>
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" preload="none">
 				<source src="media/bbb_trailer_mobile.m4v" />
@@ -45,7 +45,7 @@
 		<hr />
 		<h2>Audioplayer</h2>
 		
-		<div class="ui-media-player">
+		<div class="media-player">
 			<!-- class for labelling a player good for a11y -->
 			<span class="media-label">audioplayer</span>
 			
@@ -78,13 +78,13 @@
 		<p>jmeEmbedControls makes your HTML5 media elements cross browser and will append some Control-Elements inside of the wrapper element.</p>
 <code>
 $(function(){
-	$('div.ui-media-player').jmeEmbedControls();
+	$('div.media-player').jmeEmbedControls();
 });
 </code>
 		<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player:</p>
 <code>
 $(function(){
-	$('div.ui-media-player').jmeEmbedControls({
+	$('div.media-player').jmeEmbedControls({
 		embed: {
 			jwPlayer: {
 				path: 'path-to/player.swf'
@@ -98,7 +98,7 @@ $(function(){
 <p>The uitility 'jmeEmbedControls' will append some of these controls. Note, that you can change them/this file for your needs.</p>
 <p>You find a full list of control classes in the <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-documentation</a>.</p>
 <code>
-&lt;div class="ui-media-player"&gt;
+&lt;div class="media-player"&gt;
 	&amp;lt;video poster="media/bbb_watchtrailer.gif" controls="controls""&amp;gt;
 		&amp;lt;source src="media/bbb_trailer_mobile.m4v" /&amp;gt;
 		&amp;lt;source src="media/bbb_trailer_400p.ogg" /&amp;gt;

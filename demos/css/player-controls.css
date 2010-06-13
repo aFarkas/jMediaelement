@@ -4,7 +4,7 @@ video {
 	height: 240px;
 }
 
-.ui-media-player {
+.media-player {
 	position: relative;
 	width: 432px;
 }
@@ -160,7 +160,7 @@ div.volume-slider {
 	padding: 2px 5px;
 	cursor: pointer;
 }
-.playlist a.src {
+.playlist a {
 	overflow: hidden;
 	zoom: 1;
 	display: block;

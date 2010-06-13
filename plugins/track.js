@@ -1,5 +1,16 @@
-/*
- * 
+/**
+ * Simple Caption Plugin for jme 
+ * @version 1.0
+ *
+ * http://protofunc.com/jme
+ * http://github.com/aFarkas/jMediaelement
+ *
+ * -------------------
+ *  Uses a modified Version of Silvia Pfeifers srt-parser
+ *	http://www.annodex.net/~silvia/itext/
+ * -------------------
+ *
+ * @description	
  * 
  * HTML:
  * <a class="track" href="srtfile.srt" lang="en" data-enabled="enabled" data-sanitize="sanitize" data-role="textaudiodesc">name</a>

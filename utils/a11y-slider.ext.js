@@ -22,23 +22,32 @@
 		},
 		widgetEventPrefix: "slide",
 		_create: function(){
-			sup._create.apply(this, arguments);
 			var o 		= this.options,
 				that 	= this
 			;
 			
-			this.element.attr('role', 'application');
-						
+			this.element
+				.attr('role', 'application')
+				.bind('slidechange', $.proxy(this, '_updateA11yValues') )
+			;
+			
+			sup._create.apply(this, arguments);
+								
 			this.handles
 				.removeAttr('href')
 				.attr({
 					tabindex: '0',
-					role: 'slider'
+					role: 'slider',
+					'aria-valuemin': this._valueMax(),
+					'aria-valuemax': this._valueMin()
 				})
 				.css({
 					display: inline,
 					minHeight: min,
 					minWidth: min
+				})
+				.each(function(i){
+					that._updateA11yValues(i, {value: that.values(i), handle: this});
 				})
 			;
 			$('.handle-label', this.element)
@@ -56,7 +65,7 @@
 					;
 				})
 			;
-			this._updateA11yValues();
+			//this._updateA11yValues();
 		},
 		_setOption: function( key, value ) {
 			sup._setOption.apply(this, arguments);
@@ -70,49 +79,40 @@
 			}
 			return this;
 		},
-		_slide: function(e, index){
-			var ret = sup._slide.apply(this, arguments);
-			this._updateA11yValues(index);
-			
-			return ret;
-		},
-		_updateA11yValues: function(index){
+		_updateA11yValues: function(index, ui){
 			var that 	= this,
-				o 		= this.options,
-				limits 	= {
-					max: this._valueMax(),
-					min: this._valueMin()
-				}
+				o 		= this.options
 			;
-			function updateHandle(i){
-				var handle 		= $(this),
-					now 		= (o.values && o.values.length) ? that._values(i) : that.value(),
-					textValue
-				;
-				if(o.roundValue && isFinite(now)){
-					now = Math.round(now * 100) / 100;
-				}
-				if($.isFunction(o.textValue)){
-					textValue = o.textValue(now, i, handle);
-				} else {
-					textValue = $.isArray(o.textValue) ? o.textValue[i] : o.textValue;
-					textValue = textValue.replace('{value}', now);
-				}
-				
-				handle
-					.attr({
-						'aria-valuenow': ($.support.valueText) ? now : textValue,
-						'aria-valuetext': textValue,
-						'aria-valuemin': limits.max,
-						'aria-valuemax': limits.min
-					})
-				;
+			
+			if(!ui){
+				ui = {
+					handle: this.handles.get(index),
+					value: this.values(index)
+				};
 			}
-			if(isFinite(index)){
-				this.handles.filter(':eq('+ index +')').each(updateHandle);
+
+			var handle 		= $(ui.handle),
+				now 		= ui.value,
+				textValue
+			;
+			if(o.roundValue && isFinite(now)){
+				now = Math.round(now * 100) / 100;
+			}
+			if($.isFunction(o.textValue)){
+				textValue = o.textValue(now, i, handle);
 			} else {
-				this.handles.each(updateHandle);	
+				textValue = $.isArray(o.textValue) ? o.textValue[i] : o.textValue;
+				textValue = textValue.replace('{value}', now);
 			}
+			
+			handle
+				.attr({
+					'aria-valuenow': ($.support.valueText) ? now : textValue,
+					'aria-valuetext': textValue
+				})
+			;
+			
+			
 			
 		}
 	});

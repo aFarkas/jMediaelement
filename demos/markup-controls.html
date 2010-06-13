@@ -22,7 +22,7 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){	
-				$('div.ui-media-player').jmeControl();
+				$('div.media-player').jmeControl();
 			});
 			
 		</script>
@@ -33,7 +33,7 @@
 		
 		<h2>Videoplayer</h2>
 		
-		<div class="ui-media-player">
+		<div class="media-player">
 			<!-- class for labelling a player good for a11y -->
 			<span class="media-label">video: big buck bunny</span>
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" preload="none">
@@ -60,7 +60,7 @@
 		<hr />
 		<h2>Audioplayer</h2>
 		
-		<div class="ui-media-player">
+		<div class="media-player">
 			<!-- class for labelling a player good for a11y -->
 			<span class="media-label">audioplayer</span>
 			
@@ -100,13 +100,13 @@
 		<p>jmeControl makes your  HTML5 media elements cross browser and enables all Control-Elements inside of the wrapper element.</p>
 <code>
 $(function(){
-	$('div.ui-media-player').jmeControl();
+	$('div.media-player').jmeControl();
 });
 </code>
 		<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player:</p>
 <code>
 $(function(){
-	$('div.ui-media-player').jmeControl({
+	$('div.media-player').jmeControl({
 		embed: {
 			jwPlayer: {
 				path: 'path-to/player.swf'
@@ -119,7 +119,7 @@ $(function(){
 <p>jme uses a Markup-API to enable custom stylable controls, by using predefined HTML-Classes (i.e. play-pause for a play-pause Toggle-button or current-time for a current-time display).</p>
 <p>You find a full list of control classes in the <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-documentation</a>.</p>
 <code>
-&lt;div class="ui-media-player"&gt;
+&lt;div class="media-player"&gt;
 	&amp;lt;video poster="media/bbb_watchtrailer.gif" controls="controls""&amp;gt;
 		&amp;lt;source src="media/bbb_trailer_mobile.m4v" /&amp;gt;
 		&amp;lt;source src="media/bbb_trailer_400p.ogg" /&amp;gt;

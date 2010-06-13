@@ -267,9 +267,11 @@
 		},
 		_mmload: function(src, poster){
 			this._lastLoad = {
-				file: src,
-				image: poster || false
+				file: src
 			};
+			if(poster){
+				this._lastLoad.image = poster;
+			}
 			this._$resetStates();
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			

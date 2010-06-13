@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.1.1 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.1.1 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1473,16 +1473,14 @@
 				},
 		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
 		labelID 		= 0,
-		lastValue 		= 0,
 		controls 		= {
 			'timeline-slider': function(control, mm, api, o){
 				var stopSlide = false;
 				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
 				function changeTimeState(e, ui){
 					var time = parseInt( ui.timeProgress, 10 );
-					if(ui.timeProgress !== undefined && !stopSlide && lastValue !== time ){
+					if(ui.timeProgress !== undefined && !stopSlide ){
 						control[sliderMethod]('value', ui.timeProgress);
-						lastValue = time;
 					}
 				}
 				
@@ -1499,7 +1497,6 @@
 					.bind('timechange', changeTimeState)
 					.bind('mediareset', function(){
 						control[sliderMethod]('value', 0);
-						lastValue = 0;
 						changeDisabledState();
 					})
 					.bind('ended', function(){

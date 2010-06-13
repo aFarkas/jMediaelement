@@ -79,15 +79,15 @@
 			}
 			return this;
 		},
-		_updateA11yValues: function(index, ui){
+		_updateA11yValues: function(i, ui){
 			var that 	= this,
 				o 		= this.options
 			;
 			
 			if(!ui){
 				ui = {
-					handle: this.handles.get(index),
-					value: this.values(index)
+					handle: this.handles.get(i),
+					value: this.values(i)
 				};
 			}
 

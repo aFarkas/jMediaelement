@@ -10,7 +10,7 @@ I. File-Structur
 Main js files and swf fallback player, simply copy all of them into
 your JS-directory. (You will only need to include one js-file.)
 2. demos
-Use the as a starting point
+Use the demos as a starting point
 3. utils
 uitils like an mouseactivity event (for UI behavior) or the
 quick-starter utility 'jmeEmbedControls'.
@@ -28,7 +28,15 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
-Release 1.1
+Release 1.1.1
+
+Changed from 1.1 to 1.1.1:
+	- serious issue with a11y-slider
+	- playlist rewrite
+	- native fullscreen in safari5 
+	- fixed opera ended bug
+	- Inititializing a media in a display: none !important; area fixed
+
 Changed from 1.0.x to 1.1:
 
 	Features with slightly API Changes (less configuration)

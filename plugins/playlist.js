@@ -153,7 +153,6 @@
 				activeItem = items;
 			}
 			
-			$(this.element).pause();
 			this._loadPlaylistItem(list, activeItem[0], items);
 			
 			this._trigger({

@@ -164,7 +164,7 @@
 		},
 		jmeReady: function(fn, n){
 			var e = {type: 'mmAPIReady'};
-			if(this.isJMEReady()){
+			if( this.isJMEReady() && (this.name !== 'nativ' || $.support.mediaElements) ){
 				fn.call(this.element, e, e);
 			} else {
 				n = n || 'jmediaelement';
@@ -331,7 +331,8 @@
 				var evt = {type: 'progresschange'}, 
 					dur, bufRange
 				;
-				//current implementation -> chrome 5
+				
+				//current implementation -> chrome 5/safari 5
 				if(this.buffered && this.buffered.length){
 					
 					dur = this.duration;
@@ -341,7 +342,7 @@
 						evt.relLoaded = bufRange.end / dur * 100;
 					}
 					api._trigger(evt);
-				//ff + safari implementation implementation
+				//ff + safari4 implementation
 				} else if(e.originalEvent && 'lengthComputable' in e.originalEvent && e.originalEvent.loaded){
 					if(e.originalEvent.lengthComputable && e.originalEvent.total){
 						evt.relStart = 0;
@@ -349,7 +350,7 @@
 					}
 					api._trigger(evt);
 				} 
-				
+				//opera fallback
 				if( !evt.relLoaded && this.readyState === 4 ){
 					evt.relStart = 0;
 					evt.relLoaded = 100;
@@ -358,24 +359,24 @@
 				return evt.relLoaded;
 			},
 			progressInterval = function(){
-						if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100  ){
-							clearTimeout(timer);
-						}
-					},
+				if( calculateProgress.call(api.element, { type: 'ipadprogress' }) >= 100 || api.element.readyState === 1  ){
+					clearInterval(timer);
+				}
+			},
 			timer
 		;
 		$(api.element).bind('progress load', calculateProgress);
 		
-		//iPad does not have a progress event
-		if( api.element.buffered ){
+		//iPad has no progress event
+		if ('buffered' in api.element) {
 			$(api.element).bind('play waiting loadstart', function(){
-				clearTimeout(timer);
-				if( api.isAPIActive ) {
+				clearInterval(timer);
+				if (api.isAPIActive) {
 					timer = setInterval(progressInterval, 333);
 					progressInterval();
 				}
 			});
-		} 
+		}
 	};
 	
 	//add API for native MM-Support

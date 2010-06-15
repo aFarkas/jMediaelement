@@ -565,7 +565,8 @@
 			getJMEVisual: 1,
 			jmeReady: 1,
 			isJMEReady: 1,
-			playlist: 1
+			playlist: 1,
+			getMediaAPI: 1
 		}
 	;
 	$m.registerAPI = function(names){

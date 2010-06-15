@@ -1,7 +1,7 @@
 (function($){
 	//helpers for api
 	var split 		= /\s*\|\s*|\s*\,\s*/g,
-		itemSel 	= 'li',
+		itemSel 	= 'li[data-srces], li.play-item',
 		getItemProps = function(item){
 			var img 	= $('img', item),
 				props 	= {
@@ -64,7 +64,7 @@
 				 item = {src:  item};
 			}
 			
-			var domItem = '<li';
+			var domItem = '<li class="play-item"';
 			if(item.poster){
 				domItem += ' data-poster="'+ item.poster +'"';
 			}
@@ -227,8 +227,6 @@
 					playlist: list
 				});
 			}
-			
-			
 			return list;
 		},
 		_loadPlaylistItem: function(list, item, _items, _autoplay){
@@ -238,30 +236,32 @@
 			_items = $(_items);
 			item = $(item);
 
-			var oldItem  = _items
+			var oldItem  	= _items
 					.filter('.ui-state-active')
 					.removeClass('ui-state-active'),
-				itemProps = getItemProps(item),
-				elem 	= $(this.element)
+				itemProps 	= getItemProps(item),
+				curIndex 	= _items.index( item ),
+				elem 		= $(this.element),
+				available 	= {next: true, prev: true}
 			;
 			
-			if(itemProps){
-				item.addClass('ui-state-active');
-				this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
-				this._trigger({
-					type: 'playlistitemchange',
-					items: _items, 
-					props: itemProps,
-					currentIndex: _items.index( item ),
-					currentItem: item, 
-					previousItem: oldItem
-				});
-				if( _autoplay ){
-					setTimeout(function(){
-						elem.play();
-					}, 0);
-				}
+			item.addClass('ui-state-active');
+			
+			this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
+			
+			this._trigger({
+				type: 'playlistitemchange',
+				items: _items, 
+				props: itemProps,
+				currentIndex: curIndex,
+				currentItem: item, 
+				previousItem: oldItem
+			});
 						
+			if( _autoplay ){
+				setTimeout(function(){
+					elem.play();
+				}, 0);
 			}
 		},
 		_loadNextPlaylistItem: function(list, autoplay){
@@ -274,7 +274,6 @@
 	
 	$.fn.jmeControl.defaults.playlist = {};
 	$.fn.jmeControl.addControl('playlist', function(playlist, element, api, o){
-		
 		element.playlist( playlist, o.addThemeRoller, o.playlist.activate );
 	});
 })(jQuery);

@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.1.1 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.1.2 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1372,7 +1372,8 @@
 			getJMEVisual: 1,
 			jmeReady: 1,
 			isJMEReady: 1,
-			playlist: 1
+			playlist: 1,
+			getMediaAPI: 1
 		}
 	;
 	$m.registerAPI = function(names){

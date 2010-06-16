@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Audioplayer Demo</title>
+        <link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
+        <link rel="stylesheet" href="../css/styles.css" />
+        <link rel="stylesheet" href="../css/player-controls.css" />
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js">
+        </script>
+        <!-- ui-components -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.js">
+        </script>
+        <!-- END:  ui-components -->
+        <script src="../../packages/mm.full.js">
+        </script>
+        <!-- adds audio-api to ui-widgets -->
+        <script src="../../plugins/ui.sounds.js">
+        </script>
+		
+        <script>
+            $('html').addClass('js-on');
+            $(function(){
+                // Accordion
+				$("#accordion")
+					.accordion({ 
+						header: "h3",
+						sound: {
+							changestart: '../media/sound14.mp3'
+						}
+					})
+				;
+
+            });
+            
+        </script>
+    </head>
+    <body>
+    <h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
+    <div id="accordion">
+		<div>
+			<h3><a href="#">First</a></h3>
+
+			<div>
+				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
+				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
+			</div>
+		</div>
+		<div>
+			<h3><a href="#">Second</a></h3>
+			<div>
+				<p>Phasellus mattis tincidunt nibh.</p>
+				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
+			</div>
+		</div>
+		<div>
+
+			<h3><a href="#">Third</a></h3>
+			<div>
+				<p>Nam dui erat, auctor a, dignissim quis.</p>
+				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

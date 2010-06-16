@@ -736,6 +736,16 @@
 			
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
+			
+			//remove swf fallback
+			
+			$('object, embed', this)
+				.each(function(){
+					$('> *:not(param, embed, object)', this).appendTo(elem);
+				})
+				.remove()
+			;
+			
 			$(this).trigger('jmeBeforeEmbed', {
 					options: opts,
 					nodeName: elemName

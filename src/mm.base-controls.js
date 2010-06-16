@@ -382,6 +382,7 @@
 		
 		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
 		ret.api = ret.mm.getJMEAPI(true) || ret.mm.jmeEmbed(o.embed).getJMEAPI(true);
+		if(!ret.api){return ret;}
 		if(jElm.is(o.controlSel)){
 			ret.controls = jElm;
 		}

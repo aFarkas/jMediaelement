@@ -12,8 +12,9 @@ your JS-directory. (You will only need to include one js-file.)
 2. demos
 Use the demos as a starting point
 3. utils
-uitils like an mouseactivity event (for UI behavior) or the
-quick-starter utility 'jmeEmbedControls'.
+uitils like an mouseactivity event (for UI behavior), the
+quick-starter utility 'jmeEmbedControls' and a jme-debug helper which 
+logs some usefull information, if you have troubles to get started.
 4. plugins
 API-Plugins like fullwindow/fullscreen, captions...
 
@@ -35,14 +36,14 @@ Changed from 1.1 to 1.1.1:
 	- playlist rewrite
 	- native fullscreen in safari5 
 	- fixed opera ended bug
-	- Inititializing a media in a display: none !important; area fixed
+	- Initiializing a media in a display: none !important; area fixed
 
 Changed from 1.0.x to 1.1:
 
 	Features with slightly API Changes (less configuration)
 	-----------------------------------------------------
-	All Usability - Cahnges are also API - Changes in most cases
-	You on't have to change anything, except if you use the 
+	All Usability - Changes are also API - Changes in most cases
+	you won't have to change anything, except if you used the 
 	fullwindow-plugin you have to make small tweaks to your CSS.
 	
 	- fullscreen plugin (usability): changed how we position the
@@ -61,7 +62,7 @@ Changed from 1.0.x to 1.1:
 	- Initializing a media element in a hidden area (display: none)
 	  calculates correct dimensions
 	- Workaround for Firefox doesn't stop loading on/with
-	  misconfigured Servers/Firewalls
+	  misconfigured servers/firewalls
 	
 	Features
 	-----------------------------------------------------

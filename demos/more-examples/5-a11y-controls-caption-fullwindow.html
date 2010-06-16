@@ -78,24 +78,42 @@
 	</head>
 	<body>
 		<h1>Demo with captioning and title-attributes</h1>
-		 <p>Demo uses fullwindow-plugin, captioning-plugin, a fallback-message and title-attributes on each control.</p>
+		 <p>Demo uses fullwindow-plugin, captioning-plugin, fallback-flash, a fallback-message and title-attributes on each control.</p>
 		<div class="media-player">
 			<span class="media-label" style="display: none;">video: Big Buck Bunny</span>
 			
 			<video poster="../media/bbb_watchtrailer.gif" controls="controls">
 				<source src="../media/bbb_trailer_mobile.m4v" type="video/mp4" />
 				<source src="../media/bbb_trailer_400p.ogg" type="video/ogg" />
-				<a class="track" href="test.srt" lang="de" data-enabled="enabled">Srt file</a>
-				<div class="fallback">
-					<img src="../media/bbb_watchtrailer.gif" alt="" />
-					<div class="fallback-text">
-						<p>Please use a modern browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
-						<ul>
-							<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
-							<li><a class="source" href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
-						</ul>
-					</div>
-				</div>
+				
+				<!-- optional extra flash-fallback -->
+				<object id="flash-msie-video" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="430" height="280">
+					<param name="movie" value="../../packages/player.swf" />
+					<!--[if !IE]>-->
+					<object id="flash-w3c-video" type="application/x-shockwave-flash" data="../../packages/player.swf" width="430" height="280">
+					<!--<![endif]-->
+						<param name="allowfullscreen" value="true">
+						<param name="flashvars" value="file=../demos/media/bbb_trailer_mobile.m4v&amp;&amp;image=../media/bbb_watchtrailer.gif">
+						
+						<!-- optional extra html-fallback -->
+						<div class="fallback">
+							<img src="../media/bbb_watchtrailer.gif" alt="" />
+							<div class="fallback-text">
+								<p>Please use a modern browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+								<ul>
+									<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+									<li><a class="source" href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
+									<li><a class="track" href="test.srt" lang="de" data-enabled="enabled">Srt file</a></li>
+								</ul>
+							</div>
+						</div>
+						<!-- END: optional extra html-fallback -->
+						
+					<!--[if !IE]>-->
+					</object>
+					<!--<![endif]-->
+				</object>
+				<!-- END: optional extra flash-fallback -->
 			</video>
 			<div class="media-state"></div>
 			<div class="media-controls ui-widget ui-widget-header ui-corner-all">

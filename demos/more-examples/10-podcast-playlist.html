@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Audioplayer Demo</title>
+        <link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
+        <link rel="stylesheet" href="../css/styles.css" />
+        <link rel="stylesheet" href="../css/player-controls.css" />
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js">
+        </script>
+        <!-- ui-components -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.js">
+        </script>
+        <!-- END:  ui-components --><!-- optional for a11y-slider -->
+        <script src="../../utils/a11y-slider.ext.js">
+        </script>
+        <!-- END: for a11y-slider -->
+        <script src="../../packages/mm.full.js">
+        </script>
+        <!-- adds playlist markup- and dom-api -->
+        <script src="../../plugins/playlist.js">
+        </script>
+		<style>
+			.media-player {
+				width: auto;
+			}
+		</style>
+        <script>
+            $('html').addClass('js-on');
+            $(function(){
+                var addTab = (function(){
+                    var tabID = 1;
+                    return function(url){
+						tabID++;
+						var curTabID = tabID;
+						url = 'http://query.yahooapis.com/v1/public/yql?q=select%20channel%20from%20xml%20where%20url%3D%22'+ encodeURIComponent(url) +'%22&format=json&diagnostics=true&callback=cbfunc'+curTabID;
+                        $.ajax({
+                            url: url,
+                            dataType: 'jsonp',
+                            jsonpCallback: 'cbfunc'+curTabID,
+                            success: function(data){
+                                data = data.query;
+                                if (!data.results || !data.results.rss || !data.results.rss.channel || !data.results.rss.channel.item.length) {
+                                    alert("can't read format");
+                                    return;
+                                }
+                                var playlist = [];
+                                $.each(data.results.rss.channel.item, function(i, item){
+									if(!item.title || !item.enclosure || !item.enclosure.url){return;}
+                                    playlist.push({
+                                        name: item.title,
+										srces: {
+											src: item.enclosure.url,
+                                        	type: item.enclosure.type
+										}
+                                        
+                                    });
+                                });
+                                if(!playlist.length){
+									alert("no playlist items found/can't read format?");
+									return;
+								}
+                                var id 		= '#panel-' + curTabID;
+                                $('#tabs').tabs("add", id, data.results.rss.channel.title);
+								
+                                $(id).append( $('audio').playlist(playlist) );
+                            }
+                        });
+                    };
+                })();
+				
+				$('div.media-player').jmeControl();
+                $('#tabs').append('<ul />').tabs({
+					show: function(e, ui){
+						//$('ul.playlist', ui.panel).activatePlaylist();
+					}
+				});
+               
+                addTab('http://feeds.feedburner.com/jQueryPodcast?format=xml');
+				
+				$('button.itunes-feed').click(function(){
+					var url = prompt("Please enter a URL to your itunes feed", "http://feeds.feedburner.com/yayQuery_audio");
+					if(url){
+						addTab(url);
+					}
+				});
+            });
+            
+        </script>
+    </head>
+    <body>
+    <h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
+    <div class="media-player">
+    	<button class="itunes-feed">add iTunes feed</button>
+		
+        <span class="media-label">audioplayer <span class="media-name"></span></span>
+        <div class="player-errors ui-state-error">
+            Turn on your JavaScript
+        </div>
+        <audio>
+        </audio>
+        <div class="media-controls">
+            <a class="play-pause"><span class="ui-icon"></span><span class="button-text">play / pause</span></a>
+            <span class="current-time player-display">00:00</span>
+            <div class="timeline-slider">
+                <span class="handle-label">play position</span>
+                <div class="progressbar">
+                </div>
+            </div>
+            <span class="duration player-display">00:00</span>
+            <a class="mute-unmute"><span class="ui-icon"></span><span class="button-text">mute / unmute</span></a>
+            <div class="volume-slider">
+                <span class="handle-label">volume control</span>
+            </div>
+        </div>
+        <div id="tabs">
+            
+        </div>
+    </div>
+    </div>
+</body>
+</html>

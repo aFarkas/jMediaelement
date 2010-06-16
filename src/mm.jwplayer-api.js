@@ -12,6 +12,7 @@
 	;
 	
 	function getAPI(id){
+		if(!id){return;}
 		id = id.replace(rep, '');
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}

@@ -2089,11 +2089,15 @@
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
-					params 		= $.extend({movie: opts.path}, opts.params)
+					params 		= $.extend({movie: opts.path}, opts.params),
+					provider 	= $.attr(this.element, 'data-provider')
 				;
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
+				}
+				if(provider){
+					vars.provider = provider;
 				}
 				vars.autostart = ''+ cfg.autoplay;
 				vars.repeat = (cfg.loop) ? 'single' : 'false';

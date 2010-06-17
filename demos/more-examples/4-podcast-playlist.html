@@ -22,7 +22,12 @@
         </script>
 		<style>
 			.media-player {
+				margin: 20px 0 0;
 				width: auto;
+			}
+			.playlist a {
+				margin: 5px 0 0;
+				font-size: 0.8em;
 			}
 		</style>
         <script>
@@ -70,11 +75,7 @@
                 })();
 				
 				$('div.media-player').jmeControl();
-                $('#tabs').append('<ul />').tabs({
-					show: function(e, ui){
-						//$('ul.playlist', ui.panel).activatePlaylist();
-					}
-				});
+                $('#tabs').append('<ul />').tabs();
                
                 addTab('http://feeds.feedburner.com/jQueryPodcast?format=xml');
 				
@@ -91,9 +92,7 @@
     <body>
     <h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
     <div class="media-player">
-    	<button class="itunes-feed">add iTunes feed</button>
-		
-        <span class="media-label">audioplayer <span class="media-name"></span></span>
+        <h3 class="media-label"><span class="media-role">audioplayer </span><span class="media-name"></span></h3>
         <div class="player-errors ui-state-error">
             Turn on your JavaScript
         </div>
@@ -113,8 +112,9 @@
                 <span class="handle-label">volume control</span>
             </div>
         </div>
+    	
         <div id="tabs">
-            
+            <button class="itunes-feed">add iTunes feed</button>
         </div>
     </div>
     </div>

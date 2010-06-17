@@ -80,9 +80,15 @@ div.volume-slider {
 }
 
 .handle-label,
-.media-label,
+span.media-label,
 .js-on .player-errors {
 	display: none;
+}
+.media-role {
+	position: absolute;
+	left: -9999px;
+	display: block;
+	width: 1px;
 }
 .video-box {
 	position: relative;
@@ -150,6 +156,7 @@ div.volume-slider {
 .playlist {
 	margin: 5px 0 0;
 	padding: 5px;
+	list-style: none;
 }
 .playlist ul {
 	list-style: none;

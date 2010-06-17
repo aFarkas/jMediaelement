@@ -14,7 +14,7 @@
 			;
 			
 			if(!props.label){
-				nameElem = $('span:first', item);
+				nameElem = $('.item-name', item);
 				props.label = $.trim( ( ( nameElem[0] ) ? nameElem : item ).text() );
 			}
 			
@@ -70,7 +70,7 @@
 			}
 			
 			if( item.name ){
-				domItem += ' data-label="'+ item.name +'"><span>'+item.name+'</span>';
+				domItem += ' data-label="'+ item.name +'"><span class="item-name">'+item.name+'</span>';
 			}
 			
 			for(var i = 0, len = item.srces.length; i < len; i++){

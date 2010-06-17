@@ -27,7 +27,11 @@
 			});
 			
 		</script>
-		
+		<style>
+			.js-on .playlist li ul {
+				display: none;
+			}
+		</style>
 	</head>
 	<body>
 		<h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
@@ -59,9 +63,19 @@
 					<li data-srces="../media/ANC_sketchV2n.mp3,../media/ANC_sketchV2n.ogg">
 						anc
 					</li>
-					<li data-srces="../media/chefsachesketch.mp3,../media/chefsachesketch.ogg">
-						chefsache
+					<!-- another more unobtrusive way to write a play-item -->
+					<li class="play-item">
+						<span class="item-name">chefsache</span>
+						<ul>
+							<li><a href="../media/chefsachesketch.mp3">as mp3</a></li>
+							<li><a href="../media/chefsachesketch.ogg">as ogg</a></li>
+						</ul>
 					</li>
+					<!-- another more unobtrusive way to write a play-item with only one source
+					<li>
+						<a href="../media/ANC_sketchV2n.mp3">anc</a>
+					</li>
+					 -->
 				</ul>
 			</div>
 		</div>

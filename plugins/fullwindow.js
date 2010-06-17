@@ -397,7 +397,9 @@
 			}
 			control.bind('ariaclick', function(){
 				var isFullscreen = video.hasClass('displays-fullscreen');
-				
+				if( !isFullscreen ){
+					video.play();
+				}
 				if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
 					return;
 				}

@@ -29,6 +29,10 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.1.2
+	- improvements to the fullscreen plugin (fixed IE7 z-index stacking issues)
+	- improvements to the playlist-API 
+
 Release 1.1.1
 
 Changed from 1.1 to 1.1.1:

@@ -70,7 +70,11 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-				$('div.media-player').jmeControl();
+				$('div.media-player').jmeControl({
+					fullscreen: {
+						tryFullScreen: false
+					}
+				});
 			});
 			
 		</script>
@@ -82,7 +86,7 @@
 		<div class="media-player">
 			<span class="media-label" style="display: none;">video: Big Buck Bunny</span>
 			
-			<video poster="../media/bbb_watchtrailer.gif" controls="controls">
+			<video poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
 				<source src="../media/bbb_trailer_mobile.m4v" type="video/mp4" />
 				<source src="../media/bbb_trailer_400p.ogg" type="video/ogg" />
 				

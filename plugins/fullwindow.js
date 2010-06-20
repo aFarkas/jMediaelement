@@ -14,23 +14,33 @@
  * 
  * <a class="fullscreen" role="button" tabindex="0">toggle fullscreen</a>
  * 
+ * Documentation:
+ * http://protofunc.com/jme/plugins/fullwindow.html
  */
 
 (function($){
 	
 	/* helper methods */
-	$.fn.offsetAncestors = function(){
+	var pos = {
+			relative: 1,
+			absolute: 1
+		},
+		getPosedAncestors = function(elem){
 		var ret 	= [],
 			bodyReg = /^body|html$/i
 		;
-		this.each(function(){
-			var elem = $(this).offsetParent()[0];
-			while( elem && !bodyReg.test(elem.nodeName) ){
+		if(elem.jquery){
+			elem = elem[0];
+		}
+		elem = elem.parentNode;
+		while( elem && !bodyReg.test(elem.nodeName) ){
+			if( pos[ $.curCSS(elem, 'position') ] ){
 				ret.push(elem);
-				elem = $(elem).offsetParent()[0];
 			}
-		});
-		return this.pushStack(ret, 'offestAncestors');
+			elem = elem.parentNode;
+		}
+		
+		return $(ret);
 	};
 	
 	var zIndexReg = /zIndex/;
@@ -74,7 +84,7 @@
 			height: 'auto'
 		},
 		parentsCss 	= {
-			zIndex: 99998
+			position: 'static'
 		},
 		bodyCSS = {
 			overflow: 'hidden'
@@ -145,8 +155,7 @@
 					bgImg = overlay.css('backgroundImage')
 				;
 				if( (!bgCol || trans.test( bgCol ) ) && ( !bgImg || bgImg == 'none' ) ){
-					var color = $.curCSS(video, 'backgroundColor');
-					overlay.css('backgroundColor', ( color && !trans.test(color) ) ? color :'#000');
+					overlay.css('backgroundColor', '#000');
 				}
 				overlay.insertAfter(video).show();
 				isVisible = true;
@@ -254,7 +263,7 @@
 					height: this.visualElem.height()
 				},
 				rel 	= curDim.width / curDim.height,
-				ancestors,
+				wrapper = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : this.visualElem,
 				vidCss,
 				videoCSS
 			;
@@ -264,12 +273,8 @@
 				left: win.scrollLeft()
 			};
 			
-			
-			if( !$.support.style || debug === true ){
-				ancestors = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : this.visualElem;
-				ancestors.offsetAncestors().storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
-			}
-						
+			this._posedAncestors = getPosedAncestors(wrapper[0]).storeInlineStyle(parentsCss, 'fsstoredZindexInlineStyle');
+				
 			$('html, body')
 				.addClass('contains-fullscreenvideo')
 				.storeInlineStyle(bodyCSS, 'fsstoredInlineStyle')
@@ -277,10 +282,9 @@
 			
 			if(data.controlWrapper && data.controlWrapper[0]){
 				data.controlWrapper.addClass('wraps-fullscreen');
-				windowOverlay.show(data.controlWrapper[0]);
-			} else {
-				windowOverlay.show(this.element);
 			}
+			
+			windowOverlay.show(wrapper);
 			
 			vidCss 	= getSize(rel);
 			videoCSS= $.extend({}, videoBaseCSS, vidCss);
@@ -318,7 +322,12 @@
 				that 	= this,
 				ancestors
 			;
+			if(this._posedAncestors){
+				this._posedAncestors.storeInlineStyle('fsstoredZindexInlineStyle');
+			}
+			
 			$('html, body')
+				.css({overflow: 'auto'})
 				.storeInlineStyle('fsstoredInlineStyle')
 				.removeClass('contains-fullscreenvideo')
 			;
@@ -332,12 +341,7 @@
 			}
 						
 			windowOverlay.hide();
-			if( !$.support.style || debug === true ){
-				setTimeout(function(){
-					ancestors = ( data.controlWrapper && data.controlWrapper[0]) ? data.controlWrapper : that.visualElem;
-					ancestors.offsetAncestors().storeInlineStyle('fsstoredZindexInlineStyle');
-				}, 0);
-			}
+			
 			win.unbind('.jmefullscreen');
 			doc.unbind('.jmefullscreen');
 			$(this.element).removeClass('displays-fullscreen').unbind('.jmefullscreen');

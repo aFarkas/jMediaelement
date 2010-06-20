@@ -34,17 +34,6 @@
 			$('html').addClass('js-on');
 			$(function(){
 				
-				
-				
-				$('#tabs').tabs({
-					select: function(event, ui) {
-						//pause all videos
-						$('video').pause();
-						//start current tabvideo
-						$(ui.panel).find('video').play();
-					}
-				});
-				
 				// Dialog			
 				$('#dialog').dialog({
 					autoOpen: false,
@@ -65,6 +54,16 @@
 					$('#dialog').dialog('open');
 					return false;
 				});
+				
+				$('#tabs').tabs({
+					select: function(event, ui) {
+						//pause all videos
+						$('video').pause();
+						//start current tabvideo
+						$(ui.panel).find('video').play();
+					}
+				});
+				
 				
 				$('div.media-player').jmeEmbedControls();
 				

@@ -1,3 +1,12 @@
+/**
+ * playlist plugin for the jMediaelement project | http://github.com/aFarkas/jMediaelement
+ * @author Alexander Farkas
+ * Copyright 2010, Alexander Farkas
+ * Dual licensed under the MIT or GPL Version 2 licenses.
+ * 
+ * Documentation:
+ * http://protofunc.com/jme/plugins/playlist.html
+ */
 (function($){
 	//helpers for api
 	var split 		= /\s*\|\s*|\s*\,\s*/g,
@@ -108,20 +117,21 @@
 		var _name = '_'+ name;
 
 		$.fn[name] = function(){
-			var args = arguments;
+			var args = Array.prototype.slice.call(arguments, 0);
 			return this.each(function(){
 				var jme 	= $.data(this, 'playlistFor'),
 					api
 				;
 				if( jme ){
-					args = Array.prototype.slice.call(args, 0);
 					args.unshift(this);
 					api = jme.getJMEAPI();
 					if( name !== 'activatePlaylist' ){
-						jme.activatePlaylist( this );
+						api._activatePlaylist.call(api, this);
 					}
 				} else {
-					api = $(this).getJMEAPI();
+					api = getPlayList(this);
+					args.unshift(api.playlist);
+					api = api.apis[api.name];
 				}
 
 				if( api ){
@@ -135,7 +145,8 @@
 		_activatePlaylist: function(list){
 			list = $(list);
 			var data = getPlayList(this.element);
-			if( data.playlist[0] === list[0] || list.hasClass('active-playlist')){return;}
+			if( data.playlist[0] === list[0] || list.hasClass('active-playlist') ){return;}
+			
 			var oldList = data.playlist.removeClass('active-playlist');
 			$(itemSel, data.playlist).removeClass('ui-state-active');
 			if(!list[0]){
@@ -248,16 +259,18 @@
 			item.addClass('ui-state-active');
 			
 			this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
-			
+						
 			this._trigger({
 				type: 'playlistitemchange',
+				list: list,
 				items: _items, 
 				props: itemProps,
 				currentIndex: curIndex,
 				currentItem: item, 
-				previousItem: oldItem
+				previousItem: oldItem,
+				autoplay: _autoplay
 			});
-						
+			
 			if( _autoplay ){
 				setTimeout(function(){
 					elem.play();

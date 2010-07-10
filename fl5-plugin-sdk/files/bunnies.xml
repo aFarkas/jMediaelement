@@ -1,0 +1,33 @@
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+	<channel>
+		<title>Test playlist with various formats</title>
+
+		<item>
+			<title>FLV video</title>
+			<media:content url="../files/bunny.flv" type="video/x-flv" />
+			<media:thumbnail url="files/bunny.jpg" />
+			<media:credit>Blender Foundation</media:credit>
+			<description>Big Buck Bunny is a short animated film by the Blender Institute, part of the Blender Foundation.</description>
+			<link>http://www.bigbuckbunny.org</link>
+		</item>
+
+		<item>
+			<title>MP3 audio</title>
+			<media:content url="files/bunny.mp3" type="audio/mpeg" />
+			<media:thumbnail url="files/bunny.jpg" />
+			<media:credit>Blender Foundation</media:credit>
+			<description>Big Buck Bunny is a short animated film by the Blender Institute, part of the Blender Foundation.</description>
+			<link>http://www.bigbuckbunny.org</link>
+		</item>
+
+		<item>
+			<title>JPG image</title>
+			<media:content url="files/bunny.jpg" duration="10" type="image/jpeg" />
+			<media:thumbnail url="files/bunny.jpg" />
+			<media:credit>Blender Foundation</media:credit>
+			<description>Big Buck Bunny is a short animated film by the Blender Institute, part of the Blender Foundation.</description>
+			<link>http://www.bigbuckbunny.org</link>
+		</item>
+
+	</channel>
+</rss>

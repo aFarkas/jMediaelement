@@ -60,6 +60,7 @@
 				
 				function changeDisabledState(){
 					if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
+						control[sliderMethod]('option', 'step', 100 / Math.max( 100, control[0].offsetWidth ) );
 						control[sliderMethod]('option', 'disabled', false);
 					} else {
 						control[sliderMethod]('option', 'disabled', true);
@@ -86,7 +87,6 @@
 					.bind('slidestop', function(e, ui){
 						stopSlide = false;
 					})
-					
 					.bind('slide', function(e, ui){
 						if(e.originalEvent && api.apis[api.name].isAPIReady){
 							api.apis[api.name].relCurrentTime(ui.value);
@@ -124,7 +124,10 @@
 					.bind('volumelevelchange', changeVolumeUI)
 					.jmeReady(function(){
 						control[sliderMethod]('option', 'disabled', false);
-						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
+					})
+					.bind('loadedmeta', function(){
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
 					})
 				;
 			},
@@ -303,7 +306,7 @@
 		},
 		toggleModells = {
 				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta mediareset', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
-				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
+				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute loadedmeta', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
 			}
 	;
 	

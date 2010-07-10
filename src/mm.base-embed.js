@@ -725,6 +725,32 @@
 		});
 	};
 	
+	var fixPreload = function(apiData){
+		var elem = apiData.apis.nativ.apiElem;
+		if( apiData.name !== 'nativ' || !elem.webkitPreservesPitch ){return;}
+		var preload = $.attr(elem, 'preload');
+		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) ){return;}
+		var srces 		= $(elem).attr('srces'),
+			addSrces 	= function(){
+				$(elem)
+					.attr('srces', srces)
+					.unbind('mediareset mediaerror', removeSrcAdd)
+				;
+			},
+			removeSrcAdd 	= function(){
+				$(elem)
+					.unbind('play', addSrces)
+					.unbind('mediareset mediaerror', removeSrcAdd)
+				;
+			}
+		;
+		$(elem)
+			.attr('srces', [])
+			.one('play', addSrces)
+			.one('mediareset mediaerror', removeSrcAdd)
+		;
+	};
+	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
 		if(opts.showFallback && $.support.mediaElements){
@@ -766,18 +792,23 @@
 				}
 			});
 			
-			if(opts.debug || !$.support.mediaElements){
-				 findInitFallback(this, opts);
-				 apiData.apis.nativ.isAPIReady = true;
-			} else {
-				apiData.apis.nativ._init();
-			}
 			$(this)
 				.bind('mediaerror', function(e){
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}
 				})
+			;
+			
+			if(opts.debug || !$.support.mediaElements){
+				 findInitFallback(this, opts);
+				 apiData.apis.nativ.isAPIReady = true;
+			} else {
+				fixPreload(apiData);
+				apiData.apis.nativ._init();
+			}
+			
+			$(this)
 				.trigger('jmeEmbed', {
 					options: opts,
 					nodeName: elemName,

@@ -1,0 +1,32 @@
+<plugin>
+	<title>Player5Plugin</title>
+	<filename>player5plugin.swf</filename>
+	<version>1</version>
+	<compatibility>Compatible with 5.0.</compatibility>
+	<author>LongTail Video</author>
+	<description>
+		This plugin demonstrates the Player 5 ActionScript API.  It positions itself on or around the player, reads in configuration data, 
+		and controls the player
+	</description>
+	<href>http://developer.longtailvideo.com/trac/browser/trunk/sdk/plugins/</href>
+
+	<flashvars>
+		<flashvar>
+			<name>position</name>
+			<default>over</default>
+			<description>Position of the plugin. Can be "over", "left", "right", "top" or "bottom".</description>
+		</flashvar>
+		<flashvar>
+			<name>size</name>
+			<default>100</default>
+			<description>Width or height of the plugin when not over the display.</description>
+		</flashvar>
+		<flashvar>
+			<name>text</name>
+			<default>Hello, world</default>
+			<description>Text to add to display.</description>
+		</flashvar>
+	</flashvars>
+
+
+</plugin>

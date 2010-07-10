@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
@@ -17,9 +17,7 @@
         <script src="../../src/mm.base-api.js">
         </script>
         <script src="../../src/mm.base-controls.js"></script>
-		<script src="../../plugins/fullwindow.js"></script>
-		<script src="../../plugins/timerange.js"></script>
-		<script src="../../plugins/track.js"></script>
+		
 		<!--
 		<script src="../../src/dev/mm.cortado-embed.js"></script>
 		<script src="../../src/dev/mm.cortado-api.js"></script>
@@ -30,6 +28,11 @@
 		
 		<script src="../../src/mm.vlc-embed.js"></script>
 		<script src="../../src/mm.vlc-api.js"></script>
+		
+		
+		<script src="../../plugins/fullwindow.js"></script>
+		<script src="../../plugins/timerange.js"></script>
+		<script src="../../plugins/track.js"></script>
 		
 				
         <script>
@@ -74,7 +77,13 @@
                 //removeControls: true,
 				showFallback: true,
                 jwPlayer: {
-                    path: '../../mediaplayers/jw-player/player.swf'
+                    path: '../../mediaplayers/jw-player/player.swf',
+					vars: {
+						plugins: '../../packages/jmefs.swf'
+					},
+					params: {
+						wmode: 'transparent'
+					}
                 },
 				cortado: {
 					path: '../../mediaplayers/cortado/cortado.jar'
@@ -125,7 +134,15 @@
 			            
         });
         </script>
-       
+       <style>
+       	.fullscreen {
+       		position: absolute;
+			top: 5px;
+			right: 5px;
+			pointer-events: none;
+			cursor: pointer;
+       	}
+       </style>
     </head>
     <body>       
 		<a href="../../demos/media/loader.gif" class="poster" style="display: none;"></a>
@@ -201,7 +218,6 @@
             	<span class="media-label">Videoplayer</span>
                 <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
 					<source src="../../demos/media/bbb_trailer_mobile.m4v" />
-					<source src="../../demos/media/bbb_trailer_400p.ogg" />
                    
 					<a class="track" href="test.srt" lang="de" data-enabled="enabled">name</a>
 					<p>Fallback-Content</p>
@@ -236,6 +252,7 @@
 				<a class="fullscreen">fullscreen</a>
 				<a class="toggle-track" href="#">toggle track on / toggle track off</a>
             </div>
+			
 			<a class="toggle-loop" href="#">toggle loop</a>
          	<a href="http://blip.tv/file/get/N8inpasadena-Flowers457.flv" class="load-video">Load-flv</a>
             <a href="../../demos/media/bbb_trailer_400p.ogg" class="load-video load-ogg">Load-ogg</a>

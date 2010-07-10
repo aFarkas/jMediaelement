@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.1.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.2 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -725,6 +725,32 @@
 		});
 	};
 	
+	var fixPreload = function(apiData){
+		var elem = apiData.apis.nativ.apiElem;
+		if( apiData.name !== 'nativ' || !elem.webkitPreservesPitch ){return;}
+		var preload = $.attr(elem, 'preload');
+		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) ){return;}
+		var srces 		= $(elem).attr('srces'),
+			addSrces 	= function(){
+				$(elem)
+					.attr('srces', srces)
+					.unbind('mediareset mediaerror', removeSrcAdd)
+				;
+			},
+			removeSrcAdd 	= function(){
+				$(elem)
+					.unbind('play', addSrces)
+					.unbind('mediareset mediaerror', removeSrcAdd)
+				;
+			}
+		;
+		$(elem)
+			.attr('srces', [])
+			.one('play', addSrces)
+			.one('mediareset mediaerror', removeSrcAdd)
+		;
+	};
+	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
 		if(opts.showFallback && $.support.mediaElements){
@@ -766,18 +792,23 @@
 				}
 			});
 			
-			if(opts.debug || !$.support.mediaElements){
-				 findInitFallback(this, opts);
-				 apiData.apis.nativ.isAPIReady = true;
-			} else {
-				apiData.apis.nativ._init();
-			}
 			$(this)
 				.bind('mediaerror', function(e){
 					if(apiData.name === 'nativ'){
 						findInitFallback(this, opts);
 					}
 				})
+			;
+			
+			if(opts.debug || !$.support.mediaElements){
+				 findInitFallback(this, opts);
+				 apiData.apis.nativ.isAPIReady = true;
+			} else {
+				fixPreload(apiData);
+				apiData.apis.nativ._init();
+			}
+			
+			$(this)
 				.trigger('jmeEmbed', {
 					options: opts,
 					nodeName: elemName,
@@ -1497,6 +1528,7 @@
 				
 				function changeDisabledState(){
 					if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
+						control[sliderMethod]('option', 'step', 100 / Math.max( 100, control[0].offsetWidth ) );
 						control[sliderMethod]('option', 'disabled', false);
 					} else {
 						control[sliderMethod]('option', 'disabled', true);
@@ -1523,7 +1555,6 @@
 					.bind('slidestop', function(e, ui){
 						stopSlide = false;
 					})
-					
 					.bind('slide', function(e, ui){
 						if(e.originalEvent && api.apis[api.name].isAPIReady){
 							api.apis[api.name].relCurrentTime(ui.value);
@@ -1561,7 +1592,10 @@
 					.bind('volumelevelchange', changeVolumeUI)
 					.jmeReady(function(){
 						control[sliderMethod]('option', 'disabled', false);
-						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 100);
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
+					})
+					.bind('loadedmeta', function(){
+						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
 					})
 				;
 			},
@@ -1740,7 +1774,7 @@
 		},
 		toggleModells = {
 				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta mediareset', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
-				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
+				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute loadedmeta', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
 			}
 	;
 	
@@ -2039,7 +2073,7 @@
 			q: /\?/g
 		},
 		replaceVar = function(val){
-			return val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F');
+			return (val.replace) ? val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F') : val;
 		}
 	;
 	

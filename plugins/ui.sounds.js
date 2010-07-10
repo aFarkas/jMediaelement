@@ -18,10 +18,13 @@
 			appended = true;	
 		}
 		
-		 var audio = $('<audio style="display: block; width: 10px; height: 10px;" role="presentation" tabindex="-1" preload="metadata" autobuffer="autobuffer" />')
+		 var audio = $( $.fixHTML5('<audio style="display: block; width: 10px; height: 10px;" role="presentation" tabindex="-1" preload="metadata" autobuffer="autobuffer" />') )
 			.appendTo(bgWrapper)
 			.attr('srces', mediasrces)
 			.jmeEmbed(embedOpts)
+			.jmeReady(function(){
+				$(this).currentTime(0);
+			})
 		;
 		
 		return audio;

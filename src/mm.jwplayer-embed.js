@@ -36,7 +36,7 @@
 			q: /\?/g
 		},
 		replaceVar = function(val){
-			return val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F');
+			return (val.replace) ? val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F') : val;
 		}
 	;
 	

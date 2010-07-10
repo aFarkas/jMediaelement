@@ -19,6 +19,8 @@
  */
 
 (function($){
+	$.support.cssPointerEvents = ('pointerEvents' in $('<div />')[0].style);
+	$.support.getBoundingClientRect = ('getBoundingClientRect' in $('<div />')[0]);
 	
 	/* helper methods */
 	var pos = {
@@ -233,18 +235,8 @@
 	$.fn.videoOverlay.defaults = {
 		video: false,
 		fullscreenClass: 'videooverlay-infullscreen',
-		startCSS: {
-//			height: 'auto',
-//			width: 'auto'
-		},
-		position: {
-//			bottom: 0,
-//			left: 0,
-//			right: 0,
-//			top: 0,
-//			width: 0,
-//			height: 0
-		}
+		startCSS: {},
+		position: {}
 	};
 	
 	/* 
@@ -360,7 +352,93 @@
 	/* 
 	 * extend jme controls
 	 */
-	if ($.fn.jmeControl) {
+	
+	if ( $.fn.jmeControl ) {
+		var supportJmefsButton = $.fn.jmeEmbed.defaults.jwPlayer && $.support.getBoundingClientRect && $.support.cssPointerEvents;
+		if( supportJmefsButton ){
+			$.extend($.fn.jmeEmbed.defaults.jwPlayer.vars, {
+				plugins: $.multimediaSupport.jsPath + 'jmefs.swf'
+			});
+		}
+		
+		var fsID 		= 0,
+			jmefsButton = {
+			create: function(control, video, data, o){
+				if(!supportJmefsButton || !data.controlWrapper){return;}
+				var that = this,
+					activate = function(){
+						video.jmeReady(function(){
+							that.jwPlayer = data.apis.jwPlayer;
+							that.activate();
+						});
+					}
+				;
+				
+				this.control = control;
+				if(!this.control.attr('id')){
+					fsID++;
+					this.control.attr('id', 'fs-btn-'+ fsID);
+				}
+				this.wrapper = data.controlWrapper;
+				this.video = video;
+				video
+					.bind('apiActivated', function(e, evt){
+						if(evt.api === 'jwPlayer'){
+							activate();
+						}
+					})
+					.bind('apiDeActivated', function(e, evt){
+						if(evt.api === 'jwPlayer'){
+							that.deactivate();
+						}
+					})
+				;
+				if(data.name === 'jwPlayer'){
+					activate();
+				}
+			},
+			activate: function(){
+				if(!this.jwPlayer.apiElem.jmefsSetButtonCursor){return;}
+				var timer,
+					that = this,
+					rePos = function(){
+						clearTimeout(timer);
+						timer = setTimeout(function(){
+							that.setPos();
+						}, 30);
+					}
+				;
+				this.jwPlayer.apiElem.jmefsSetButtonCursor(true);
+				this.control.addClass('jme-flashbutton');
+				this.wrapper.addClass('jme-flashbutton-wrapper');
+				if(!this.setBtnCallback){
+					this.jwPlayer.apiElem.jmefsSetButtonCallback('$.fn.jmeControl.defaults.fullscreen.jmeBtn', this.control.attr('id'));
+					this.setBtnCallback = true;
+				}
+				this.video.bind('resize.jmeFSBtn', rePos);
+				this.wrapper.bind('DOMSubtreeModified.jmeFSBtn', rePos);
+				this.setPos();
+			},
+			deactivate: function(){
+				this.control.removeClass('jme-flashbutton');
+				this.wrapper.removeClass('jme-flashbutton-wrapper').unbind('DOMSubtreeModified.jmeFSBtn');
+				this.video.unbind('resize.jmeFSBtn');
+				if(this.jwPlayer && this.jwPlayer.apiElem && this.jwPlayer.apiElem.jmefsSetButtonSize){
+					this.jwPlayer.apiElem.jmefsSetButtonSize(0, 0);
+					this.jwPlayer.apiElem.jmefsSetButtonPosition(-1, -1);
+				}
+			},
+			setPos: function(){
+				if(!this.jwPlayer.isAPIReady || !this.jwPlayer.apiElem.jmefsSetButtonPosition){return;}
+				var displayBBox = this.jwPlayer.apiElem.getBoundingClientRect(),
+					btnBBox 	= this.control[0].getBoundingClientRect()
+				;
+				this.jwPlayer.apiElem.jmefsSetButtonPosition(btnBBox.left - displayBBox.left, btnBBox.top - displayBBox.top);
+				this.jwPlayer.apiElem.jmefsSetButtonSize(btnBBox.width, btnBBox.height);
+			}
+		};
+		
+		
 		$.fn.jmeControl.addControl('video-box', function(control, video, data, o){
 			control.videoOverlay({
 				video: video,
@@ -379,6 +457,7 @@
 				}
 			});
 		});
+		
 		$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
 			if ( !supportsFullWindow && !video.supportsFullScreen() ) {
 				control.addClass('fullscreen-unsupported ui-disabled');
@@ -399,6 +478,10 @@
 			if (o.addThemeRoller) {
 				control.addClass('ui-state-default ui-corner-all');
 			}
+			if(o.fullscreen.tryFullScreen){
+				$.multimediaSupport.beget(jmefsButton).create(control, video, data, o);
+			}
+			
 			control.bind('ariaclick', function(){
 				var isFullscreen = video.hasClass('displays-fullscreen');
 				if( !isFullscreen ){
@@ -420,7 +503,10 @@
 		});
 		
 		$.fn.jmeControl.defaults.fullscreen = {
-			tryFullScreen: true
+			tryFullScreen: true,
+			jmeBtn: function(type, id){
+				$(document.getElementById(id))[(type === 'jmefsButtonOver') ? 'addClass' : 'removeClass']('jme-over ui-state-over');
+			}
 		};
 	}
 })(jQuery);

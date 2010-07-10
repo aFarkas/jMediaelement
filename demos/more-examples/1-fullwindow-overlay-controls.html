@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
@@ -67,6 +67,18 @@
 			.fullscreen {
 				right: 8px;
 			}
+			
+			.jme-flashbutton-wrapper .media-controls-wrapper {
+				pointer-events: none;
+			}
+			.jme-flashbutton-wrapper .media-state {
+				height: auto;
+				top: 0;
+				bottom: 2em;
+			}
+			.jme-flashbutton-wrapper .media-controls > *:not(.fullscreen) {
+				pointer-events: auto;
+			}
 		</style>
 	</head>
 	<body>
@@ -76,7 +88,7 @@
 			<span class="media-label">video: big buck bunny</span>
 			<video poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
 				<source src="../media/bbb_trailer_mobile.m4v" type="video/mp4" />
-				<source src="../media/bbb_trailer_400p.ogg" />
+				<source src="../media/bbb_trailer_400p.ogg" type="video/ogg" />
 				<div class="fallback">
 					<img src="../media/bbb_watchtrailer.gif" alt="" />
 					<div class="fallback-text">

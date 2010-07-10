@@ -1,0 +1,22 @@
+<plugin>
+	<title>Dockable Skinnable Plugin</title>
+	<filename>dockableskinnableplugin.swf</filename>
+	<version>1</version>
+	<compatibility>Compatible with 5.0.</compatibility>
+	<author>LongTail Video</author>
+	<description>
+		This plugin demonstrates the Player 5 ActionScript API.  It positions itself on or around the player, reads in configuration data, 
+		and controls the player
+	</description>
+	<href>http://developer.longtailvideo.com/trac/browser/trunk/sdk/plugins/</href>
+
+	<flashvars>
+		<flashvar>
+			<name>text</name>
+			<default>Hello World!</default>
+			<description>Position of the plugin. Can be "over", "left", "right", "top" or "bottom".</description>
+		</flashvar>
+	</flashvars>
+
+
+</plugin>

@@ -1,0 +1,39 @@
+<plugin>
+	<title>jme Fullscreen Plugin</title>
+	<filename>jmefs.swf</filename>
+	<version>1</version>
+	<compatibility>Compatible with 5.0.</compatibility>
+	<author>protofunc.com</author>
+	<description>
+	  Fullscreen workaround
+	</description>
+	<href>http://protofunc.com</href>
+
+	<flashvars>
+		<flashvar>
+			<name>button_x</name>
+			<default>32</default>
+			<description>X Position of the Button.</description>
+		</flashvar>
+		<flashvar>
+			<name>button_y</name>
+			<default>32</default>
+			<description>Y position of the button.</description>
+		</flashvar>
+		<flashvar>
+			<name>button_width</name>
+			<default>64</default>
+			<description>Width of the button.</description>
+		</flashvar>
+		<flashvar>
+			<name>button_height</name>
+			<default>64</default>
+			<description>Height of the button.</description>
+		</flashvar>
+		<flashvar>
+			<name>button_opaque</name>
+			<default>false</default>
+			<description>Visibility of the button.</description>
+		</flashvar>
+	</flashvars>
+</plugin>

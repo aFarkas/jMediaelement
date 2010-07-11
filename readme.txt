@@ -29,6 +29,9 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.2.2 
+	- fixed opera not playing with preload-workaround
+
 Release 1.2.1 
 	- fixed bug with native fullscreen in safari
 	

@@ -78,9 +78,7 @@
 				showFallback: true,
                 jwPlayer: {
                     path: '../../mediaplayers/jw-player/player.swf',
-					vars: {
-						plugins: '../../packages/jmefs.swf'
-					},
+					plugins: ['../../packages/jmefs.swf'],
 					params: {
 						wmode: 'transparent'
 					}
@@ -100,6 +98,10 @@
 					dynamicTimeslider: true,
 					timeSliderAdjust: -10
 				}
+			});
+			
+			$('video').bind('ended', function(){
+				//$(this).exitFullScreen();
 			});
             
 			$('button.play-pause').jmeControl();

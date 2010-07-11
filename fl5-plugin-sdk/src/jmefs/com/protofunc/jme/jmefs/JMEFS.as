@@ -1,9 +1,10 @@
-
+﻿
 package com.protofunc.jme.jmefs {
 
 	import flash.display.Sprite;
 	import com.longtailvideo.jwplayer.player.*;
 	import com.longtailvideo.jwplayer.plugins.*;
+	import flash.events.Event;
 	import flash.utils.describeType;
 	
 	public class JMEFS extends Sprite implements IPlugin {
@@ -21,8 +22,6 @@ package com.protofunc.jme.jmefs {
 			_player = player;
 			_config = config;
 
-			log(ID + " 0.1.0");
-
 			_button = new Button(_player);
 			addChild(_button);
 
@@ -35,13 +34,29 @@ package com.protofunc.jme.jmefs {
 			addCallback("jmefsSetButtonCallback", _button.setCallback);
 			addCallback("jmefsSetButtonPosition", _button.setPosition);
 			addCallback("jmefsSetButtonSize", _button.setSize);
-			addCallback("jmefsSetButtonDisplay", _button.setVisible);
 			addCallback("jmefsSetButtonCursor", _button.setCursor);
+			
+			addCallback("jmeExitFullScreen", this.exitFullScreen);
+			
+			stage.addEventListener(Event.RESIZE, resizeHandler);
+		}
+		
+		public function exitFullScreen():void {
+			if (typeof(_player.fullscreen) == "boolean") {
+				_player["fullscreen"] = false;
+			}
+			else {
+				_player["fullscreen"](false);
+			}
+		}
+		
+		private function resizeHandler(event:Event):void {
+			_button.dispatch("resize");
 		}
 
 
 		public function resize(w:Number, h:Number):void {
-			// log(ID + " resize: " + w + " / " + h);
+			
 		}
 
 		
@@ -60,7 +75,8 @@ import com.longtailvideo.jwplayer.player.*;
 class Button extends Sprite {
 
 	private var _callbackName:String = "";
-	private var _id:String = "";
+	private var _vId:String = "";
+	private var _cId:String = "";
 	private var _player:IPlayer;
 	
 
@@ -94,20 +110,16 @@ class Button extends Sprite {
 	}
 
 
-	public function setVisible(b:Boolean):void {
-		visible = b;
-	}
-
-
-	public function setCallback(callbackName:String, id:String):void {
+	public function setCallback(callbackName:String, vId:String, cId:String):void {
 		_callbackName = callbackName;
-		_id = id;
+		_vId = vId;
+		_cId = cId;
 	}
 
 
-	private function dispatch(eventType:String):void {
+	public function dispatch(eventType:String):void {
 		if (_callbackName && ExternalInterface.available) {
-			ExternalInterface.call(_callbackName, eventType, _id);
+			ExternalInterface.call(_callbackName, eventType, _vId, _cId);
 		}
 	}
 	
@@ -117,11 +129,12 @@ class Button extends Sprite {
 		case MouseEvent.MOUSE_OVER:  dispatch("jmefsButtonOver"); break;
 		case MouseEvent.MOUSE_OUT:   dispatch("jmefsButtonOut"); break;
 		case MouseEvent.CLICK:
+			_player.play();
 			if (typeof(_player.fullscreen) == "boolean") {
 				_player["fullscreen"] = true;
 			}
 			else {
-				_player["fullscreen"]();
+				_player["fullscreen"](true);
 			}
 			dispatch("jmefsButtonClick");
 			break;

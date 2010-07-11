@@ -20,11 +20,57 @@
 		<script src="../../packages/mm.full.min.js"></script>
 		
 		<script src="../../plugins/playlist.js"></script>
-
+		<!-- fullwindow plugin -->
+		<script src="../../plugins/fullwindow.js"></script>
+		<!-- fullwindow plugin -->
+		
+		<!-- useractivity -->
+		<script src="../../utils/useractivity.js"></script>
+		<style>
+			/*overlay controls*/
+			.media-controls-wrapper {
+				position: absolute;
+				bottom: 0;
+				width: 100%;
+			}
+			/* position the fullscreen-button */
+			div.volume-slider {
+				right: 46px;
+				width: 60px;
+			}
+			.fullscreen {
+				right: 8px;
+			}
+			
+			/* prepare fullscreen-button for flash fullscreen in modern browsers */
+			html > body .media-state {
+				height: auto;
+				top: 0;
+				bottom: 2em;
+			}
+			.jme-flashbutton-wrapper .media-controls-wrapper {
+				pointer-events: none;
+			}
+			
+			.jme-flashbutton-wrapper .media-controls > *:not(.fullscreen) {
+				pointer-events: auto;
+			}
+		</style>
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
-				$('div.media-player').jmeControl();
+				$('div.media-player')
+					.jmeControl()
+					//useractive/userinactive event is provided by utils/useractivity.js plugin
+					.bind('useractive', function(){
+						$('div.media-controls', this).stop().animate({opacity: 1});
+					})
+					.bind('userinactive', function(){
+						$('div.media-controls', this).stop().animate({opacity: 0});
+					})
+					.find('div.media-controls')
+					.css('opacity', 0)
+				;
 			});
 			
 		</script>
@@ -44,19 +90,23 @@
 					</div>
 				</video>
 				<div class="media-state"></div>
-			</div>
-			<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-				<a class="play-pause" title="play / pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></a>
-				<span class="current-time player-display" title="current position">00:00</span>
-				<div class="timeline-slider">
-					<span class="handle-label">play position</span>
-					<span class="ui-slider-handle" title="play position"></span>
-					<div class="progressbar"></div>
+				<div class="media-controls-wrapper">
+					<div class="media-controls">
+						<a class="play-pause" title="play / pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></a>
+						<span class="current-time player-display" title="current position">00:00</span>
+						<div class="timeline-slider">
+							<span class="handle-label">play position</span>
+							<span class="ui-slider-handle" title="play position"></span>
+							<div class="progressbar"></div>
+						</div>
+						<span class="duration player-display" title="duration">00:00</span>
+						<a class="mute-unmute" title="mute / unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></a>
+						<div class="volume-slider"><span class="handle-label">volume control</span><span class="ui-slider-handle" title="volume control"></span></div>
+						<a class="fullscreen button"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin</span></a>
+					</div>
 				</div>
-				<span class="duration player-display" title="duration">00:00</span>
-				<a class="mute-unmute" title="mute / unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></a>
-				<div class="volume-slider"><span class="handle-label">volume control</span><span class="ui-slider-handle" title="volume control"></span></div>
 			</div>
+			
 			
 			<div class="playlist">
 				<ul>
@@ -82,5 +132,18 @@
 			</div>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+		<script>
+			if(location.protocol === 'file:'){
+				$('<small class="flash-hint">Youtube videos only work in an http-enviroment! Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
+					.css({opacity: 0})
+					.insertAfter('div.media-player')
+					.fadeTo(1500, 1)
+					.delay(9000)
+					.fadeOut(900, function(){
+						$(this).remove();
+					})
+				;
+			}
+		</script>
 	</body>
 </html>

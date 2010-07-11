@@ -356,15 +356,13 @@
 	if ( $.fn.jmeControl ) {
 		var supportJmefsButton = $.fn.jmeEmbed.defaults.jwPlayer && $.support.getBoundingClientRect && $.support.cssPointerEvents;
 		if( supportJmefsButton ){
-			$.extend($.fn.jmeEmbed.defaults.jwPlayer.vars, {
-				plugins: $.multimediaSupport.jsPath + 'jmefs.swf'
-			});
+			$.fn.jmeEmbed.defaults.jwPlayer.plugins.push($.multimediaSupport.jsPath + 'jmefs.swf');
 		}
 		
 		var fsID 		= 0,
 			jmefsButton = {
 			create: function(control, video, data, o){
-				if(!supportJmefsButton || !data.controlWrapper){return;}
+				if(!supportJmefsButton || !data.controlWrapper || !$.contains(data.controlWrapper[0], control[0])){return;}
 				var that = this,
 					activate = function(){
 						video.jmeReady(function(){
@@ -399,11 +397,12 @@
 			},
 			activate: function(){
 				if(!this.jwPlayer.apiElem.jmefsSetButtonCursor){return;}
-				var timer,
-					that = this,
+				var that = this,
 					rePos = function(){
-						clearTimeout(timer);
-						timer = setTimeout(function(){
+						if(that.timer){
+							clearTimeout(that.timer);
+						}
+						that.timer = setTimeout(function(){
 							that.setPos();
 						}, 30);
 					}
@@ -412,7 +411,7 @@
 				this.control.addClass('jme-flashbutton');
 				this.wrapper.addClass('jme-flashbutton-wrapper');
 				if(!this.setBtnCallback){
-					this.jwPlayer.apiElem.jmefsSetButtonCallback('$.fn.jmeControl.defaults.fullscreen.jmeBtn', this.control.attr('id'));
+					this.jwPlayer.apiElem.jmefsSetButtonCallback('$.fn.jmeControl.defaults.fullscreen.jmeBtn', this.video.attr('id'), this.control.attr('id'));
 					this.setBtnCallback = true;
 				}
 				this.video.bind('resize.jmeFSBtn', rePos);
@@ -423,6 +422,9 @@
 				this.control.removeClass('jme-flashbutton');
 				this.wrapper.removeClass('jme-flashbutton-wrapper').unbind('DOMSubtreeModified.jmeFSBtn');
 				this.video.unbind('resize.jmeFSBtn');
+				if(this.timer){
+					clearTimeout(this.timer);
+				}
 				if(this.jwPlayer && this.jwPlayer.apiElem && this.jwPlayer.apiElem.jmefsSetButtonSize){
 					this.jwPlayer.apiElem.jmefsSetButtonSize(0, 0);
 					this.jwPlayer.apiElem.jmefsSetButtonPosition(-1, -1);
@@ -487,14 +489,16 @@
 				if( !isFullscreen ){
 					video.play();
 				}
-				if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
-					return;
-				}
-				if ( isFullscreen ) {
-					video.exitFullWindow(o.fullscreen);
-				} else {
-					video.enterFullWindow(o.fullscreen);
-				}
+				setTimeout(function(){
+					if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
+						return;
+					}
+					if ( isFullscreen ) {
+						video.exitFullWindow(o.fullscreen);
+					} else {
+						video.enterFullWindow(o.fullscreen);
+					}
+				}, 9);
 				
 				return false;
 			});
@@ -504,8 +508,12 @@
 		
 		$.fn.jmeControl.defaults.fullscreen = {
 			tryFullScreen: true,
-			jmeBtn: function(type, id){
-				$(document.getElementById(id))[(type === 'jmefsButtonOver') ? 'addClass' : 'removeClass']('jme-over ui-state-over');
+			jmeBtn: function(type, vid, cid){
+				if(type === 'resize'){
+					$(document.getElementById(vid)).triggerHandler('resize');				
+				} else {
+					$(document.getElementById(cid))[(type === 'jmefsButtonOver') ? 'addClass' : 'removeClass']('jme-over ui-state-over');
+				}
 			}
 		};
 	}

@@ -16,6 +16,7 @@
 		id = id.replace(rep, '');
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
+	
 	var privJwEvents = {
 		View: {
 			PLAY: function(obj){
@@ -128,7 +129,6 @@
 					api._trigger(evt);
 				}
 			}
-			
 		}),
 		five: $.extend(true, {}, privJwEvents, {
 			Model: {
@@ -403,7 +403,18 @@
 	});
 	
 	
-	$m.add('jwPlayer', 'video', jwAPI);
+	$m.add('jwPlayer', 'video', $.extend({}, jwAPI, {
+		exitFullScreen: function(){
+			if(this.apiElem.jmeExitFullScreen){
+				try {
+					this.apiElem.jmeExitFullScreen();
+					return true;
+				} catch(e){}
+			}
+			return false;
+		}
+	}));
+	
 	$m.add('jwPlayer', 'audio', jwAPI);
 	
 })(jQuery);

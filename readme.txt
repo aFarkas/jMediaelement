@@ -29,6 +29,10 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.2
+	- flash fullscreen plugin for modern browsers (thanks to Till Reitemeyer)
+	- preload fix for webkit browser (opera will come soon)
+
 Release 1.1.2
 	- improvements to the fullscreen plugin (fixed IE7 z-index stacking issues)
 	- improvements to the playlist-API 

@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.2 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.2 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -7,13 +7,18 @@
 
 (function($){
 	$.multimediaSupport = {};
-	var m 	= $.multimediaSupport,
-		vID = new Date().getTime(),
-		doc	= document
+	var m 		= $.multimediaSupport,
+		vID 	= new Date().getTime(),
+		doc		= document,
+		tVid 	= $('<video />')[0],
+		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
+		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && $.browser.version < 534 )
 	;
 	// support test + document.createElement trick
-	$.support.video = !!($('<video />')[0].canPlayType);
+	$.support.video = !!(tVid.canPlayType);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
+	
+	tVid = null;
 	
 	$('<source />');
 	$('<track />');
@@ -727,9 +732,9 @@
 	
 	var fixPreload = function(apiData){
 		var elem = apiData.apis.nativ.apiElem;
-		if( apiData.name !== 'nativ' || !elem.webkitPreservesPitch ){return;}
+		if( supportMediaPreload && apiData.name === 'nativ' ){return;}
 		var preload = $.attr(elem, 'preload');
-		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) ){return;}
+		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) || $.attr(elem, 'autoplay') ){return;}
 		var srces 		= $(elem).attr('srces'),
 			addSrces 	= function(){
 				$(elem)
@@ -746,8 +751,8 @@
 		;
 		$(elem)
 			.attr('srces', [])
-			.one('play', addSrces)
-			.one('mediareset mediaerror', removeSrcAdd)
+			.one('play mediaerror', addSrces)
+			.one('mediareset', removeSrcAdd)
 		;
 	};
 	
@@ -804,6 +809,7 @@
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
 			} else {
+				//fixPreload has to happen before mediaerror setup!
 				fixPreload(apiData);
 				apiData.apis.nativ._init();
 			}
@@ -2056,6 +2062,7 @@
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
+					plugins: [],
 					params: {
 						allowscriptaccess: 'always',
 						allowfullscreen: 'true'
@@ -2150,6 +2157,10 @@
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
+				
+				if(opts.plugins.length){
+					params.flashvars.push( 'plugins='+ ( opts.plugins.join(',') ) );
+				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
@@ -2180,6 +2191,7 @@
 		id = id.replace(rep, '');
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
+	
 	var privJwEvents = {
 		View: {
 			PLAY: function(obj){
@@ -2292,7 +2304,6 @@
 					api._trigger(evt);
 				}
 			}
-			
 		}),
 		five: $.extend(true, {}, privJwEvents, {
 			Model: {
@@ -2567,7 +2578,18 @@
 	});
 	
 	
-	$m.add('jwPlayer', 'video', jwAPI);
+	$m.add('jwPlayer', 'video', $.extend({}, jwAPI, {
+		exitFullScreen: function(){
+			if(this.apiElem.jmeExitFullScreen){
+				try {
+					this.apiElem.jmeExitFullScreen();
+					return true;
+				} catch(e){}
+			}
+			return false;
+		}
+	}));
+	
 	$m.add('jwPlayer', 'audio', jwAPI);
 	
 })(jQuery);

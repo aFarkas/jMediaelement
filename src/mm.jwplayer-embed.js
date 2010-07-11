@@ -19,6 +19,7 @@
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
+					plugins: [],
 					params: {
 						allowscriptaccess: 'always',
 						allowfullscreen: 'true'
@@ -113,6 +114,10 @@
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
+				
+				if(opts.plugins.length){
+					params.flashvars.push( 'plugins='+ ( opts.plugins.join(',') ) );
+				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},

@@ -44,8 +44,7 @@
 					})
 					.bind('userinactive', function(){
 						$('div.media-controls', this).stop().animate({opacity: 0});
-					})
-					.find('div.media-controls')
+					})					.find('div.media-controls')
 					.css('opacity', 0)
 				;
 			});
@@ -68,17 +67,16 @@
 				right: 8px;
 			}
 			
-			/* if flash fullscreen feature is avaible remove pointer events */
-			.jme-flashbutton-wrapper .media-controls-wrapper {
-				pointer-events: none;
-			}
-			
-			.jme-flashbutton-wrapper .media-state {
+			/* prepare fullscreen-button for flash fullscreen in modern browsers */
+			html > body .media-state {
 				height: auto;
 				top: 0;
 				bottom: 2em;
 			}
-			/* re-add pointer-events to all elements, but the fullscreen button */
+			.jme-flashbutton-wrapper .media-controls-wrapper {
+				pointer-events: none;
+			}
+			
 			.jme-flashbutton-wrapper .media-controls > *:not(.fullscreen) {
 				pointer-events: auto;
 			}
@@ -105,5 +103,18 @@
 			</video>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+		<script>
+			if(location.protocol === 'file:'){
+				$('<small class="flash-hint">Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
+					.css({opacity: 0})
+					.insertAfter('div.media-player')
+					.fadeTo(1000, 1)
+					.delay(3000)
+					.fadeOut(400, function(){
+						$(this).remove();
+					})
+				;
+			}
+		</script>
 	</body>
 </html>

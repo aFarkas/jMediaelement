@@ -28,10 +28,33 @@
 		<script src="../../utils/jmeEmbedControls.js"></script>
 		
 		<style>
-			#dialog .media-controls-wrapper {
+			/*overlay controls*/
+			.media-controls-wrapper {
 				position: absolute;
 				bottom: 0;
 				width: 100%;
+			}
+			/* position the fullscreen-button */
+			div.volume-slider {
+				right: 46px;
+				width: 60px;
+			}
+			.fullscreen {
+				right: 8px;
+			}
+			
+			/* prepare fullscreen-button for flash fullscreen in modern browsers */
+			html > body .media-state {
+				height: auto;
+				top: 0;
+				bottom: 2em;
+			}
+			.jme-flashbutton-wrapper .media-controls-wrapper {
+				pointer-events: none;
+			}
+			
+			.jme-flashbutton-wrapper .media-controls > *:not(.fullscreen) {
+				pointer-events: auto;
 			}
 		</style>
 		<script>

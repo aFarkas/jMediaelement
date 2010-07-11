@@ -489,16 +489,14 @@
 				if( !isFullscreen ){
 					video.play();
 				}
-				setTimeout(function(){
-					if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
-						return;
-					}
-					if ( isFullscreen ) {
-						video.exitFullWindow(o.fullscreen);
-					} else {
-						video.enterFullWindow(o.fullscreen);
-					}
-				}, 9);
+				if ( o.fullscreen.tryFullScreen && !isFullscreen && video.supportsFullScreen() && video.enterFullScreen() ){
+					return;
+				}
+				if ( isFullscreen ) {
+					video.exitFullWindow(o.fullscreen);
+				} else {
+					video.enterFullWindow(o.fullscreen);
+				}
 				
 				return false;
 			});

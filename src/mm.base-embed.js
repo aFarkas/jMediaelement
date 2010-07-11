@@ -12,7 +12,7 @@
 		doc		= document,
 		tVid 	= $('<video />')[0],
 		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
-		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && $.browser.version < 534 )
+		supportMediaPreload = !( ('webkitPreservesPitch' in tVid && $.browser.version < 534) || (window.opera && !'preload' in tVid) )
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
@@ -732,7 +732,7 @@
 	
 	var fixPreload = function(apiData){
 		var elem = apiData.apis.nativ.apiElem;
-		if( supportMediaPreload && apiData.name === 'nativ' ){return;}
+		if( supportMediaPreload && apiData.name !== 'nativ' ){return;}
 		var preload = $.attr(elem, 'preload');
 		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) || $.attr(elem, 'autoplay') ){return;}
 		var srces 		= $(elem).attr('srces'),
@@ -754,6 +754,11 @@
 			.one('play mediaerror', addSrces)
 			.one('mediareset', removeSrcAdd)
 		;
+		//we came to late
+		if(!window.opera && elem.load && elem.readyState > 0 && elem.getAttribute('poster') ){
+			elem.load();
+		}
+		
 	};
 	
 	$.fn.jmeEmbed = function(opts){

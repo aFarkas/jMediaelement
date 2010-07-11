@@ -29,6 +29,9 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.2.1 
+	- fixed bug with native fullscreen in safari
+	
 Release 1.2
 	- flash fullscreen plugin for modern browsers (thanks to Till Reitemeyer)
 	- preload fix for webkit browser (opera will come soon)

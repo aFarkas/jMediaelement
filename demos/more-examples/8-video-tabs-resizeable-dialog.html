@@ -95,7 +95,7 @@
 				
 				$('div.media-player').jmeEmbedControls();
 				
-				$('#dialog div.media-player')
+				$('div.media-player')
 					//useractive/userinactive event is provided by utils/useractivity.js plugin
 					.bind('useractive', function(){
 						$('div.media-controls', this).stop().animate({opacity: 1});
@@ -103,8 +103,6 @@
 					.bind('userinactive', function(){
 						$('div.media-controls', this).stop().animate({opacity: 0});
 					})
-					.find('div.media-controls')
-					.css('opacity', 0)
 				;
 			});
 		</script>

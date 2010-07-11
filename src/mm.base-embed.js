@@ -12,7 +12,7 @@
 		doc		= document,
 		tVid 	= $('<video />')[0],
 		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
-		supportMediaPreload = !( ('webkitPreservesPitch' in tVid && $.browser.version < 534) )
+		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && $.browser.version < 534 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
@@ -738,11 +738,16 @@
 		var preload = $.attr(elem, 'preload');
 		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) || $.attr(elem, 'autoplay') ){return;}
 		var srces 		= $(elem).attr('srces'),
-			addSrces 	= function(){
+			addSrces 	= function(e){
 				$(elem)
 					.attr('srces', srces)
 					.unbind('mediareset mediaerror', removeSrcAdd)
 				;
+				if(e.type === 'play'){
+					setTimeout(function(){
+						elem.play();
+					}, 0); 
+				}
 			},
 			removeSrcAdd 	= function(){
 				$(elem)

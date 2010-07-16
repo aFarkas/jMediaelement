@@ -29,7 +29,7 @@ package com.protofunc.jme.jmefs {
 			_button.y = _config.button_y | 0;
 			_button.width = _config.button_width | 0;
 			_button.height = _config.button_height | 0;
-			_button.alpha = _config.button_opaque == "true" ? 1 : 0;
+			_button.alpha = _config.button_opaque == true ? 1 : 0;
 
 			addCallback("jmefsSetButtonCallback", _button.setCallback);
 			addCallback("jmefsSetButtonPosition", _button.setPosition);

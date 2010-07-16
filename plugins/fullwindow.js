@@ -355,7 +355,7 @@
 	
 	if ( $.fn.jmeControl ) {
 		var supportJmefsButton = $.fn.jmeEmbed.defaults.jwPlayer && $.support.getBoundingClientRect && $.support.cssPointerEvents;
-		if( supportJmefsButton ){
+		if( $.fn.jmeEmbed.defaults.jwPlayer ){
 			$.fn.jmeEmbed.defaults.jwPlayer.plugins.push($.multimediaSupport.jsPath + 'jmefs.swf');
 		}
 		

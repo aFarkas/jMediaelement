@@ -198,7 +198,7 @@
 			api._$lastMuteState = api.muted();
 			var cfg = $.attr(api.element, 'getConfig');
 			if(!cfg.autoplay){
-				if( api.nodeName === 'audio' && cfg.preload === 'metadata' ){
+				if( api.nodeName === 'audio' && cfg.preload === 'auto' ){
 					api.apiElem.sendEvent('PLAY', 'true');
 					api.apiElem.sendEvent('PLAY', 'false');
 				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){

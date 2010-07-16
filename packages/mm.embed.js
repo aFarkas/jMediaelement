@@ -187,9 +187,12 @@
 					});
 					break;
 				case 'preload':
-					ret = elem.getAttribute('preload');
-					if(!preloadVals[ret]){
+					ret = elem.preload || elem.getAttribute('preload');
+					if(ret === ''){
 						ret = 'auto';
+					}
+					if(!preloadVals[ret]){
+						ret = 'metadata';
 					}
 					break;
 			}
@@ -233,8 +236,10 @@
 					$.attr(elem, n, v);
 				});
 			} else if(name === 'preload'){
-				if(!preloadVals[value]){
+				if(!value){
 					value = 'auto';
+				} else if(!preloadVals[value]){
+					value = 'metadata';
 				}
 				elem.setAttribute(name, value);
 			}
@@ -736,7 +741,7 @@
 			return;
 		}
 		var preload = $.attr(elem, 'preload');
-		if( preload === 'metadata' || (preload === 'auto' && !elem.getAttribute('poster')) || $.attr(elem, 'autoplay') ){return;}
+		if( preload === 'auto' || ( preload === 'metadata' && !elem.getAttribute('poster') ) || $.attr(elem, 'autoplay') ){return;}
 		var srces 		= $(elem).attr('srces'),
 			addSrces 	= function(e){
 				$(elem)

@@ -1,7 +1,8 @@
 var settings = {
 	/** Player versions to embed in the testpage. **/
 	players: {
-		'5.0':'players/5.0.swf'
+		'5.0':'players/5.0.swf',
+		'5.2':'players/5.2.swf'
 	},
 	/** Available plugins (xml contains all info for flashvars). **/
 	plugins: {

@@ -238,21 +238,6 @@
 					that._$reInitTimer = false;
 				}, 20000);
 			}
-		},
-		canPlaySrc: function(media){
-			var ret 	= $m.fn.canPlaySrc.apply(this, arguments), 
-				index 	= -1,
-				src 	= media.src || media
-			;
-			
-			if( !ret && typeof src === 'string' ){
-				index = src.indexOf('youtube.com/');
-				if(index < 15 && index > 6){
-					ret = 'maybe';
-				}
-			}
-			
-			return ret;
 		}, 
 		play: function(){
 			this.apiElem.sendEvent('PLAY', 'true');

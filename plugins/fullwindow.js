@@ -122,6 +122,12 @@
 		supportsFullWindow
 	;
 	
+	$.each(['Top', 'Left', 'Right', 'Bottom'], function(i, name){
+		videoBaseCSS['padding'+ name] = 0;
+		videoBaseCSS['margin'+ name] = 0;
+		videoBaseCSS['border'+ name +'Width'] = 0;
+	});
+	
 	var windowOverlay = (function(){
 		var trans 	= /transparent|rgba\(0, 0, 0, 0\)/,
 			overlay = $('<div class="fullwindow-overlay" />')
@@ -346,7 +352,7 @@
 				data._$fullwindowScrollPosition = false;
 			}
 		}
-	});
+	}, true);
 	
 	
 	/* 

@@ -6,6 +6,7 @@ audio[controls],
 video {
 	display: block;
 }
+
 /* always define a default */
 audio {
 	width: 328px;

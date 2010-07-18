@@ -56,6 +56,9 @@
 			.jme-flashbutton-wrapper .media-controls > *:not(.fullscreen) {
 				pointer-events: auto;
 			}
+			#dialog form {
+				margin: 30px 0 0;
+			}
 		</style>
 		<script>
 			
@@ -63,19 +66,42 @@
 			$(function(){
 				
 				// Dialog			
-				$('#dialog').dialog({
-					autoOpen: false,
-					width: 600,
-					height: 400,
-					minWidth: 360,
-					minHeight: 280,
-					beforeclose: function(e, ui){
-						$('#dialog video').pause();
-					},
-					open: function(){
-						$('#dialog video').play();
-					}
-				});
+				$('#dialog')
+					.dialog({
+						autoOpen: false,
+						width: 600,
+						height: 400,
+						minWidth: 360,
+						minHeight: 280,
+						beforeclose: function(e, ui){
+							$('#dialog video').pause();
+						},
+						open: function(){
+							$('#dialog video').play();
+						}
+					})
+					.each(function(){
+						var colors 		= ['#fdd', '#dfd', '#ddf'],
+							colorIndex 	= -1,
+							elem 		= this
+						;
+						$('form', elem).delegate('input, button', 'click', function(e){
+							var btn = $(e.currentTarget);
+							if(btn.is('input')){
+								$('video', elem).attr('loop', btn.is(':checked'));
+							} else {
+								colorIndex++;
+								if(colorIndex >= colors.length){
+									colorIndex = 0;
+								}
+								$('video', elem).getJMEVisual().css('backgroundColor', colors[colorIndex]);
+								return false;
+							}
+							
+						});
+						$('video', elem).attr('loop', $('input[type=checkbox]', elem).is(':checked'));
+					})
+				;
 				
 				// Dialog Link
 				$('#dialog_link').click(function(){
@@ -104,6 +130,7 @@
 						$('div.media-controls', this).stop().animate({opacity: 0});
 					})
 				;
+				
 			});
 		</script>
 		
@@ -175,6 +202,14 @@
 							</div>
 						</video>
 					</div>
+					<form>
+						<div>
+							<input type="checkbox" id="loop" /><label for="loop">loop</label>
+						</div>
+						<div>
+							<button>change color</button>
+						</div>
+					</form>
 				</div>
 			</div>
 		</div>

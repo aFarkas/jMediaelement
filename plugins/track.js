@@ -61,25 +61,32 @@
 			mm.enableTrack(activeTracks[0], data);
 		}
 		//add fullwindow support
-		data.trackDisplay
-			.videoOverlay({
-				fullscreenClass: 'track-in-fullscreen',
-				video: mm,
-				startCSS: {
-					width: 'auto'
-				},
-				position: {
-					bottom: 0,
-					left: 0,
-					right: 0
-				}
-			})
-		;
+		if(data.trackDisplay.videoOverlay && mm.is('video')){
+			data.trackDisplay
+				.videoOverlay({
+					fullscreenClass: 'track-in-fullscreen',
+					video: mm,
+					startCSS: {
+						width: 'auto'
+					},
+					position: {
+						bottom: 0,
+						left: 0,
+						right: 0
+					}
+				})
+			;
+		}
 	});
 	
 	/*
 	 * extend the api
 	 */
+	var capTypes = {		
+		'text/srt': 'parseSrt',
+		'xml/dfxp': 'parseDfxp',
+		'xml/ttml': 'parseDfxp'
+	}
 	$.multimediaSupport.fn._extend({
 		disableTrack: function(object, _data){
 			object = (isFinite(object)) ? tracks.filter(':eq('+ object +')') : $(object);
@@ -96,12 +103,20 @@
 			_trackData = _trackData || $.data(object[0], 'jmeTrack') || $.data(object[0], 'jmeTrack', {load: false});
 			if( !_trackData.load ){
 				_trackData.load = 'loading';
+				var type = object.attr('type') || 'text/srt';
+				if(!capTypes[type]){
+					setTimeout( function(){
+						throw("we don't know. captions type: "+ type);
+					}, 0);
+					return;
+				}
+				
 				$.ajax({
 					url: object[0].href,
-					dataType: 'text',
+					dataType: type.split('/')[0],
 					success: function(srt){
 						_trackData.load = 'loaded';
-						_trackData.captions = $.parseSrt(srt, (object[0].attributes[name] || {}).specified );
+						_trackData.captions = $[capTypes[type]](srt, (object[0].attributes['data-sanitize'] || {}).specified );
 						fn( _trackData.captions );
 					}
 				});
@@ -169,7 +184,7 @@
 			object.attr('data-enabled', 'enabled');
 			this._trigger('trackChange', {track: object, enabled: true, trackData: trackData});
 		}
-	});
+	}, true);
 	
 	/*
 	 * extend jme controls
@@ -218,7 +233,41 @@
 		changeState();
 		mm.bind('trackChange', changeState);
 	});
+
+$.parseDfxp = (function(){
+	var getTime = function(time){
+		time = (time || '').split(':');
+		if(time.length === 3){
+			time = (parseInt(time[0], 10) * 60 * 60) +
+                  (parseInt(time[1], 10) * 60) +
+                  (parseInt(time[2], 10))
+			;
+			return isNaN(time) ? false : time;
+		}
+		return false;
+	};
 	
+	var sanitizeReg = /<[a-zA-Z\/][^>]*>/g;
+	return function(xml, sanitize){
+		var caps 		= xml.getElementsByTagName('p'),
+			captions 	= []
+		;
+		var e, s, c;
+		for(var i = 0, len = caps.length; i < len; i++){
+			s = getTime(caps[i].getAttribute('begin'));
+			e = getTime(caps[i].getAttribute('end'));
+			
+			if(s !== false && e !== false){
+				c = $(caps[i]).text() || '';
+				if(sanitize){
+					c = c.replace(sanitizeReg, '');
+				}
+				captions.push({content: c, start: s, end: e});
+			}
+		}
+		return captions;
+	};
+})();
 	
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1

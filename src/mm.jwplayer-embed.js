@@ -94,9 +94,17 @@
 				if(cfg.poster){
 					vars.image = cfg.poster;
 				}
+				
 				if(provider){
 					vars.provider = provider;
 				}
+				
+				// if we can't autodetect provider by file-extension,
+				// we add a provider
+				if(!vars.provider && !this.canPlaySrc(src)){
+					vars.provider = this.nodeName;
+				}
+								
 				vars.autostart = ''+ cfg.autoplay;
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
@@ -110,6 +118,11 @@
 					vars.showicons = 'false';
 				}
 				
+				if( params.wmode === 'transparent' && !vars.screencolor && !attrs.bgcolor ){
+					vars.screencolor = 'ffffffff';
+					attrs.bgcolor = '#000000';
+				}
+				
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
@@ -121,8 +134,23 @@
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
+			canPlaySrc: function(media){
+				var ret 	= m.fn.canPlaySrc.apply(this, arguments), 
+					index 	= -1,
+					src 	= media.src || media
+				;
+				
+				if( !ret && typeof src === 'string' ){
+					index = src.indexOf('youtube.com/');
+					if(index < 15 && index > 6){
+						ret = 'maybe';
+					}
+				}
+				
+				return ret;
+			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'VP6', 'mp3', 'AAC'],
-			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla', 'youtube/flv']
 		}
 	;
 	

@@ -144,6 +144,12 @@
 			pointer-events: none;
 			cursor: pointer;
        	}
+		video {
+			padding: 10px;
+			width: 412px;
+			height: 220px;
+			background: #f00;
+		}
        </style>
     </head>
     <body>       
@@ -219,10 +225,10 @@
             <div class="media-player" data-controlwrapper="controlwrapper">
             	<span class="media-label">Videoplayer</span>
                 <video poster="../../demos/media/bbb_watchtrailer.gif" controls="controls" id="video-1">
-					<source src="../../demos/media/bbb_trailer_mobile.m4v" />
-					<source src="../../demos/media/bbb_trailer_400p.ogg" />
+					<source src="../../demos/media/bbb_trailer_mobile.m24v" type="video/mp4" />
+					
                    
-					<a class="track" href="test.srt" lang="de" data-enabled="enabled">name</a>
+					<a class="track" type="xml/ttml" href="caption.xml" lang="de" data-enabled="enabled">name</a>
 					<p>Fallback-Content</p>
                     <a class="source" href="../../demos/media/bbb_trailer_400p.ogg">title</a>
                     

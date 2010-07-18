@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.2.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.2.4 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -68,8 +68,8 @@
 							styles = $.attr(parent, 'style');
 							$.attr(parent, 'style', styles+'; display: block !important;');
 						}
-						ret.height = jElm.height();
-						ret.width = jElm.width();
+						ret.height = jElm.innerHeight();
+						ret.width = jElm.innerWidth();
 						if( !ret.width && !ret.height ){
 							ret = getHiddenDim(jElm, parent);
 						}
@@ -85,21 +85,35 @@
 				parent = parent.parentNode;
 			}
 			return ret;
-		}
+		},
+		dimStyles = []
 	;
 	
+	$.each(['Top', 'Left', 'Right', 'Bottom'], function(i, name){
+		dimStyles.push('margin'+ name);
+		dimStyles.push('padding'+ name);
+		dimStyles.push('border'+ name +'Width');
+		setTimeout(function(){
+			m._transferBackground.push('border'+ name +'Color');
+			m._transferBackground.push('border'+ name +'Style');
+		}, 1);
+	});
 	$.fn.getDimensions = function(){
 		var ret = {width: 0, height: 0};
 		if(this[0]){
-			var elmS = this[0].style;
+			var elem = this,
+				elmS = this[0].style
+			;
 			// assume that inline style is correct
 			// enables 100% feature with inline-style
 			ret.height = elmS.height;
 			ret.width = elmS.width;
-			
+			$.each(dimStyles, function(i, name){
+				ret[name] = elmS[name] || elem.css(name);
+			});
 			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
-				ret.height = this.height();
-				ret.width = this.width();
+				ret.height = this.innerHeight();
+				ret.width = this.innerWidth();
 				
 				if( !ret.width && !ret.height ){
 					ret = getHiddenDim(this, this[0]);
@@ -486,6 +500,9 @@
 			}
 			return data;
 		},
+		_transferBackground: [
+			'backgroundColor', 'backgroundPosition', 'backgroundImage', 'backgroundRepeat', 'background-attachment'
+		],
 		_setAPIActive: function(element, supType){
 			var data 		= $.data(element, 'mediaElemSupport'),
 				oldActive 	= data.name
@@ -509,6 +526,7 @@
 				}
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
+				
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 				if( data.apis[oldActive] ){
 					if( data.apis[oldActive]._volumelevelState !== undefined ){
@@ -517,7 +535,13 @@
 					if( data.apis[oldActive]._muteState !== undefined ){
 						$(element).muted(data.apis[oldActive]._muteState);
 					}
+					if(data.apis[oldActive].visualElem){
+						$.each(m._transferBackground, function(i, name){
+							data.apis[supType].visualElem.css(name, data.apis[oldActive].visualElem.css(name));	
+						});
+					}
 				}
+				
 			}
 			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){
@@ -619,6 +643,10 @@
 				apiData.apis[supported.name].visualElem
 					.css( jElm.getDimensions() )
 				;
+				$.each(m._transferBackground, function(i, name){
+					apiData.apis[supported.name].visualElem.css(name, jElm.css(name));	
+				});
+				
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},
@@ -965,9 +993,17 @@
 				if(cfg.poster){
 					vars.image = cfg.poster;
 				}
+				
 				if(provider){
 					vars.provider = provider;
 				}
+				
+				// if we can't autodetect provider by file-extension,
+				// we add a provider
+				if(!vars.provider && !this.canPlaySrc(src)){
+					vars.provider = this.nodeName;
+				}
+								
 				vars.autostart = ''+ cfg.autoplay;
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
@@ -981,6 +1017,11 @@
 					vars.showicons = 'false';
 				}
 				
+				if( params.wmode === 'transparent' && !vars.screencolor && !attrs.bgcolor ){
+					vars.screencolor = 'ffffffff';
+					attrs.bgcolor = '#000000';
+				}
+				
 				params.flashvars = [];
 				$.each(vars, function(name, val){
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
@@ -992,8 +1033,23 @@
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
 			},
+			canPlaySrc: function(media){
+				var ret 	= m.fn.canPlaySrc.apply(this, arguments), 
+					index 	= -1,
+					src 	= media.src || media
+				;
+				
+				if( !ret && typeof src === 'string' ){
+					index = src.indexOf('youtube.com/');
+					if(index < 15 && index > 6){
+						ret = 'maybe';
+					}
+				}
+				
+				return ret;
+			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'VP6', 'mp3', 'AAC'],
-			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla', 'youtube/flv']
 		}
 	;
 	

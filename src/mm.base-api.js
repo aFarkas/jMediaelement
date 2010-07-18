@@ -565,7 +565,6 @@
 			getJMEVisual: 1,
 			jmeReady: 1,
 			isJMEReady: 1,
-			playlist: 1,
 			getMediaAPI: 1
 		}
 	;
@@ -585,6 +584,7 @@
 						if(!api){return;}
 						if(  noAPIMethods[name] || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
+							return !(ret !== undefined);
 						} else {
 							api.unAPIReady(name+'queue');
 							api.jmeReady.call(api, function(){
@@ -610,12 +610,16 @@
 	$.fn.getMMAPI = $.fn.getJMEAPI;
 	
 	//plugin mechanism
-	$m.fn._extend = function(exts){
+	$m.fn._extend = function(exts, noAPI){
 		var names = [];
 		$.each(exts, function(name, fn){
 			$m.fn[name] = fn;
 			names.push(name);
+			if(noAPI){
+				noAPIMethods[name] = true;
+			}
 		});
 		$m.registerAPI(names);
 	};
+	
 })(jQuery);

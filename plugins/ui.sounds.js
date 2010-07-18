@@ -18,7 +18,7 @@
 			appended = true;	
 		}
 		
-		 var audio = $( $.fixHTML5('<audio style="display: block; width: 10px; height: 10px;" role="presentation" tabindex="-1" preload="metadata" autobuffer="autobuffer" />') )
+		 var audio = $( $.fixHTML5('<audio style="display: block; width: 10px; height: 10px;" role="presentation" tabindex="-1" preload="auto" />') )
 			.appendTo(bgWrapper)
 			.attr('srces', mediasrces)
 			.jmeEmbed(embedOpts)

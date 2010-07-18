@@ -29,6 +29,12 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.2.4
+	- refactored preload handling to better meet the spec
+	- improved jmefs plugin
+	- added support for background-styles/transparent flashplayer
+	- added provider handling for jw player
+
 Release 1.2.2 
 	- fixed opera not playing with preload-workaround
 

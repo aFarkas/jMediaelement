@@ -172,6 +172,52 @@
 				oldPlaylist: oldList
 			});
 		},
+		_loadPlaylistItem: function(list, item, _items, _autoplay){
+			if(!_items){
+				_items = $(itemSel, list);
+			}
+			_items = $(_items);
+			item = $(item);
+
+			var oldItem  	= _items
+					.filter('.ui-state-active')
+					.removeClass('ui-state-active'),
+				itemProps 	= getItemProps(item),
+				curIndex 	= _items.index( item ),
+				elem 		= $(this.element),
+				available 	= {next: true, prev: true}
+			;
+			
+			item.addClass('ui-state-active');
+			
+			this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
+						
+			this._trigger({
+				type: 'playlistitemchange',
+				list: list,
+				items: _items, 
+				props: itemProps,
+				currentIndex: curIndex,
+				currentItem: item, 
+				previousItem: oldItem,
+				autoplay: _autoplay
+			});
+			
+			if( _autoplay ){
+				setTimeout(function(){
+					elem.play();
+				}, 0);
+			}
+		},
+		_loadNextPlaylistItem: function(list, autoplay){
+			loadPrevNext(this, list, 1, autoplay);
+		},
+		_loadPreviousPlaylistItem: function(list, autoplay){
+			loadPrevNext(this, list, -1, autoplay);
+		}
+	});
+	
+	$.multimediaSupport.fn._extend({
 		playlist: function(list, _addThemeRoller, activate){
 			var elem 		= $(this.element);
 			if( !list ){
@@ -239,52 +285,8 @@
 				});
 			}
 			return list;
-		},
-		_loadPlaylistItem: function(list, item, _items, _autoplay){
-			if(!_items){
-				_items = $(itemSel, list);
-			}
-			_items = $(_items);
-			item = $(item);
-
-			var oldItem  	= _items
-					.filter('.ui-state-active')
-					.removeClass('ui-state-active'),
-				itemProps 	= getItemProps(item),
-				curIndex 	= _items.index( item ),
-				elem 		= $(this.element),
-				available 	= {next: true, prev: true}
-			;
-			
-			item.addClass('ui-state-active');
-			
-			this.loadSrc(itemProps.srces, itemProps.poster, itemProps.label );
-						
-			this._trigger({
-				type: 'playlistitemchange',
-				list: list,
-				items: _items, 
-				props: itemProps,
-				currentIndex: curIndex,
-				currentItem: item, 
-				previousItem: oldItem,
-				autoplay: _autoplay
-			});
-			
-			if( _autoplay ){
-				setTimeout(function(){
-					elem.play();
-				}, 0);
-			}
-		},
-		_loadNextPlaylistItem: function(list, autoplay){
-			loadPrevNext(this, list, 1, autoplay);
-		},
-		_loadPreviousPlaylistItem: function(list, autoplay){
-			loadPrevNext(this, list, -1, autoplay);
 		}
-	});
-	
+	}, true);
 	$.fn.jmeControl.defaults.playlist = {};
 	$.fn.jmeControl.addControl('playlist', function(playlist, element, api, o){
 		element.playlist( playlist, o.addThemeRoller, o.playlist.activate );

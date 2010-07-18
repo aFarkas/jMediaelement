@@ -68,8 +68,8 @@
 							styles = $.attr(parent, 'style');
 							$.attr(parent, 'style', styles+'; display: block !important;');
 						}
-						ret.height = jElm.height();
-						ret.width = jElm.width();
+						ret.height = jElm.innerHeight();
+						ret.width = jElm.innerWidth();
 						if( !ret.width && !ret.height ){
 							ret = getHiddenDim(jElm, parent);
 						}
@@ -85,21 +85,35 @@
 				parent = parent.parentNode;
 			}
 			return ret;
-		}
+		},
+		dimStyles = []
 	;
 	
+	$.each(['Top', 'Left', 'Right', 'Bottom'], function(i, name){
+		dimStyles.push('margin'+ name);
+		dimStyles.push('padding'+ name);
+		dimStyles.push('border'+ name +'Width');
+		setTimeout(function(){
+			m._transferBackground.push('border'+ name +'Color');
+			m._transferBackground.push('border'+ name +'Style');
+		}, 1);
+	});
 	$.fn.getDimensions = function(){
 		var ret = {width: 0, height: 0};
 		if(this[0]){
-			var elmS = this[0].style;
+			var elem = this,
+				elmS = this[0].style
+			;
 			// assume that inline style is correct
 			// enables 100% feature with inline-style
 			ret.height = elmS.height;
 			ret.width = elmS.width;
-			
+			$.each(dimStyles, function(i, name){
+				ret[name] = elmS[name] || elem.css(name);
+			});
 			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
-				ret.height = this.height();
-				ret.width = this.width();
+				ret.height = this.innerHeight();
+				ret.width = this.innerWidth();
 				
 				if( !ret.width && !ret.height ){
 					ret = getHiddenDim(this, this[0]);
@@ -486,6 +500,9 @@
 			}
 			return data;
 		},
+		_transferBackground: [
+			'backgroundColor', 'backgroundPosition', 'backgroundImage', 'backgroundRepeat', 'background-attachment'
+		],
 		_setAPIActive: function(element, supType){
 			var data 		= $.data(element, 'mediaElemSupport'),
 				oldActive 	= data.name
@@ -509,6 +526,7 @@
 				}
 				data.apis[supType]._setActive(oldActive);
 				apiReady = true;
+				
 				data.apis[supType]._trigger({type: 'apiActivated', api: supType});
 				if( data.apis[oldActive] ){
 					if( data.apis[oldActive]._volumelevelState !== undefined ){
@@ -517,7 +535,13 @@
 					if( data.apis[oldActive]._muteState !== undefined ){
 						$(element).muted(data.apis[oldActive]._muteState);
 					}
+					if(data.apis[oldActive].visualElem){
+						$.each(m._transferBackground, function(i, name){
+							data.apis[supType].visualElem.css(name, data.apis[oldActive].visualElem.css(name));	
+						});
+					}
 				}
+				
 			}
 			data.apis[supType].isAPIActive = true;
 			if(hideElem && hideElem.nodeName){
@@ -619,6 +643,10 @@
 				apiData.apis[supported.name].visualElem
 					.css( jElm.getDimensions() )
 				;
+				$.each(m._transferBackground, function(i, name){
+					apiData.apis[supported.name].visualElem.css(name, jElm.css(name));	
+				});
+				
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},

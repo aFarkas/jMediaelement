@@ -16,12 +16,21 @@ package com.protofunc.jme.jmefs {
 		private var _player:IPlayer;
 
 		private var _button:Button;
+		
+		private var _layer:MovieLayer;
 
 
 		public function initPlugin(player:IPlayer, config:PluginConfig):void {
 			_player = player;
 			_config = config;
-
+			
+			if(!player.config.icons && player.config.controlbar == "none"){
+				_layer = new MovieLayer();
+				_layer.width = stage.width;
+				_layer.height = stage.height;			
+				addChild(_layer);
+			}
+			
 			_button = new Button(_player);
 			addChild(_button);
 
@@ -51,6 +60,10 @@ package com.protofunc.jme.jmefs {
 		}
 		
 		private function resizeHandler(event:Event):void {
+			if(_layer){
+				_layer.width = stage.width;
+				_layer.height = stage.height;
+			}
 			_button.dispatch("resize");
 		}
 
@@ -64,6 +77,23 @@ package com.protofunc.jme.jmefs {
 			return ID;
 		}
 	}
+}
+
+import flash.display.Sprite;
+import flash.events.Event;
+import com.longtailvideo.jwplayer.player.*;
+
+
+class MovieLayer extends Sprite {
+	public function MovieLayer() {
+		
+		graphics.beginFill(0xFF00FF, 1);
+		graphics.drawRect(0, 0, 64, 64);
+		graphics.endFill();
+		alpha = 0;
+	}
+	
+
 }
 
 import flash.display.Sprite;
@@ -160,7 +190,6 @@ function addCallback(funName:String, fun:Function):void {
 
 
 function log(message:String):void {
-	return;
 	if (ExternalInterface.available) {
 		try {
 			ExternalInterface.call("console.log" , message);

@@ -6,7 +6,7 @@ for srt captions
 2
 00:00:7,166 --> 00:00:15,883
 Simply use a srt-file and append:
-&lt;a href="file.srt" class="track" data-enabled="true"&gt;My srt file&lt;/a&gt;
+&lt;a href="file.srt" class="track" data-enabled="enabled"&gt;My srt file&lt;/a&gt;
 
 3
 00:00:16,000 --> 00:00:18,962

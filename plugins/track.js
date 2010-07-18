@@ -83,10 +83,9 @@
 	 * extend the api
 	 */
 	var capTypes = {		
-		'text/srt': 'parseSrt',
-		'xml/dfxp': 'parseDfxp',
-		'xml/ttml': 'parseDfxp'
-	}
+		'text/srt': ['text', 'parseSrt'],
+		'application/ttaf+xml': ['xml', 'parseDfxp']
+	};
 	$.multimediaSupport.fn._extend({
 		disableTrack: function(object, _data){
 			object = (isFinite(object)) ? tracks.filter(':eq('+ object +')') : $(object);
@@ -104,7 +103,8 @@
 			if( !_trackData.load ){
 				_trackData.load = 'loading';
 				var type = object.attr('type') || 'text/srt';
-				if(!capTypes[type]){
+				type = capTypes[type];
+				if(!type){
 					setTimeout( function(){
 						throw("we don't know. captions type: "+ type);
 					}, 0);
@@ -113,11 +113,17 @@
 				
 				$.ajax({
 					url: object[0].href,
-					dataType: type.split('/')[0],
+					dataType: type[0],
 					success: function(srt){
 						_trackData.load = 'loaded';
-						_trackData.captions = $[capTypes[type]](srt, (object[0].attributes['data-sanitize'] || {}).specified );
-						fn( _trackData.captions );
+						$[type[1]](
+							srt, 
+							function(caps){
+								_trackData.captions = caps;
+								fn( caps );
+							},
+							(object[0].attributes['data-sanitize'] || {}).specified 
+						);
 					}
 				});
 			} else {
@@ -233,39 +239,88 @@
 		changeState();
 		mm.bind('trackChange', changeState);
 	});
-
-$.parseDfxp = (function(){
-	var getTime = function(time){
-		time = (time || '').split(':');
-		if(time.length === 3){
-			time = (parseInt(time[0], 10) * 60 * 60) +
-                  (parseInt(time[1], 10) * 60) +
-                  (parseInt(time[2], 10))
-			;
-			return isNaN(time) ? false : time;
-		}
-		return false;
-	};
 	
+$.backgroundEach = function(arr, processFn, completeFn){
+	var i = 0,
+		l = arr.length
+	;
+	var process = function(){
+		var start = new Date().getTime();
+		for(; i < l; i++){
+			processFn(i, arr[i], arr);
+			if(new Date().getTime() - start > 100){
+				setTimeout(process, 50);
+				break;
+			}
+		}
+		if( i >= l - 1 ){
+			completeFn(arr, i, l);
+		}
+	};
+	process();
+};
+$.parseDfxp = (function(){
 	var sanitizeReg = /<[a-zA-Z\/][^>]*>/g;
-	return function(xml, sanitize){
-		var caps 		= xml.getElementsByTagName('p'),
+	var getTime = function(time){
+			time = (time || '').split(':');
+			if(time.length === 3){
+				time = (parseInt(time[0], 10) * 60 * 60) +
+	                  (parseInt(time[1], 10) * 60) +
+	                  (parseInt(time[2], 10))
+				;
+				return isNaN(time) ? false : time;
+			}
+			return false;
+		},
+		doc 		= document,
+		allowedNodes = {
+			span: 1,
+			div: 1,
+			p: 1,
+			em: 1,
+			strong: 1,
+			br: 1
+		},
+		getContent 	= function(elem){
+			var childs 	= elem.childNodes,
+				div 	= doc.createElement('div'),
+				childElem, childContent
+			;
+			
+			for(var i = 0, len = childs.length; i < len; i++){
+				if(childs[i].nodeType === 3){
+					div.appendChild( doc.createTextNode(childs[i].data) );
+				} else if(childs[i].nodeType === 1 && allowedNodes[childs[i].nodeName.toLowerCase()]){
+					childElem = doc.createElement(childs[i].nodeName);
+					childContent = getContent(childs[i]);
+					if(childContent){
+						childElem.innerHTML = childContent;
+					}
+					div.appendChild( childElem );
+				}
+				
+			}
+			return div.innerHTML;
+		}
+	;
+	
+	
+	return function(xml, complete, sanitize){
+		var caps 		= $('p, div, span', xml).filter('[begin][end]'),
 			captions 	= []
 		;
 		var e, s, c;
-		for(var i = 0, len = caps.length; i < len; i++){
+		$.backgroundEach(caps, function(i){
 			s = getTime(caps[i].getAttribute('begin'));
 			e = getTime(caps[i].getAttribute('end'));
 			
 			if(s !== false && e !== false){
-				c = $(caps[i]).text() || '';
-				if(sanitize){
-					c = c.replace(sanitizeReg, '');
-				}
+				c = getContent(caps[i]) || '';
 				captions.push({content: c, start: s, end: e});
 			}
-		}
-		return captions;
+		}, function(){
+			complete(captions);
+		});
 	};
 })();
 	
@@ -304,7 +359,7 @@ var regs = {
 	time: /(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>\s*(\d+):(\d+):(\d+)(?:,(\d+))?/
 	
 };
-$.parseSrt = function(srt, sanitize) {
+$.parseSrt = function(srt, complete, sanitize) {
     srt = srt.replace(regs.dosLines, ''); // remove dos newlines
     srt = $.trim(srt); // trim white space start and end
     if(sanitize){
@@ -314,8 +369,8 @@ $.parseSrt = function(srt, sanitize) {
     // get captions
     var captions = [];
     var caplist = srt.split('\n\n');
-    for (var i = 0; i < caplist.length; i=i+1) {
-        var caption = "";
+	$.backgroundEach(caplist, function(i){
+		var caption = "";
         var content, start, end, s;
         caption = caplist[i];
         s = caption.split(/\n/);
@@ -334,19 +389,13 @@ $.parseSrt = function(srt, sanitize) {
                   (parseInt(m[6], 10) * 60) +
                   (parseInt(m[7], 10)) +
                   (parseInt(m[8], 10) / 1000);
-            } else {
-                // Unrecognized timestring
-                continue;
+				content = s.slice(2).join("<br>");
+				captions.push({start: start, end: end, content: content});
             }
-            // concatenate text lines to html text
-            content = s.slice(2).join("<br>");
-        } else {
-            // file format error or comment lines
-            continue;
         }
-        captions.push({start: start, end: end, content: content});
-    }
-
-    return captions;
+        
+	}, function(){
+		complete(captions);
+	});
 };
 })(jQuery);

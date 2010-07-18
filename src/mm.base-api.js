@@ -250,59 +250,6 @@
 				ret = parseFloat(num, 10);
 			}
 			return ret;
-		},
-		_hidePoster: function(){
-			if(!this._isHiddenPoster){
-				$('img.poster-image', this.visualElem).css('visibility', 'hidden');
-				$(this.apiElem).css('visibility', '');
-				this._isHiddenPoster = true;
-			}
-		},
-		_showPoster: function(e, d){
-			if(!d.time){
-				$('img.poster-image', this.visualElem).css('visibility', '');
-				$(this.apiElem).css('visibility', 'hidden');
-				this._isHiddenPoster = false;
-			} else if(!this._isHiddenPoster){
-				this._hidePoster();
-			}
-		},
-		_setPoster: function(poster){
-			$('img.poster-image', this.visualElem).remove();
-			$(this.element).unbind('.jme_poster');
-			if(poster){
-				var time = this.currentTime();
-				$('<img />', 
-					{
-						'class': 'poster-image',
-						css: {
-							position: 'absolute',
-							top: 0,
-							left: 0,
-							margin: 0,
-							'float': 'none',
-							maxHeight: '100%',
-							maxWidth: '100%',
-							width: '100%',
-							height: 'auto',
-							visibility: 'hidden'
-						},
-						src: poster
-					}
-				)
-					.appendTo(this.visualElem)
-				;
-				this._isHiddenPoster = true;
-				$(this.element)
-					.bind('play.jme_poster', $.proxy(this, '_hidePoster'))
-					.bind('timechange.jme_poster', $.proxy(this, '_showPoster'))
-				;
-				if(!isFinite(time) || !time){
-					this._showPoster(false, {time: 0});
-				} else {
-					this._hidePoster();
-				}
-			}
 		}
 	});
 	

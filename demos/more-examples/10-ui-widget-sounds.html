@@ -26,15 +26,34 @@
 					.accordion({ 
 						header: "h3",
 						sound: {
-							changestart: '../media/sound14.mp3'
+							changestart: '../media/sounds/sound14.mp3'
 						}
 					})
 				;
 				$('#slider').slider({
+					animate: true,
 					sound: {
-						change: '../media/button-3.mp3'
+						change: '../media/sounds/button-3.mp3'
 					}
 				});
+				
+				$('#dialog').dialog({
+					autoOpen: false,
+					show: 'blind',
+					hide: 'explode',
+					sound: {
+						beforeclose: '../media/sounds/button-4.mp3',
+						dragStop: '../media/sounds/button-3.mp3',
+						resizeStart: '../media/sounds/sound14.mp3',
+						open: '../media/sounds/button-7.mp3'
+					}
+				});
+				
+				$('#opener').click(function() {
+					$('#dialog').dialog('open');
+					return false;
+				});
+
 
 
             });
@@ -49,7 +68,10 @@
 
 			<div>
 				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
-				<div id="slider"></div>
+				<div id="dialog" title="Basic dialog">
+					<p>This is an animated dialog which is useful for displaying information. The dialog window can be moved, resized and closed with the 'x' icon.</p>
+				</div>
+				<button id="opener">Open Dialog</button>
 				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
 			</div>
 		</div>
@@ -57,6 +79,7 @@
 			<h3><a href="#">Second</a></h3>
 			<div>
 				<p>Phasellus mattis tincidunt nibh.</p>
+				<div id="slider"></div>
 				<p>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</p>
 			</div>
 		</div>

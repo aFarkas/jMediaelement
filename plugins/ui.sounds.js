@@ -22,9 +22,6 @@
 			.appendTo(bgWrapper)
 			.attr('srces', mediasrces)
 			.jmeEmbed(embedOpts)
-			.jmeReady(function(){
-				$(this).currentTime(0);
-			})
 		;
 		
 		return audio;

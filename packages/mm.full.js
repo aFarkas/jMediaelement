@@ -16,6 +16,7 @@
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
+	$.support.autoBuffer = !!('autobuffer' in tVid);
 	$.support.audio = !!($('<audio />')[0].canPlayType);
 	
 	tVid = null;
@@ -250,10 +251,13 @@
 					$.attr(elem, n, v);
 				});
 			} else if(name === 'preload'){
-				if(!value){
+				if(value === ''){
 					value = 'auto';
 				} else if(!preloadVals[value]){
 					value = 'metadata';
+				}
+				if( $.support.autoBuffer ){
+					elem.autobuffer = !!(value === 'auto');
 				}
 				elem.setAttribute(name, value);
 			}
@@ -764,11 +768,15 @@
 	};
 	
 	var fixPreload = function(apiData){
-		var elem = apiData.apis.nativ.apiElem;
+		var elem 	= apiData.apis.nativ.apiElem,
+			preload = $.attr(elem, 'preload')
+		;
 		if( supportMediaPreload || apiData.name !== 'nativ' ){
+			if($.support.autoBuffer){
+				$.attr(elem, 'preload', preload);
+			}
 			return;
 		}
-		var preload = $.attr(elem, 'preload');
 		if( preload === 'auto' || ( preload === 'metadata' && !elem.getAttribute('poster') ) || $.attr(elem, 'autoplay') ){return;}
 		var srces 		= $(elem).attr('srces'),
 			addSrces 	= function(e){

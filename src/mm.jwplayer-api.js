@@ -17,7 +17,7 @@
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
 	
-	var privJwEvents = {
+	window.jwEvents = {
 		View: {
 			PLAY: function(obj){
 				var api = obj.state && getAPI(obj.id);
@@ -27,6 +27,30 @@
 			}
 		},
 		Model: {
+			BUFFER: function(obj){
+				var api = getAPI(obj.id);
+				if(!api){return;}
+				
+				if( api._$timeProgress && obj.percentage + api._$startBuffer + 1 < api._$timeProgress ){
+					api._$startBuffer = api._$timeProgress;
+				}
+				var evt = {
+					type: 'progresschange',
+					relLoaded: obj.percentage + api._$startBuffer,
+					relStart: 0
+				};
+				api._$buffered = evt.relLoaded;
+				api._trigger(evt);
+			},
+			STATE: function(obj){
+				var state = privJwEvents.Model.STATE(obj);
+				if(state === 'playing'){
+					var api = getAPI(obj.id);
+					if(!api){return;}
+					api._trigger('playing');
+					api._$isPlaystate = true;
+				}
+			},
 			META: function(obj){
 				if(obj.type === 'metadata'){
 					var api = getAPI(obj.id);
@@ -109,57 +133,7 @@
 			}
 		}
 	};
-	window.jwEvents = {
-		four: $.extend(true, {}, privJwEvents, {
-			Model: {
-				LOADED: function(obj){
-					var api = getAPI(obj.id);
-					if(!api){return;}
-					var evt = {
-						type: 'progresschange',
-						lengthComputable: !!(obj.total)
-					};
-					if(obj.total){
-						$.extend(evt, {
-							relLoaded: obj.total / obj.loaded * 100
-						});
-						
-						api._$buffered = evt.relLoaded;
-					}
-					api._trigger(evt);
-				}
-			}
-		}),
-		five: $.extend(true, {}, privJwEvents, {
-			Model: {
-				BUFFER: function(obj){
-					var api = getAPI(obj.id);
-					if(!api){return;}
-					
-					if( api._$timeProgress && obj.percentage + api._$startBuffer + 1 < api._$timeProgress ){
-						api._$startBuffer = api._$timeProgress;
-					}
-					var evt = {
-						type: 'progresschange',
-						relLoaded: obj.percentage + api._$startBuffer,
-						relStart: 0
-					};
-					api._$buffered = evt.relLoaded;
-					api._trigger(evt);
-				},
-				STATE: function(obj){
-					var state = privJwEvents.Model.STATE(obj);
-					if(state === 'playing'){
-						var api = getAPI(obj.id);
-						if(!api){return;}
-						api._trigger('playing');
-						api._$isPlaystate = true;
-					}
-				}
-			}
-		})
-	};
-	
+		
 	window.playerReady = function (obj) {
 		
 		var api = getAPI(obj.id);
@@ -185,11 +159,10 @@
 			}, 20);
 		}
 		
-		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
 		//add events
-		$.each(jwEvents[apiVersion], function(mvcName, evts){
+		$.each(jwEvents, function(mvcName, evts){
 			$.each(evts, function(evtName){
-				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
+				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ mvcName +'.'+ evtName);
 			});
 		});
 		
@@ -274,89 +247,13 @@
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
-		_isSeekable: function(t){
-			var cfg = this.apiElem.getConfig() || {};
-			if(this._$buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
-				return true;
-			}
-			var dur = this.getDuration();
-			if(!dur){
-				return false;
-			}
-			return (t / dur * 100 < this._$buffered);
-		},
 		currentTime: function(t){
 			if(!isFinite(t)){
 				return this._$currentPos || 0;
 			}
-			var api 			= this,
-				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
-				doSeek 			= function(){
-					api.apiElem.sendEvent('SEEK', t);
-					unbind();
-					if(!wantsPlaying){
-						api.apiElem.sendEvent('PLAY', 'false');
-					}
-					api._$currentPos = t;
-					api._trigger({type: 'timechange', time: t});
-				},
-				unbind 			= function(){
-					$(api.element).unbind('.jwseekrequest');
-				}
-			;
-			if(!wantsPlaying){
-				this.apiElem.sendEvent('PLAY', 'true');
-				this.apiElem.sendEvent('PLAY', 'false');
-			}
-			clearTimeout(this._seekrequestTimer);
-			unbind();
-			
-			if(this._isSeekable(t)){
-				doSeek();
-			} else {
-				this.apiElem.sendEvent('PLAY', 'false');
-				this._trigger('waiting');
-				$(this.element)
-					.bind('progresschange.jwseekrequest', function(){
-						if(api._isSeekable(t)){
-							var wasMuted = api.muted();
-							unbind();
-							clearTimeout(api._seekrequestTimer);
-							if (!wasMuted) {
-								api.muted(true);
-							}
-							api.apiElem.sendEvent('PLAY', 'true');
-							api._seekrequestTimer = setTimeout(function(){
-								if(!wasMuted){
-									api.muted(wasMuted);
-								}
-								doSeek();
-							}, 120);
-							
-							
-						}
-					})
-					.bind('mediareset.jwseekrequest', unbind)
-					.bind('play.jwseekrequest', function(){
-						api.apiElem.sendEvent('PLAY', 'false');
-						api._trigger('waiting');
-						wantsPlaying = true;
-					})
-					.bind('pause.jwseekrequest', function(){
-						wantsPlaying = false;
-					})
-				;
-				
-				//seek aborted
-				this._seekrequestTimer = setTimeout(function(){
-					$(api.element)
-						.unbind('play.jwseekrequest')
-						.unbind('pause.jwseekrequest')
-						.bind('play.jwseekrequest', unbind)
-						.bind('pause.jwseekrequest', unbind)
-					;
-				}, 999);
-			}
+			this._$currentPos = t;
+			this.apiElem.sendEvent('SEEK', t);
+			this._trigger({type: 'timechange', time: t});
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;

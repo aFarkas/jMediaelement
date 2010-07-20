@@ -862,7 +862,7 @@
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				//fixPreload has to happen before mediaerror setup!
+				//fixPreload has to happen after mediaerror setup!
 				fixPreload(apiData);
 				apiData.apis.nativ._init();
 			}
@@ -2096,6 +2096,10 @@
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
+			providerMatch 		= {
+				audio: 'sound',
+				video: 'video'
+			},
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
 					try {
@@ -2152,7 +2156,7 @@
 				// if we can't autodetect provider by file-extension,
 				// we add a provider
 				if(!vars.provider && !this.canPlaySrc(src)){
-					vars.provider = this.nodeName;
+					vars.provider = providerMatch[this.nodeName];
 				}
 								
 				vars.autostart = ''+ cfg.autoplay;
@@ -2200,7 +2204,7 @@
 				return ret;
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'VP6', 'mp3', 'AAC'],
-			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla', 'youtube/flv']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla', 'youtube/flv', 'jwplayer/jwplayer']
 		}
 	;
 	
@@ -2227,7 +2231,7 @@
 		return $.data(doc.getElementById(id), 'mediaElemSupport').apis.jwPlayer;
 	}
 	
-	var privJwEvents = {
+	window.jwEvents = {
 		View: {
 			PLAY: function(obj){
 				var api = obj.state && getAPI(obj.id);
@@ -2237,6 +2241,30 @@
 			}
 		},
 		Model: {
+			BUFFER: function(obj){
+				var api = getAPI(obj.id);
+				if(!api){return;}
+				
+				if( api._$timeProgress && obj.percentage + api._$startBuffer + 1 < api._$timeProgress ){
+					api._$startBuffer = api._$timeProgress;
+				}
+				var evt = {
+					type: 'progresschange',
+					relLoaded: obj.percentage + api._$startBuffer,
+					relStart: 0
+				};
+				api._$buffered = evt.relLoaded;
+				api._trigger(evt);
+			},
+			STATE: function(obj){
+				var state = privJwEvents.Model.STATE(obj);
+				if(state === 'playing'){
+					var api = getAPI(obj.id);
+					if(!api){return;}
+					api._trigger('playing');
+					api._$isPlaystate = true;
+				}
+			},
 			META: function(obj){
 				if(obj.type === 'metadata'){
 					var api = getAPI(obj.id);
@@ -2319,57 +2347,7 @@
 			}
 		}
 	};
-	window.jwEvents = {
-		four: $.extend(true, {}, privJwEvents, {
-			Model: {
-				LOADED: function(obj){
-					var api = getAPI(obj.id);
-					if(!api){return;}
-					var evt = {
-						type: 'progresschange',
-						lengthComputable: !!(obj.total)
-					};
-					if(obj.total){
-						$.extend(evt, {
-							relLoaded: obj.total / obj.loaded * 100
-						});
-						
-						api._$buffered = evt.relLoaded;
-					}
-					api._trigger(evt);
-				}
-			}
-		}),
-		five: $.extend(true, {}, privJwEvents, {
-			Model: {
-				BUFFER: function(obj){
-					var api = getAPI(obj.id);
-					if(!api){return;}
-					
-					if( api._$timeProgress && obj.percentage + api._$startBuffer + 1 < api._$timeProgress ){
-						api._$startBuffer = api._$timeProgress;
-					}
-					var evt = {
-						type: 'progresschange',
-						relLoaded: obj.percentage + api._$startBuffer,
-						relStart: 0
-					};
-					api._$buffered = evt.relLoaded;
-					api._trigger(evt);
-				},
-				STATE: function(obj){
-					var state = privJwEvents.Model.STATE(obj);
-					if(state === 'playing'){
-						var api = getAPI(obj.id);
-						if(!api){return;}
-						api._trigger('playing');
-						api._$isPlaystate = true;
-					}
-				}
-			}
-		})
-	};
-	
+		
 	window.playerReady = function (obj) {
 		
 		var api = getAPI(obj.id);
@@ -2395,11 +2373,10 @@
 			}, 20);
 		}
 		
-		var apiVersion = (parseInt(obj.version, 10) > 4)? 'five' : 'four';
 		//add events
-		$.each(jwEvents[apiVersion], function(mvcName, evts){
+		$.each(jwEvents, function(mvcName, evts){
 			$.each(evts, function(evtName){
-				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ apiVersion +'.'+ mvcName +'.'+ evtName);
+				api.apiElem['add'+ mvcName +'Listener'](evtName, 'jwEvents.'+ mvcName +'.'+ evtName);
 			});
 		});
 		
@@ -2484,89 +2461,13 @@
 			} 
 			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
 		},
-		_isSeekable: function(t){
-			var cfg = this.apiElem.getConfig() || {};
-			if(this._$buffered === 100 || ( cfg.provider !== 'video' && cfg.provider !== 'audio' ) ){
-				return true;
-			}
-			var dur = this.getDuration();
-			if(!dur){
-				return false;
-			}
-			return (t / dur * 100 < this._$buffered);
-		},
 		currentTime: function(t){
 			if(!isFinite(t)){
 				return this._$currentPos || 0;
 			}
-			var api 			= this,
-				wantsPlaying 	= (/PLAYING|BUFFERING/.test( this.apiElem.getConfig().state)),
-				doSeek 			= function(){
-					api.apiElem.sendEvent('SEEK', t);
-					unbind();
-					if(!wantsPlaying){
-						api.apiElem.sendEvent('PLAY', 'false');
-					}
-					api._$currentPos = t;
-					api._trigger({type: 'timechange', time: t});
-				},
-				unbind 			= function(){
-					$(api.element).unbind('.jwseekrequest');
-				}
-			;
-			if(!wantsPlaying){
-				this.apiElem.sendEvent('PLAY', 'true');
-				this.apiElem.sendEvent('PLAY', 'false');
-			}
-			clearTimeout(this._seekrequestTimer);
-			unbind();
-			
-			if(this._isSeekable(t)){
-				doSeek();
-			} else {
-				this.apiElem.sendEvent('PLAY', 'false');
-				this._trigger('waiting');
-				$(this.element)
-					.bind('progresschange.jwseekrequest', function(){
-						if(api._isSeekable(t)){
-							var wasMuted = api.muted();
-							unbind();
-							clearTimeout(api._seekrequestTimer);
-							if (!wasMuted) {
-								api.muted(true);
-							}
-							api.apiElem.sendEvent('PLAY', 'true');
-							api._seekrequestTimer = setTimeout(function(){
-								if(!wasMuted){
-									api.muted(wasMuted);
-								}
-								doSeek();
-							}, 120);
-							
-							
-						}
-					})
-					.bind('mediareset.jwseekrequest', unbind)
-					.bind('play.jwseekrequest', function(){
-						api.apiElem.sendEvent('PLAY', 'false');
-						api._trigger('waiting');
-						wantsPlaying = true;
-					})
-					.bind('pause.jwseekrequest', function(){
-						wantsPlaying = false;
-					})
-				;
-				
-				//seek aborted
-				this._seekrequestTimer = setTimeout(function(){
-					$(api.element)
-						.unbind('play.jwseekrequest')
-						.unbind('pause.jwseekrequest')
-						.bind('play.jwseekrequest', unbind)
-						.bind('pause.jwseekrequest', unbind)
-					;
-				}, 999);
-			}
+			this._$currentPos = t;
+			this.apiElem.sendEvent('SEEK', t);
+			this._trigger({type: 'timechange', time: t});
 		},
 		getDuration: function(){
 			var t = this.apiElem.getPlaylist()[0].duration || 0;

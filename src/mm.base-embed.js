@@ -862,7 +862,7 @@
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				//fixPreload has to happen before mediaerror setup!
+				//fixPreload has to happen after mediaerror setup!
 				fixPreload(apiData);
 				apiData.apis.nativ._init();
 			}

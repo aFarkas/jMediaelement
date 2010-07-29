@@ -14,6 +14,7 @@
  * 
  * HTML:
  * <a class="track" href="srtfile.srt" lang="en" data-enabled="enabled" data-sanitize="sanitize" data-role="textaudiodesc">name</a>
+ * <a class="track" href="caption-dfxp.xml" type="application/ttaf+xml" data-enabled="enabled">name</a>
  * 
  * API:
  * 
@@ -42,7 +43,7 @@
  * 
  * HTML-UI:
  * only toggles first track on/off. for more functionality script your own UI. API is powerfull enough
- * <a class="toggle-track">bla</a>
+ * <a class="toggle-track">toggle track</a>
  */
 
 (function($){

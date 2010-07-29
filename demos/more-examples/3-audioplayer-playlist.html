@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
+		<meta charset="UTF-8" />
 		<title>Audioplayer Demo</title>
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/player-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js"></script>
@@ -15,7 +16,12 @@
 		<!-- optional for a11y-slider -->
 		<script src="../../utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
-		<script src="../../packages/mm.full.js"></script>
+		
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
 		
 		<!-- adds playlist markup- and dom-api -->
 		<script src="../../plugins/playlist.js"></script>

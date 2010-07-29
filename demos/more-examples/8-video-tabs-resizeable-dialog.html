@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
+		<meta charset="UTF-8" />
 		<title>jme DOM-API mixed with UI Widgets</title>
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/player-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
@@ -15,12 +16,18 @@
 		<!-- optional for a11y-slider -->
 		<script src="../../utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
-		<script src="../../packages/mm.full.js"></script>
+		
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
 		
 		<!-- useractivity -->
 		<script src="../../utils/useractivity.js"></script>
 		
 		<!-- fullwindow plugin -->
+		<script class="jme-jwPlayer" type="application/swf" src="../../packages/jmefs.swf"></script>
 		<script src="../../plugins/fullwindow.js"></script>
 		<!-- fullwindow plugin -->
 		
@@ -219,8 +226,8 @@
 					.css({opacity: 0})
 					.insertAfter('div.media-player')
 					.fadeTo(1000, 1)
-					.delay(3000)
-					.fadeOut(400, function(){
+					.delay(4000)
+					.fadeOut(1400, function(){
 						$(this).remove();
 					})
 				;

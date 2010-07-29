@@ -1,19 +1,28 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
-		<title>Simple Controls Demo</title>
+		<meta charset="UTF-8" />
+		<title>embed only Demo</title>
 		<link rel="stylesheet" href="../css/styles.css" />
-		<link rel="stylesheet" href="holy-grail-player-style.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		
-		<script src="../../packages/mm.embed.min.js"></script>
+		<!-- jmeEmbed script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+       <script src="../../packages/mm.embed.min.js"></script>
+		<!-- END: jme -->
+		
 		
 		<script>
 			$('html').addClass('js-on');
 			$(function(){	
 				$('video, audio').jmeEmbed({showFallback: true});
+$('video, audio').jmeEmbed({
+	jwPlayer: {
+		path: 'my-path-to/player.swf'
+	}
+});				
 			});
 		</script>
 	</head>

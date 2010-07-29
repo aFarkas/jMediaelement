@@ -93,31 +93,33 @@
 		},
 		win 	= $(window),
 		doc 	= $(document),
-		getSize	= function(rel){
-			var width 	= win.width(),
-				height	= win.height(),
-				winRel 	= width / height,
-				ret 	= {}
-			;
-			if(winRel > rel){
-				ret.height = height;
-				ret.width = height * rel;
-				
-				ret.bottom = 0;
-				ret.top = 0;
-				ret.left = (width / 2) - (ret.width / 2);
-				ret.right = ret.left;
-			} else {
-				ret.width = width;
-				ret.height = width / rel;
-				
-				ret.right = 0;
-				ret.left = 0;
-				ret.width = width;
-				ret.top = (height / 2) - (ret.height / 2);
-				ret.bottom = ret.top;
-			}
+		doSize 	= function(winDim, max, model){
+			var ret = {};
+			ret[model[0]] = max[model[0]];
+			ret[model[1]] = max[model[0]] * model[2];
+			
+			ret.bottom = (winDim.height / 2) - (ret.height / 2);
+			ret.top = ret.bottom;
+			ret.left = (winDim.width / 2) - (ret.width / 2);
+			ret.right = ret.left;
 			return ret;
+		},
+		getSize	= function(rel, maxWidth, maxHeight){
+			var width 	= win.width(),
+				height	= win.height()
+			;
+			
+			var winDim = {
+					width: win.width(),
+					height: win.height()
+				},
+				max 	= {
+					width: maxWidth ? Math.min(winDim.width, maxWidth) : winDim.width,
+					height: maxHeight ? Math.min(winDim.height, maxHeight) : winDim.height
+				}
+			;
+			
+			return doSize(winDim, max, (max.width / max.height > rel) ?  ['height', 'width', rel] : ['width', 'height', 1 / rel] );
 		},
 		supportsFullWindow
 	;
@@ -180,7 +182,7 @@
 	
 	$(function(){
 		var div = $('<div style="position: fixed; visibility: hidden; height: 0; width: 0; margin: 0; padding: 0; border: none;" />').appendTo('body');
-		supportsFullWindow = ($.curCSS(div[0], 'position', true) === 'fixed');
+		supportsFullWindow = ($.curCSS(div[0], 'position', true) === 'fixed' && (!$.browser.msie || parseInt($.browser.version, 10) > 6) );
 		div.remove();
 	});
 	
@@ -252,7 +254,7 @@
 		supportsFullWindow: function(){
 			return supportsFullWindow;
 		},
-		enterFullWindow: function(debug){
+		enterFullWindow: function(maxWidth, maxHeight){
 			if(this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
@@ -284,7 +286,7 @@
 			
 			windowOverlay.show(wrapper);
 			
-			vidCss 	= getSize(rel);
+			vidCss 	= getSize(rel, maxWidth, maxHeight);
 			videoCSS= $.extend({}, videoBaseCSS, vidCss);
 			
 			this.visualElem
@@ -294,13 +296,13 @@
 			
 			doc.bind('keydown.jmefullscreen', function(e){
 				if(e.keyCode === 27){
-					that.exitFullWindow(debug);
+					that.exitFullWindow();
 				}
 			});
 			//IE 7 triggers resize event on enterFullWindow
 			setTimeout(function(){
 				win.bind('resize.jmefullscreen', function(){
-					vidCss = getSize(rel);
+					vidCss = getSize(rel, maxWidth, maxHeight);
 					that.visualElem.css(vidCss);
 					$(that.element).triggerHandler('fullwindowresize', vidCss);
 					$(that.element).triggerHandler('resize');
@@ -314,7 +316,7 @@
 			$(this.element).triggerHandler('fullwindowresize', vidCss);
 			$(this.element).triggerHandler('resize');
 		},
-		exitFullWindow: function(debug){
+		exitFullWindow: function(){
 			if(!this.visualElem.hasClass('displays-fullscreen') || !supportsFullWindow){return;}
 			var data 	= $.data(this.element, 'mediaElemSupport'),
 				that 	= this,
@@ -362,7 +364,13 @@
 	if ( $.fn.jmeControl ) {
 		var supportJmefsButton = $.fn.jmeEmbed.defaults.jwPlayer && $.support.getBoundingClientRect && $.support.cssPointerEvents;
 		if( $.fn.jmeEmbed.defaults.jwPlayer ){
-			$.fn.jmeEmbed.defaults.jwPlayer.plugins.push($.multimediaSupport.jsPath + 'jmefs.swf');
+			$.fn.jmeEmbed.defaults.jwPlayer.plugins.jmefs = $.multimediaSupport.jsPath + 'jmefs.swf';
+			$(function(){
+				var path = ($('script.jme-jwPlayer')[0] || {}).src;
+				if(path){
+					$.fn.jmeEmbed.defaults.jwPlayer.plugins.jmefs = path;
+				}
+			});
 		}
 		
 		var fsID 		= 0,
@@ -467,8 +475,12 @@
 		});
 		
 		$.fn.jmeControl.addControl('fullscreen', function(control, video, data, o){
+			
 			if ( !supportsFullWindow && !video.supportsFullScreen() ) {
 				control.addClass('fullscreen-unsupported ui-disabled');
+				if(data.controlWrapper){
+					data.controlWrapper.addClass('fullscreen-unsupported');
+				}
 				return;
 			}
 			var elems = $.fn.jmeControl.getBtn(control), changeState = function(){
@@ -499,19 +511,20 @@
 					return;
 				}
 				if ( isFullscreen ) {
-					video.exitFullWindow(o.fullscreen);
+					video.exitFullWindow();
 				} else {
-					video.enterFullWindow(o.fullscreen);
+					video.enterFullWindow(o.fullscreen['max-width'], o.fullscreen['max-height']);
 				}
 				
 				return false;
 			});
 			changeState();
 			video.bind('fullwindow', changeState);
-		});
-		
-		$.fn.jmeControl.defaults.fullscreen = {
+		},
+		{
 			tryFullScreen: true,
+			'max-width': false,
+			'max-height': false,
 			jmeBtn: function(type, vid, cid){
 				if(type === 'resize'){
 					$(document.getElementById(vid)).triggerHandler('resize');				
@@ -519,6 +532,7 @@
 					$(document.getElementById(cid))[(type === 'jmefsButtonOver') ? 'addClass' : 'removeClass']('jme-over ui-state-over');
 				}
 			}
-		};
+		});
+		
 	}
 })(jQuery);

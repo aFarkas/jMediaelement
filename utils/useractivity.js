@@ -37,10 +37,9 @@
 	}
 	var activity = {
 		add: function(elem, cfg, name){
-			var data 		= $.data(elem, 'useractivity') || $.data(elem, 'useractivity', {idletime: 2500, idle: true, trigger: {}}),
+			var data 		= $.data(elem, 'jmeuseractivity') || $.data(elem, 'jmeuseractivity', {idletime: 2500, idle: true, trigger: {}}),
 				jElm 		= $(elem),
 				setInactive = function(){
-					
 					if(!data.idle){
 						data.idle = true;
 						if ( data.trigger.userinactive ) {
@@ -67,22 +66,29 @@
 				},
 				x, y
 			;
+			
 			data.idletime = (cfg || {}).idletime || data.idletime;
+			if(cfg && 'idle' in cfg){
+				data.idle = cfg.idle;
+			}
 			data.trigger[name] = true;
 			
 			if( !data.bound ){
 				jElm
-					.bind('mouseleave.useractivity', setInactive)
-					.bind('mousemove.useractivity focusin.useractivity mouseenter.useractivity keydown.useractivity keyup.useractivity', setActive)
+					.bind('mouseleave.jmeuseractivity', setInactive)
+					.bind('mousemove.jmeuseractivity focusin.jmeuseractivity mouseenter.jmeuseractivity keydown.jmeuseractivity keyup.jmeuseractivity mousedown.jmeuseractivity', setActive)
 				;
 				data.bound = true;
 			}
+			if(!data.idle){
+				setActive({type: 'initunidled'});
+			}
 		},
 		remove: function(elem, name){
-			var data = $.data(elem, 'useractivity') || $.data(elem, 'useractivity', {idletime: 2500, idle: true, trigger: {}});
+			var data = $.data(elem, 'jmeuseractivity') || $.data(elem, 'jmeuseractivity', {idletime: 2500, idle: true, trigger: {}});
 			data.trigger[name] = false;
 			if(!data.trigger.useractive && !data.trigger.userinactive){
-				$(elem).unbind('.useractivity');
+				$(elem).unbind('.jmeuseractivity');
 				data.bound = false;
 			}
 		}

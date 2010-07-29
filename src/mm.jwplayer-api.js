@@ -252,7 +252,11 @@
 				return this._$currentPos || 0;
 			}
 			this._$currentPos = t;
+			var playing = this._isPlaying();
 			this.apiElem.sendEvent('SEEK', t);
+			if(!playing){
+				this.pause();
+			}
 			this._trigger({type: 'timechange', time: t});
 		},
 		getDuration: function(){
@@ -263,7 +267,11 @@
 			if(!isFinite(v)){
 				return parseInt(this.apiElem.getConfig().volume, 10);
 			}
+			var wasMuted = this.muted();
 			this.apiElem.sendEvent('VOLUME', ''+v);
+			if(wasMuted){
+				this.apiElem.sendEvent('mute', 'true');
+			}
 		},
 		getCurrentSrc: function(){
 			return (this.apiElem.getConfig() || {}).file || '';

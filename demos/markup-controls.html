@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<meta charset="utf-8">
-		<title>Simple Controls Demo</title>
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
+		<meta charset="UTF-8" />
+		<title>Simple markup Controls Demo</title>		
 		<link rel="stylesheet" href="css/styles.css" />
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="css/player-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
@@ -17,12 +18,15 @@
 		<!-- END: for a11y-slider -->
 		
 		<!-- full jme script inlcudes jmeEmbed and jmeControl -->
-		<script src="../packages/mm.full.min.js"></script>
-		
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../packages/player.swf"></script>
+		<script src="../packages/mm.full.js"></script>
+		<!-- END: full jme script inlcudes jmeEmbed and jmeControl -->
 		
 		<script>
 			$('html').addClass('js-on');
-			$(function(){	
+			$(function(){
+				//initialize jmeControl	
 				$('div.media-player').jmeControl();
 			});
 			
@@ -34,25 +38,54 @@
 		
 		<h2>Videoplayer</h2>
 		
+		
+		<!-- media-player: serves as common wrapper-element -->
 		<div class="media-player">
-			<!-- class for labelling a player good for a11y -->
-			<span class="media-label">video: big buck bunny</span>
+			
+			
+			
 			<video poster="media/bbb_watchtrailer.gif" controls="controls" preload="none">
 				<source src="media/bbb_trailer_mobile.m4v" type="video/mp4" />
-				<source src="media/bbb_trailer_400p.ogg" type="video/ogg" />
+				<source src="media/bbb_trailer_400p.ogg" />
 			</video>
+			
+			<!--
+			 	control-elements: we use an interesting controls-concept, that works as a markup-api
+				this makes jme extremly flexible: You can change the structure, regroup etc.
+				Please have look @http://protofunc.com/jme/documentation/documentation-controls.html
+			-->
+			
+			<!-- media-state: has some interessting state-classes + serves as a play-pause interface for mouse -->
 			<div class="media-state"></div>
+			
+			<!-- media-label for labelling a player: good for a11y -->
+			<span class="media-label">video: big buck bunny</span>
+			
 			<!-- media-controls is grouping some controls -->
 			<div class="media-controls">
+				
+				<!-- play-pause-button -->
 				<a class="play-pause"><span class="ui-icon"> </span><span class="button-text">play / pause</span></a>
+				
+				<!-- current-time: displays the current time -->
 				<span class="current-time player-display">00:00</span>
+				
+				<!-- timeline-slider: time-slider with label (a11y.slider.ext) -->
 				<div class="timeline-slider">
 					<span class="handle-label">play position</span>
+					
+					<!-- progressbar: inside of the timeline-slider -->
 					<div class="progressbar"></div>
 				</div>
+				
+				<!-- duration displays duration -->
 				<span class="duration player-display">00:00</span>
+				
+				<!-- mute-unmute: toggle mute state -->
 				<a class="mute-unmute"><span class="ui-icon"> </span><span class="button-text">mute / unmute</span></a>
-				<div class="volume-slider"><span class="handle-label">volume control</span></div>
+				
+				<!-- volume-slider -->
+				<div class="volume-slider" data-mutestate="true"><span class="handle-label">volume control</span></div>
 			</div>
 		</div>
 		
@@ -62,14 +95,14 @@
 		<h2>Audioplayer</h2>
 		
 		<div class="media-player">
-			<!-- class for labelling a player good for a11y -->
-			<span class="media-label">audioplayer</span>
+			
 			
 			<audio controls="controls">
 				<source src="media/swazzrokk_v1.mp3" type="audio/mpeg" />
 				<source src="media/swazzrokk_v1.ogg" type="audio/ogg" />
 			</audio>
-			<!-- media-controls is grouping some controls -->
+			
+			<span class="media-label">audioplayer</span>
 			<div class="media-controls">
 				<a class="play-pause"><span class="ui-icon"> </span><span class="button-text">play / pause</span></a>
 				<span class="current-time player-display">00:00</span>
@@ -93,7 +126,10 @@
 &lt;link rel="stylesheet" href="css/player-controls.css" /&gt;
 
 &lt;script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"&gt;&lt;/script&gt;	
-&lt;!-- you only need slider &mp; progressbar widget from jquery ui --&gt;
+&lt;!-- 
+	you only need slider &amp; progressbar widget from jquery ui 
+	(jquery.ui.core, jquery.ui.widget, jquery.ui.mouse, jquery.ui.slider, jquery.ui.progressbar)
+--&gt;
 &lt;script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/jquery-ui.min.js"&gt;&lt;/script&gt;
 &lt;script src="../packages/mm.full.min.js"&gt;&lt;/script&gt;
 </code>
@@ -104,7 +140,12 @@ $(function(){
 	$('div.media-player').jmeControl();
 });
 </code>
-		<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player:</p>
+<h3>III. Configure path to swf-Fallback</h3>
+<p>Note: If the player.swf is not in your JS-folder. You have to configure the path to the JW-Player. There are to ways to achieve this (Using Markup or using JavaScript Configuration):</p>
+<h4>Configute swf path width markup</h4>
+<code>&lt;script class="jwPlayer" type="application/swf" src="../packages/player.swf"&gt;&lt;/script&gt;
+</code>
+<h4>Configute swf path in JS</h4>
 <code>
 $(function(){
 	$('div.media-player').jmeControl({
@@ -116,12 +157,12 @@ $(function(){
 	});
 });
 </code>
-<h3>Use HTML5 media elements with some <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-elements</a></h3>
+<h3>IV. Use HTML5 media elements with some <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-elements</a></h3>
 <p>jme uses a Markup-API to enable custom stylable controls, by using predefined HTML-Classes (i.e. play-pause for a play-pause Toggle-button or current-time for a current-time display).</p>
 <p>You find a full list of control classes in the <a href="http://protofunc.com/jme/documentation/documentation-controls.html">control-documentation</a>.</p>
 <code>
 &lt;div class="media-player"&gt;
-	&lt;video poster="media/bbb_watchtrailer.gif" controls="controls""&gt;
+	&lt;video poster="media/bbb_watchtrailer.gif" controls="controls"&gt;
 		&lt;source src="media/bbb_trailer_mobile.m4v" /&gt;
 		&lt;source src="media/bbb_trailer_400p.ogg" /&gt;
 	&lt;/video&gt;

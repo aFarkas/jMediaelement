@@ -347,7 +347,7 @@
 				loadingTimer 		= false,
 				triggerLoadingErr 	= function(e){
 					clearInterval(loadingTimer);
-					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 && ( $.support.flash9 || $.support.vlc ) ) {
+					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 && $.support.flash9 ) {
 						if(e === true){
 							//this will abort and start the error handling
 							that.element.load();
@@ -372,7 +372,11 @@
 							that._trigger.call(that, {type: 'volumelevelchange', volumelevel: that.apiElem.volume * 100});
 						}
 					},
-					
+					ended: function(){
+						if(that.isAPIActive && this.ended && !this.paused && !$.attr(this, 'loop') ){
+							this.pause();
+						}
+					},
 					timeupdate: function(){
 						var e = {
 							type: 'timechange',
@@ -392,7 +396,6 @@
 					}
 				})
 				.bind('play pause playing waiting', bubbleEvents)
-				// firefox also loads video without calling load-method, if autoplay is true and media pack has changed
 				.bind('play playing', function(){
 					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
 						try{
@@ -428,7 +431,7 @@
 				this._trigger('mmAPIReady');
 			}
 		},
-		play: function(src){
+		play: function(){
 			this.element.play();
 		},
 		pause: function(){
@@ -512,7 +515,8 @@
 			getJMEVisual: 1,
 			jmeReady: 1,
 			isJMEReady: 1,
-			getMediaAPI: 1
+			getMediaAPI: 1,
+			supportsFullScreen: 1
 		}
 	;
 	$m.registerAPI = function(names){

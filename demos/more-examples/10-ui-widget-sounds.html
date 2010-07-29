@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
-        <title>Audioplayer Demo</title>
-        <link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
+        <meta charset="UTF-8" />
+        <title>Sound-Extension for jQuery.UI Widgets Demo</title>
         <link rel="stylesheet" href="../css/styles.css" />
-        <link rel="stylesheet" href="../css/player-controls.css" />
+		
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/sunny/jquery-ui.css"/>
+		
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.js">
         </script>
         <!-- ui-components -->
         <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.js">
         </script>
         <!-- END:  ui-components -->
-        <script src="../../packages/mm.full.js">
-        </script>
+		
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
+		
         <!-- adds audio-api to ui-widgets -->
         <script src="../../plugins/ui.sounds.js">
         </script>
@@ -26,6 +33,7 @@
 					.accordion({ 
 						header: "h3",
 						sound: {
+							//using mp3 only
 							changestart: '../media/sounds/sound14.mp3'
 						}
 					})
@@ -33,7 +41,8 @@
 				$('#slider').slider({
 					animate: true,
 					sound: {
-						change: '../media/sounds/button-3.mp3'
+						//using mp3 + ogg
+						change: ['../media/sounds/button-3.mp3', '../media/sounds/button-3.ogg']
 					}
 				});
 				
@@ -42,10 +51,22 @@
 					show: 'blind',
 					hide: 'explode',
 					sound: {
-						beforeclose: '../media/sounds/button-4.mp3',
-						dragStop: '../media/sounds/button-3.mp3',
+						//using mp3 + ogg with type attribute
+						beforeclose: [
+							{src: '../media/sounds/button-4.mp3', type: 'audio/mpeg'},
+							{src: '../media/sounds/button-4.ogg', type: 'audio/ogg'}
+						],
+						//using mp3 + ogg with type attribute for first source
+						dragStop: [
+							{src: '../media/sounds/button-3.mp3', type: 'audio/mpeg'},
+							'../media/sounds/button-3.ogg'
+						],
+						//using only mp3
 						resizeStart: '../media/sounds/sound14.mp3',
-						open: '../media/sounds/button-7.mp3'
+						open: [
+							{src: '../media/sounds/button-7.mp3', type: 'audio/mpeg'},
+							'../media/sounds/button-7.ogg'
+						]
 					}
 				});
 				
@@ -61,7 +82,8 @@
         </script>
     </head>
     <body>
-    <h1>Playlist Demo with audio-element using the Playlist-Plugin</h1>
+    <h1>Sound-Extension for jQuery.UI Widgets Demo</h1>
+	<p>The jme-soundextension hooks into the widget-factory of jQuery UI. All widgets with events are capable to have background-sounds.</p>
     <div id="accordion">
 		<div>
 			<h3><a href="#">First</a></h3>

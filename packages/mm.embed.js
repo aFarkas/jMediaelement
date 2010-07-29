@@ -12,7 +12,7 @@
 		doc		= document,
 		tVid 	= $('<video />')[0],
 		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
-		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && $.browser.version < 534 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
+		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && parseFloat($.browser.version, 10) < 534 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
@@ -27,6 +27,7 @@
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
 	$.support.mediaLoop = ('loop' in $('<video />')[0]);
+	$.browser.deprecatedPoster = !supportMediaPreload;
 	
 	// HTML5 shiv document.createElement does not work with dynamic inserted elements
 	// thanks to jdbartlett for this simple script
@@ -87,7 +88,7 @@
 			}
 			return ret;
 		},
-		dimStyles = []
+		dimStyles = ['float']
 	;
 	
 	$.each(['Top', 'Left', 'Right', 'Bottom'], function(i, name){
@@ -95,8 +96,8 @@
 		dimStyles.push('padding'+ name);
 		dimStyles.push('border'+ name +'Width');
 		setTimeout(function(){
-			m._transferBackground.push('border'+ name +'Color');
-			m._transferBackground.push('border'+ name +'Style');
+			m._transferStyles.push('border'+ name +'Color');
+			m._transferStyles.push('border'+ name +'Style');
 		}, 1);
 	});
 	$.fn.getDimensions = function(){
@@ -106,10 +107,11 @@
 				elmS = this[0].style
 			;
 			// assume that inline style is correct
-			// enables 100% feature with inline-style
+			// enables %, em etc. feature with inline-style (i.e.: 100%)
 			ret.height = elmS.height;
 			ret.width = elmS.width;
 			$.each(dimStyles, function(i, name){
+				// assume that inline style is correct
 				ret[name] = elmS[name] || elem.css(name);
 			});
 			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
@@ -149,10 +151,57 @@
 		} 
 	;
 	
-	$.attr = function(elem, name, value, pass){
+	var fixPreload = {
+		change: function(elem, setPreload, force){
+			if( !$.support.mediaElements ){return;}
+			var _preload = elem.getAttribute('preload') || 'metadata3';
+			if( force || setPreload !== _preload ){
+				if( !supportMediaPreload ){
+					if( setPreload === 'none' || (_preload === 'none' && (setPreload === 'auto' || !elem.getAttribute('poster')) ) ){
+						$(elem).unbind('play', fixPreload.changePlayMode);
+						if(setPreload === 'none'){
+							$(elem).bind('play', fixPreload.changePlayMode);
+						}
+						$.attr(elem, 'srces', $.attr(elem, 'srces'), setPreload);
+					}
+				} else if( $.support.autoBuffer ){
+					elem.autobuffer = !!(setPreload === 'auto');
+				}
+			}
+		},
+		changeAutoplay: function(elem, autoplay){
+			if( $.support.mediaElements && !supportMediaPreload && $.attr(elem, 'preload') === 'none' && autoplay !== $.attr(elem, 'autoplay')){
+				var srces = $.attr(elem, 'srces');
+				$.attr(elem, 'srces', srces, 'auto');
+				if( srces.length && autoplay ){
+					setTimeout(function(){
+						if(elem.play && $(elem).getMediaAPI() === 'nativ' ){
+							elem.play();
+						}
+					}, 9);
+				}
+			}
+		},
+		changePlayMode: function(){
+			fixPreload.changeAutoplay(this, true);
+		},
+		addSrces: function(elem, srces, preload){
+			if( supportMediaPreload || !$.support.mediaElements ){
+				return false;
+			}
+			
+			preload = preload || $.attr(elem, 'preload');
+			$(elem).unbind('play', fixPreload.changePlayMode);
+			if( preload === 'auto' || $.attr(elem, 'autoplay') ){return $.data(elem, 'jme-srces', false);}
+			$(elem).bind('play', fixPreload.changePlayMode);
+			$.data(elem, 'jme-srces', srces);
+			return true;
+		}
+	};
+	$.attr = function(elem, name, value, preloadPass){
 		
 		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || booleanNames[name] || srcNames[name])) ){
-			return oldAttr(elem, name, value, pass);
+			return oldAttr(elem, name, value, preloadPass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
@@ -166,6 +215,9 @@
 			}
 			switch(name) {
 				case 'srces':
+					ret = $.data(elem, 'jme-srces');
+					if(ret){break;}
+					
 					ret = $.attr(elem, 'src');
 					if( ret ){
 						ret = [{
@@ -216,6 +268,9 @@
 			if(booleanNames[name]){
 				value = !!(value);
 				elem[name] = value;
+				if(name === 'autoplay'){
+					fixPreload.changeAutoplay(elem, value);
+				}
 				if(value){
 					elem[name] = value;
 					elem.setAttribute(name, name);
@@ -229,7 +284,7 @@
 				$('source, a.source', elem).remove();
 				elem.removeAttribute('src');
 				value = $.isArray(value) ? value : [value];
-				
+				if(fixPreload.addSrces(elem, value, preloadPass)){return;}
 				$.each(value, function(i, src){
 					
 					ret = doc.createElement('source');
@@ -256,9 +311,7 @@
 				} else if(!preloadVals[value]){
 					value = 'metadata';
 				}
-				if( $.support.autoBuffer ){
-					elem.autobuffer = !!(value === 'auto');
-				}
+				fixPreload.change(elem, value, preloadPass);
 				elem.setAttribute(name, value);
 			}
 		}
@@ -365,12 +418,76 @@
 		}
 	;
 	
+	
 	$.extend(m, {
 		jsPath: (function(){
 			var scripts = $('script'),
 				path = scripts[scripts.length - 1].src.split('?')[0]
 			;
 			return path.slice(0, path.lastIndexOf("/") + 1);
+		})(),
+		extendWithData: (function(){
+			var allowedVals ={
+				string: 1,
+				number: 1,
+				'boolean': 1
+			};
+			return function(elem, target, obj){
+				if(!obj){
+					obj = target;
+				}
+				$.each(obj, $.isArray(obj) ? 
+					function(i, name){
+						m.getData(elem, name, target);
+					} :
+					function(name, val){
+						if(allowedVals[typeof val]){
+							m.getData(elem, name, target);
+						}
+					}
+				);
+				return target;
+			};
+		})(),
+		getData: (function(){
+			var getVal = function(elem, name){
+				var val = elem.getAttribute('data-'+ name);
+				if(!val && val !== ''){
+					return undefined;
+				}
+								
+				return (val * 1 == val) ? 
+					parseFloat(val, 10) :
+					(val === 'false') ?
+					false :
+					(val === 'true') ?
+					true :
+					val
+				;
+			};
+			return function(elem, arr, ret){
+				var name = arr;
+				ret = ret || {};
+				if(typeof arr === 'string'){
+					arr = [name];
+				}
+				
+				$.each(arr, $.isArray(arr) ? 
+					function(i, name){
+						var val = getVal(elem, name);
+						if(val !== undefined){
+							ret[name] = val;
+						}
+					} :
+					function(name){
+						var val = getVal(elem, name);
+						if(val !== undefined){
+							ret[name] = val;
+						}
+					}
+				);
+				return ret;
+			};
 		})(),
 		registerMimetype: function(elemName, mimeObj){
 			if(arguments.length === 1){
@@ -504,7 +621,7 @@
 			}
 			return data;
 		},
-		_transferBackground: [
+		_transferStyles: [
 			'backgroundColor', 'backgroundPosition', 'backgroundImage', 'backgroundRepeat', 'background-attachment'
 		],
 		_setAPIActive: function(element, supType){
@@ -540,7 +657,7 @@
 						$(element).muted(data.apis[oldActive]._muteState);
 					}
 					if(data.apis[oldActive].visualElem){
-						$.each(m._transferBackground, function(i, name){
+						$.each(m._transferStyles, function(i, name){
 							data.apis[supType].visualElem.css(name, data.apis[oldActive].visualElem.css(name));	
 						});
 					}
@@ -647,10 +764,9 @@
 				apiData.apis[supported.name].visualElem
 					.css( jElm.getDimensions() )
 				;
-				$.each(m._transferBackground, function(i, name){
+				$.each(m._transferStyles, function(i, name){
 					apiData.apis[supported.name].visualElem.css(name, jElm.css(name));	
 				});
-				
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},
@@ -767,47 +883,7 @@
 		});
 	};
 	
-	var fixPreload = function(apiData){
-		var elem 	= apiData.apis.nativ.apiElem,
-			preload = $.attr(elem, 'preload')
-		;
-		if( supportMediaPreload || apiData.name !== 'nativ' ){
-			if($.support.autoBuffer){
-				$.attr(elem, 'preload', preload);
-			}
-			return;
-		}
-		if( preload === 'auto' || ( preload === 'metadata' && !elem.getAttribute('poster') ) || $.attr(elem, 'autoplay') ){return;}
-		var srces 		= $(elem).attr('srces'),
-			addSrces 	= function(e){
-				$(elem)
-					.attr('srces', srces)
-					.unbind('mediareset mediaerror', removeSrcAdd)
-				;
-				if(e.type === 'play'){
-					setTimeout(function(){
-						elem.play();
-					}, 0); 
-				}
-			},
-			removeSrcAdd 	= function(){
-				$(elem)
-					.unbind('play', addSrces)
-					.unbind('mediareset mediaerror', removeSrcAdd)
-				;
-			}
-		;
-		$(elem)
-			.attr('srces', [])
-			.one('play mediaerror', addSrces)
-			.one('mediareset', removeSrcAdd)
-		;
-		//we came to late
-		if( elem.load && elem.readyState > 0 && elem.getAttribute('poster') ){
-			elem.load();
-		}
-		
-	};
+	
 	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
@@ -862,11 +938,9 @@
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				//fixPreload has to happen after mediaerror setup!
-				fixPreload(apiData);
 				apiData.apis.nativ._init();
 			}
-			
+			$.attr(this, 'preload', $.attr(this, 'preload'), true);
 			$(this)
 				.trigger('jmeEmbed', {
 					options: opts,
@@ -926,7 +1000,7 @@
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
-					plugins: [],
+					plugins: {},
 					params: {
 						allowscriptaccess: 'always',
 						allowfullscreen: 'true'
@@ -936,12 +1010,20 @@
 		)
 	;
 	
+	$(function(){
+		var path = ($('script.jwPlayer')[0] || {}).src;
+		$.fn.jmeEmbed.defaults.jwPlayer.path = path || $.fn.jmeEmbed.defaults.path;
+	});
 		
 	var regs = {
 			A: /&amp;/g,
 			a: /&/g,
 			e: /\=/g,
 			q: /\?/g
+		},
+		providerMatch = {
+			audio: 'sound',
+			video: 'video'
 		},
 		replaceVar = function(val){
 			return (val.replace) ? val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F') : val;
@@ -953,10 +1035,6 @@
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
-			providerMatch 		= {
-				audio: 'sound',
-				video: 'video'
-			},
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
 					try {
@@ -999,15 +1077,13 @@
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
 					params 		= $.extend({movie: opts.path}, opts.params),
-					provider 	= $.attr(this.element, 'data-provider')
+					plugins 	= []
 				;
+				
+				m.extendWithData(this.element, vars, ['type', 'provider']);
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
-				}
-				
-				if(provider){
-					vars.provider = provider;
 				}
 				
 				// if we can't autodetect provider by file-extension,
@@ -1039,8 +1115,11 @@
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				
-				if(opts.plugins.length){
-					params.flashvars.push( 'plugins='+ ( opts.plugins.join(',') ) );
+				$.each(opts.plugins, function(name, src){
+					plugins.push(src);
+				});
+				if(plugins.length){
+					params.flashvars.push( 'plugins='+ ( plugins.join(',') ) );
 				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));

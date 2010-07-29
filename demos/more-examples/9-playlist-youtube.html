@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
+		<meta charset="UTF-8" />
 		<title>Youtube playlist Demo</title>
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/styles.css" />
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/player-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
@@ -17,10 +18,15 @@
 		<script src="../../utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
 		
-		<script src="../../packages/mm.full.min.js"></script>
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
 		
 		<script src="../../plugins/playlist.js"></script>
 		<!-- fullwindow plugin -->
+		<script class="jme-jwPlayer" type="application/swf" src="../../packages/jmefs.swf"></script>
 		<script src="../../plugins/fullwindow.js"></script>
 		<!-- fullwindow plugin -->
 		
@@ -78,6 +84,8 @@
 	</head>
 	<body>
 		<h1>Demo with playlist-plugin and youtube videos</h1>
+		<p>This demo adds the fullwindow plugin, the playlist plugin, the useractivity-event plugin and a fallback message to our <a href="../markup-controls.html">standard example using jmeControl</a>.</p>
+		<p>It also demonstrates the flash-fullscreen feature, in borwsers, wich supports the <a href="https://developer.mozilla.org/en/css/pointer-events">CSS3 pointer-events</a>, especially FF3.6.</p>
 		<div class="media-player">
 			<h3 class="media-label"><span class="media-role">videoplayer: </span><span class="media-name">html5 videos from youtube</span></h3>
 			<div class="video-box">
@@ -85,7 +93,6 @@
 					<div class="fallback">
 						<div class="fallback-text">
 							<p>Please install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
-							
 						</div>
 					</div>
 				</video>
@@ -134,12 +141,12 @@
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
 		<script>
 			if(location.protocol === 'file:'){
-				$('<small class="flash-hint">Youtube videos only work in an http-enviroment! Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
+				$('<small class="flash-hint"><strong>Youtube videos only work in an http-enviroment!</strong> Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
 					.css({opacity: 0})
 					.insertAfter('div.media-player')
 					.fadeTo(1500, 1)
-					.delay(9000)
-					.fadeOut(900, function(){
+					.delay(19000)
+					.fadeOut(3900, function(){
 						$(this).remove();
 					})
 				;

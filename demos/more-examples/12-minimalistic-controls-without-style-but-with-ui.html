@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Minimalistic Controls Demo</title>
+		<link rel="stylesheet" href="../css/styles.css" />
+		
+		
+		<style>
+			/* always define a default */
+			video {
+				display: block;
+			}
+			
+			video {
+				width: 510px;
+				height: 280px;
+			}
+			/* always define */
+			.timeline-slider,
+			.volume-slider,
+			.progressbar {
+				position: relative;
+				zoom: 1;
+			}
+			.ui-slider-horizontal .ui-slider-handle,
+			.ui-progressbar-value {
+				position: absolute;
+				display: block;
+				min-width: 1px;
+				min-height: 1px;
+				height: 100%;
+				top: 0;
+				left: 0;
+			}
+			
+			/* simple style */
+			.timeline-slider,
+			.volume-slider,
+			.progressbar {
+				margin: 10px 0;
+				height: 22px;
+				background: #eee;
+			}
+			.ui-slider-disabled {
+				opacity: 0.8;
+			}
+			.ui-slider-disabled .ui-slider-handle {
+				cursor: default;
+			}
+			.ui-slider-horizontal .ui-slider-handle,
+			.ui-progressbar-value {
+				background: #333;
+			}
+			.ui-slider-horizontal .ui-slider-handle {
+				margin-left: -3px;
+				width: 5px;
+			}
+			.media-state {
+				margin: 10px 0;
+				height: 22px;
+				/* default color + preload loader gif */
+				background: #eee url(../media/loader.gif) no-repeat -9999px -999px;
+			}
+			.media-state.waiting {
+				background-position: center;
+			}
+			.media-state.idle {
+				background-color: #999;
+			}
+			.media-state.playing {
+				background-color: #99e;
+			}
+			.media-state.totalerror {
+				background-color: #99e;
+			}
+		</style>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+				
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
+		
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				$('div.media-player').jmeControl();
+			});
+		</script>
+		
+	</head>
+	<body>
+		<h1>Minimalistic Demo without Styles</h1>
+		<div class="media-player">
+			<span class="media-label">video: big buck bunny</span>
+			<video poster="../media/bbb_watchtrailer.gif" preload="none" controls="controls">
+				<source src="../media/bbb_trailer_mobile.m4v" type="video/mp4" />
+				<source src="../media/bbb_trailer_400p.ogg" type="video/ogg" />
+				<div class="fallback">
+					<img src="../media/bbb_watchtrailer.gif" alt="" />
+					<div class="fallback-text">
+						<p>Please use a webkit browser or install <a href="http://www.videolan.org/">VLC (check Mozilla Plugin)</a> or <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+						<ul>
+							<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
+							<li><a href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
+						</ul>
+					</div>
+				</div>
+			</video>
+			
+			<button class="play-pause">play / pause</button>
+			
+			<button class="mute-unmute">mute|unmute</button>
+			
+			<span class="duration" title="duration">00:00</span>
+			
+			<span class="remaining-time" title="remaining time">00:00</span>
+			<span class="current-time" title="current position">00:00</span>
+			
+			<div class="timeline-slider" title="position slider"></div>
+			
+			<div class="volume-slider" title="volume slider"></div>
+			
+			<div class="progressbar" title="buffer progress"></div>
+			
+			<div class="media-state" title="media-state"></div>
+		</div>
+		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>
+<!--[if IE]>
+		<script>
+			if(location.protocol === 'file:'){
+				$('<small class="flash-hint">Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
+					.css({opacity: 0})
+					.insertAfter('div.media-player')
+					.fadeTo(1000, 1)
+					.delay(5000)
+					.fadeOut(1400, function(){
+						$(this).remove();
+					})
+				;
+			}
+		</script>
+<![endif]-->
+	</body>
+</html>

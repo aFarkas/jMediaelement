@@ -12,7 +12,7 @@
 		doc		= document,
 		tVid 	= $('<video />')[0],
 		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
-		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && $.browser.version < 534 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
+		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && parseFloat($.browser.version, 10) < 534 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
@@ -27,6 +27,7 @@
 	$.support.mediaElements = ($.support.video && $.support.audio);
 	$.support.dynamicHTML5 = !!($('<video><div></div></video>')[0].innerHTML);
 	$.support.mediaLoop = ('loop' in $('<video />')[0]);
+	$.browser.deprecatedPoster = !supportMediaPreload;
 	
 	// HTML5 shiv document.createElement does not work with dynamic inserted elements
 	// thanks to jdbartlett for this simple script
@@ -87,7 +88,7 @@
 			}
 			return ret;
 		},
-		dimStyles = []
+		dimStyles = ['float']
 	;
 	
 	$.each(['Top', 'Left', 'Right', 'Bottom'], function(i, name){
@@ -95,8 +96,8 @@
 		dimStyles.push('padding'+ name);
 		dimStyles.push('border'+ name +'Width');
 		setTimeout(function(){
-			m._transferBackground.push('border'+ name +'Color');
-			m._transferBackground.push('border'+ name +'Style');
+			m._transferStyles.push('border'+ name +'Color');
+			m._transferStyles.push('border'+ name +'Style');
 		}, 1);
 	});
 	$.fn.getDimensions = function(){
@@ -106,10 +107,11 @@
 				elmS = this[0].style
 			;
 			// assume that inline style is correct
-			// enables 100% feature with inline-style
+			// enables %, em etc. feature with inline-style (i.e.: 100%)
 			ret.height = elmS.height;
 			ret.width = elmS.width;
 			$.each(dimStyles, function(i, name){
+				// assume that inline style is correct
 				ret[name] = elmS[name] || elem.css(name);
 			});
 			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
@@ -149,10 +151,57 @@
 		} 
 	;
 	
-	$.attr = function(elem, name, value, pass){
+	var fixPreload = {
+		change: function(elem, setPreload, force){
+			if( !$.support.mediaElements ){return;}
+			var _preload = elem.getAttribute('preload') || 'metadata3';
+			if( force || setPreload !== _preload ){
+				if( !supportMediaPreload ){
+					if( setPreload === 'none' || (_preload === 'none' && (setPreload === 'auto' || !elem.getAttribute('poster')) ) ){
+						$(elem).unbind('play', fixPreload.changePlayMode);
+						if(setPreload === 'none'){
+							$(elem).bind('play', fixPreload.changePlayMode);
+						}
+						$.attr(elem, 'srces', $.attr(elem, 'srces'), setPreload);
+					}
+				} else if( $.support.autoBuffer ){
+					elem.autobuffer = !!(setPreload === 'auto');
+				}
+			}
+		},
+		changeAutoplay: function(elem, autoplay){
+			if( $.support.mediaElements && !supportMediaPreload && $.attr(elem, 'preload') === 'none' && autoplay !== $.attr(elem, 'autoplay')){
+				var srces = $.attr(elem, 'srces');
+				$.attr(elem, 'srces', srces, 'auto');
+				if( srces.length && autoplay ){
+					setTimeout(function(){
+						if(elem.play && $(elem).getMediaAPI() === 'nativ' ){
+							elem.play();
+						}
+					}, 9);
+				}
+			}
+		},
+		changePlayMode: function(){
+			fixPreload.changeAutoplay(this, true);
+		},
+		addSrces: function(elem, srces, preload){
+			if( supportMediaPreload || !$.support.mediaElements ){
+				return false;
+			}
+			
+			preload = preload || $.attr(elem, 'preload');
+			$(elem).unbind('play', fixPreload.changePlayMode);
+			if( preload === 'auto' || $.attr(elem, 'autoplay') ){return $.data(elem, 'jme-srces', false);}
+			$(elem).bind('play', fixPreload.changePlayMode);
+			$.data(elem, 'jme-srces', srces);
+			return true;
+		}
+	};
+	$.attr = function(elem, name, value, preloadPass){
 		
 		if( !(elem.nodeName && attrElems.test(elem.nodeName) && (mixedNames[name] || booleanNames[name] || srcNames[name])) ){
-			return oldAttr(elem, name, value, pass);
+			return oldAttr(elem, name, value, preloadPass);
 		}
 		
 		var set = (value !== undefined), elemName, api, ret;
@@ -166,6 +215,9 @@
 			}
 			switch(name) {
 				case 'srces':
+					ret = $.data(elem, 'jme-srces');
+					if(ret){break;}
+					
 					ret = $.attr(elem, 'src');
 					if( ret ){
 						ret = [{
@@ -216,6 +268,9 @@
 			if(booleanNames[name]){
 				value = !!(value);
 				elem[name] = value;
+				if(name === 'autoplay'){
+					fixPreload.changeAutoplay(elem, value);
+				}
 				if(value){
 					elem[name] = value;
 					elem.setAttribute(name, name);
@@ -229,7 +284,7 @@
 				$('source, a.source', elem).remove();
 				elem.removeAttribute('src');
 				value = $.isArray(value) ? value : [value];
-				
+				if(fixPreload.addSrces(elem, value, preloadPass)){return;}
 				$.each(value, function(i, src){
 					
 					ret = doc.createElement('source');
@@ -256,9 +311,7 @@
 				} else if(!preloadVals[value]){
 					value = 'metadata';
 				}
-				if( $.support.autoBuffer ){
-					elem.autobuffer = !!(value === 'auto');
-				}
+				fixPreload.change(elem, value, preloadPass);
 				elem.setAttribute(name, value);
 			}
 		}
@@ -365,12 +418,76 @@
 		}
 	;
 	
+	
 	$.extend(m, {
 		jsPath: (function(){
 			var scripts = $('script'),
 				path = scripts[scripts.length - 1].src.split('?')[0]
 			;
 			return path.slice(0, path.lastIndexOf("/") + 1);
+		})(),
+		extendWithData: (function(){
+			var allowedVals ={
+				string: 1,
+				number: 1,
+				'boolean': 1
+			};
+			return function(elem, target, obj){
+				if(!obj){
+					obj = target;
+				}
+				$.each(obj, $.isArray(obj) ? 
+					function(i, name){
+						m.getData(elem, name, target);
+					} :
+					function(name, val){
+						if(allowedVals[typeof val]){
+							m.getData(elem, name, target);
+						}
+					}
+				);
+				return target;
+			};
+		})(),
+		getData: (function(){
+			var getVal = function(elem, name){
+				var val = elem.getAttribute('data-'+ name);
+				if(!val && val !== ''){
+					return undefined;
+				}
+								
+				return (val * 1 == val) ? 
+					parseFloat(val, 10) :
+					(val === 'false') ?
+					false :
+					(val === 'true') ?
+					true :
+					val
+				;
+			};
+			return function(elem, arr, ret){
+				var name = arr;
+				ret = ret || {};
+				if(typeof arr === 'string'){
+					arr = [name];
+				}
+				
+				$.each(arr, $.isArray(arr) ? 
+					function(i, name){
+						var val = getVal(elem, name);
+						if(val !== undefined){
+							ret[name] = val;
+						}
+					} :
+					function(name){
+						var val = getVal(elem, name);
+						if(val !== undefined){
+							ret[name] = val;
+						}
+					}
+				);
+				return ret;
+			};
 		})(),
 		registerMimetype: function(elemName, mimeObj){
 			if(arguments.length === 1){
@@ -504,7 +621,7 @@
 			}
 			return data;
 		},
-		_transferBackground: [
+		_transferStyles: [
 			'backgroundColor', 'backgroundPosition', 'backgroundImage', 'backgroundRepeat', 'background-attachment'
 		],
 		_setAPIActive: function(element, supType){
@@ -540,7 +657,7 @@
 						$(element).muted(data.apis[oldActive]._muteState);
 					}
 					if(data.apis[oldActive].visualElem){
-						$.each(m._transferBackground, function(i, name){
+						$.each(m._transferStyles, function(i, name){
 							data.apis[supType].visualElem.css(name, data.apis[oldActive].visualElem.css(name));	
 						});
 					}
@@ -647,10 +764,9 @@
 				apiData.apis[supported.name].visualElem
 					.css( jElm.getDimensions() )
 				;
-				$.each(m._transferBackground, function(i, name){
+				$.each(m._transferStyles, function(i, name){
 					apiData.apis[supported.name].visualElem.css(name, jElm.css(name));	
 				});
-				
 			}
 			apiData.apis[supported.name]._embed(supported.src, apiData.name +'-'+ id, config, fn);
 		},
@@ -767,47 +883,7 @@
 		});
 	};
 	
-	var fixPreload = function(apiData){
-		var elem 	= apiData.apis.nativ.apiElem,
-			preload = $.attr(elem, 'preload')
-		;
-		if( supportMediaPreload || apiData.name !== 'nativ' ){
-			if($.support.autoBuffer){
-				$.attr(elem, 'preload', preload);
-			}
-			return;
-		}
-		if( preload === 'auto' || ( preload === 'metadata' && !elem.getAttribute('poster') ) || $.attr(elem, 'autoplay') ){return;}
-		var srces 		= $(elem).attr('srces'),
-			addSrces 	= function(e){
-				$(elem)
-					.attr('srces', srces)
-					.unbind('mediareset mediaerror', removeSrcAdd)
-				;
-				if(e.type === 'play'){
-					setTimeout(function(){
-						elem.play();
-					}, 0); 
-				}
-			},
-			removeSrcAdd 	= function(){
-				$(elem)
-					.unbind('play', addSrces)
-					.unbind('mediareset mediaerror', removeSrcAdd)
-				;
-			}
-		;
-		$(elem)
-			.attr('srces', [])
-			.one('play mediaerror', addSrces)
-			.one('mediareset', removeSrcAdd)
-		;
-		//we came to late
-		if( elem.load && elem.readyState > 0 && elem.getAttribute('poster') ){
-			elem.load();
-		}
-		
-	};
+	
 	
 	$.fn.jmeEmbed = function(opts){
 		opts = $.extend(true, {}, $.fn.jmeEmbed.defaults, opts);
@@ -862,11 +938,9 @@
 				 findInitFallback(this, opts);
 				 apiData.apis.nativ.isAPIReady = true;
 			} else {
-				//fixPreload has to happen after mediaerror setup!
-				fixPreload(apiData);
 				apiData.apis.nativ._init();
 			}
-			
+			$.attr(this, 'preload', $.attr(this, 'preload'), true);
 			$(this)
 				.trigger('jmeEmbed', {
 					options: opts,
@@ -1254,7 +1328,7 @@
 				loadingTimer 		= false,
 				triggerLoadingErr 	= function(e){
 					clearInterval(loadingTimer);
-					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 && ( $.support.flash9 || $.support.vlc ) ) {
+					if ( !that.element.error && that.element.mozLoadFrom && that.isAPIActive && !that.element.readyState && that.element.networkState === 2 && $.support.flash9 ) {
 						if(e === true){
 							//this will abort and start the error handling
 							that.element.load();
@@ -1279,7 +1353,11 @@
 							that._trigger.call(that, {type: 'volumelevelchange', volumelevel: that.apiElem.volume * 100});
 						}
 					},
-					
+					ended: function(){
+						if(that.isAPIActive && this.ended && !this.paused && !$.attr(this, 'loop') ){
+							this.pause();
+						}
+					},
 					timeupdate: function(){
 						var e = {
 							type: 'timechange',
@@ -1299,7 +1377,6 @@
 					}
 				})
 				.bind('play pause playing waiting', bubbleEvents)
-				// firefox also loads video without calling load-method, if autoplay is true and media pack has changed
 				.bind('play playing', function(){
 					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
 						try{
@@ -1335,7 +1412,7 @@
 				this._trigger('mmAPIReady');
 			}
 		},
-		play: function(src){
+		play: function(){
 			this.element.play();
 		},
 		pause: function(){
@@ -1419,7 +1496,8 @@
 			getJMEVisual: 1,
 			jmeReady: 1,
 			isJMEReady: 1,
-			getMediaAPI: 1
+			getMediaAPI: 1,
+			supportsFullScreen: 1
 		}
 	;
 	$m.registerAPI = function(names){
@@ -1485,152 +1563,326 @@
 
 (function($){
 	if(!$.event.special.ariaclick){
-		var preventclick = false;
-		function handleAriaClick(e){
-			
-			if(!preventclick && (!e.keyCode || e.keyCode === 13 || ( e.keyCode === 32 && $.attr(e.target, 'role') === 'button' ) )){
-				//ToDo:  || e.keyCode === $.ui.keyCode.SPACE
-				preventclick = true;
-				setTimeout(function(){
-					preventclick = false;
-				}, 1);
-				return $.event.special.ariaclick.handler.apply(this, arguments);
-			} else if(preventclick && e.type == 'click'){
-				e.preventDefault();
-				return false;
-			}
-			return undefined;
-		}
-		$.event.special.ariaclick = {
-			setup: function(){
-				$(this).bind('click keydown', handleAriaClick);
-	            return true;
-	        },
-			teardown: function(){
-	            $(this).unbind('click keydown', handleAriaClick);
-	            return true;
-	        },
-	        handler: function(e){
-	            e.type = 'ariaclick';
-	            return $.event.handle.apply(this, arguments);
-	        }
-		};
+		(function(){
+			var preventclick 	= false,
+				handleAriaClick = function(e){
+					if(!preventclick && (!e.keyCode || e.keyCode === 13 || ( e.keyCode === 32 && $.attr(e.target, 'role') === 'button' ) )){
+						preventclick = true;
+						setTimeout(function(){
+							preventclick = false;
+						}, 1);
+						return $.event.special.ariaclick.handler.apply(this, arguments);
+					} else if(preventclick && e.type == 'click'){
+						e.preventDefault();
+						return false;
+					}
+					return undefined;
+				}
+			;
+			$.event.special.ariaclick = {
+				setup: function(){
+					$(this).bind('click keydown', handleAriaClick);
+		            return true;
+		        },
+				teardown: function(){
+		            $(this).unbind('click keydown', handleAriaClick);
+		            return true;
+		        },
+		        handler: function(e){
+		            e.type = 'ariaclick';
+		            return $.event.handle.apply(this, arguments);
+		        }
+			};
+		})();
+		
 	}
-	var split 			= /\s*\/\s*|\s*\|\s*|\s*\,\s*/g,
-		moveKeys 		= {
-					40: true,
-					37: true,
-					39: true,
-					38: true
+	
+	var controls = {};
+	
+	function getElems(elem, o){
+		var jElm 	= $(elem),
+			ret 	= {},
+			mmID 	= jElm.attr('data-controls')
+		;
+		
+		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
+		ret.api = ret.mm.getJMEAPI(true) || ret.mm.jmeEmbed(o.embed).getJMEAPI(true);
+		if(!ret.api){return ret;}
+		if(jElm.is(o.controlSel)){
+			ret.controls = jElm;
+		}
+		
+		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
+			if( jElm[0] && !ret.api.controlWrapper &&  $.contains( jElm[0], ret.mm[0] ) ){
+				ret.api.controlWrapper = jElm;
+			}
+			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
+		}
+		return ret;
+	}
+	
+	
+	function addWrapperBindings(wrapper, mm, api, o){
+		if(wrapper.data('jmePlayer')){return;}
+		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
+		wrapper.data('jmePlayer', {mediaelement: mm, api: api});
+		if( $.fn.videoOverlay ){
+			wrapper
+				.videoOverlay({
+					video: mm,
+					startCSS: {
+						width: 'auto',
+						height: 'auto',
+						zIndex: 99998,
+						padding: 0,
+						margin: 0,
+						borderWidth: 0
+					},
+					position: {
+						bottom: 0,
+						left: 0,
+						right: 0,
+						top: 0,
+						width: 0,
+						height: 0
+					}
+				})
+			;
+		}
+		if (!$.ui || !$.ui.keyCode) {return;}
+		wrapper
+			.bind('keydown', function(e){
+				if( e.jmeHandledEvent ){return;}
+				e.jmeHandledEvent = true;
+				if( {40: 1,37: 1,39: 1,38: 1}[e.keyCode] ){
+					//user is interacting with the slider don´t do anything
+					if($(e.target).is('.ui-slider-handle')){return;}
+					var dif = 5;
+					switch(e.keyCode) {
+						case $.ui.keyCode.UP:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							mm.volume( Math.min(100, mm.volume() + dif ) );
+							break;
+						case $.ui.keyCode.DOWN:
+							if(e.ctrlKey){
+								dif += 5;
+							}
+							mm.volume( Math.max(0, mm.volume() - dif ) );
+							break;
+						case $.ui.keyCode.LEFT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							mm.currentTime( Math.max(0, mm.currentTime() - dif ) );
+							break;
+						case $.ui.keyCode.RIGHT:
+							if(e.ctrlKey){
+								dif += 55;
+							}
+							mm.currentTime( Math.min( mm.getDuration(), mm.currentTime() + dif ) );
+							break;
+					}
+					e.preventDefault();
+				} else if( e.keyCode === $.ui.keyCode.SPACE && ( !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' || wrapper.hasClass('wraps-fullscreen')) ){
+					mm.togglePlay();
+					e.preventDefault();
+				}
+			})
+		;
+	}
+		
+	$.fn.jmeControl = function(opts){
+		opts = $.extend(true, {}, $.fn.jmeControl.defaults, opts);
+		opts.controlSel = [];
+		$.each(controls, function(name){
+			if(name !== 'media-controls'){
+				opts.controlSel.push('.'+ opts.classPrefix + name);
+			}
+		});
+		opts.controlSel.push('.'+ opts.classPrefix + 'media-controls');
+		opts.controlSel = opts.controlSel.join(', ');
+		
+		function registerControl(){
+			var elems = getElems(this, opts);
+			if( !elems.api ){return;}
+			elems.api.controls = elems.api.controls || [];
+			if(!elems.api){return;}
+			elems.controls.each(function(){
+				var jElm 	= $(this);
+				
+				if($.inArray(this, elems.api.controls) !== -1){return;}
+				elems.api.controls.push(this);
+				$.each(controls, function(name, ui){
+					if( jElm.hasClass(opts.classPrefix+name) ){
+						var o = $.extend(true, {}, opts);
+						o[ui.optionsName] = $.multimediaSupport.extendWithData(jElm[0], o[ui.optionsName], opts[ui.optionsName]);
+						ui(jElm, elems.mm, elems.api, o);
+						return false;
+					}
+				});
+			});
+			if( elems.api.controlWrapper && elems.api.controlWrapper[0] ){
+				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, opts);
+			}
+		}
+		
+		return this.each(registerControl);
+	};
+	
+	$.fn.jmeControl.defaults = {
+		//common
+		embed: {removeControls: true},
+		classPrefix: '',
+		addThemeRoller: true
+	};
+	
+	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
+	
+	$.fn.jmeControl.getBtn = (function(){
+		var split = /\s*\/\s*|\s*\|\s*|\s*\,\s*/g;
+		return function(control){
+			var elems = {
+				icon: $('.ui-icon', control),
+				text: $('.button-text', control),
+				title: control
+			};
+			
+			if (!control.is(':button') && !control.attr('role')) {
+				if ($.support.waiaria) {
+					control.removeAttr('href');
+				}
+				control.attr({
+					role: 'button',
+					tabindex: 0
+				});
+			}
+			
+			if (!elems.icon[0] && !elems.text[0] && !$('*', control)[0]) {
+				elems.icon = control;
+				elems.text = control;
+			}
+			
+			elems.names = elems.text.text().split(split);
+			elems.titleText = (control.attr('title') || '').split(split);
+			
+			if (elems.names.length !== 2) {
+				elems.text = $([]);
+			}
+			if (elems.titleText.length !== 2) {
+				elems.title = $([]);
+			}
+			return elems;
+		};
+	})();
+	
+	$.multimediaSupport.camelCase = (function(){
+		var rdashAlpha = /-([a-z])/ig,
+			fcamelCase = function( all, letter ) {
+				return letter.toUpperCase();
+			}
+		;
+		return function(name){
+			return name.replace(rdashAlpha, fcamelCase);
+		};
+	})();
+	
+	$.fn.jmeControl.addControl = function(name, fn, ops, optsName){
+		ops = ops || {};
+		optsName = optsName || $.multimediaSupport.camelCase(name);
+		$.fn.jmeControl.defaults[optsName] = ops;
+		fn.optionsName = optsName;
+		controls[name] = fn;
+		
+	};
+	
+	$.fn.jmeControl.addControls = function(controls){
+		$.each(controls, function(i, control){
+			$.fn.jmeControl.addControl(control.name, control.fn, control.options, control.optionName);
+		});
+	};
+	
+	$.fn.registerMMControl = $.fn.jmeControl;
+	
+	
+	//implement controls
+	var toggleModells = {
+			'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta mediareset', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
+			'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute loadedmeta', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
+		}
+	;
+	
+	$.each(toggleModells, function(name, opts){
+		$.fn.jmeControl.addControl(name, function(control, mm, api, o){
+			var elems = $.fn.jmeControl.getBtn(control);
+			if(o.addThemeRoller){
+				control.addClass('ui-state-default ui-corner-all');
+			}		
+			function changeState(){
+				var state = mm[opts.stateMethod]();
+				if(state){
+					elems.text.text(elems.names[1]);
+					elems.title.attr('title', elems.titleText[1]);
+					elems.icon.addClass(opts.trueClass).removeClass(opts.falseClass);
+				} else {
+					elems.text.text(elems.names[0]);
+					elems.title.attr('title', elems.titleText[0]);
+					elems.icon.addClass(opts.falseClass).removeClass(opts.trueClass);
+				}
+			}
+			
+			changeState();
+			
+			mm
+				.bind(opts.evts, changeState)
+				.jmeReady(changeState)
+			;
+			control.bind('ariaclick', function(e){
+				mm[opts.actionMethod]();
+				e.preventDefault();
+			});
+		});
+	});
+	
+	
+	
+	$.each(['current-time', 'remaining-time'], function(i, name){
+		$.fn.jmeControl.addControl(name, function(control, mm, api, o){
+			var timeChange = ( name == 'remaining-time' ) ? 
+				function(e, evt){
+					control.html( api.apis[api.name]._format( duration - evt.time ));
+				} :
+				function(e, evt){
+					control.html(api.apis[api.name]._format(evt.time));
 				},
-		sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider',
-		labelID 		= 0,
-		controls 		= {
-			'timeline-slider': function(control, mm, api, o){
-				var stopSlide = false;
-				control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
-				function changeTimeState(e, ui){
-					var time = parseInt( ui.timeProgress, 10 );
-					if(ui.timeProgress !== undefined && !stopSlide ){
-						control[sliderMethod]('value', ui.timeProgress);
-					}
-				}
-				
-				function changeDisabledState(){
-					if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
-						control[sliderMethod]('option', 'step', 100 / Math.max( 100, control[0].offsetWidth ) );
-						control[sliderMethod]('option', 'disabled', false);
-					} else {
-						control[sliderMethod]('option', 'disabled', true);
-					}
-				}
-				
-				mm
-					.bind('loadedmeta', changeDisabledState)
-					.bind('timechange', changeTimeState)
-					.bind('mediareset', function(){
-						control[sliderMethod]('value', 0);
-						changeDisabledState();
-					})
-					.bind('ended', function(){
-						control[sliderMethod]('value', 100);
-					})
-				;
-				control
-					.bind('slidestart', function(e, ui){
-						if (e.originalEvent) {
-							stopSlide = true;
-						}
-					})
-					.bind('slidestop', function(e, ui){
-						stopSlide = false;
-					})
-					.bind('slide', function(e, ui){
-						if(e.originalEvent && api.apis[api.name].isAPIReady){
-							api.apis[api.name].relCurrentTime(ui.value);
-						}
-					})
-				;
-			},
-			'volume-slider': function(control, mm, api, o){
-				var stopSlide = false;
-				control[sliderMethod](o.volumeSlider)[sliderMethod]('option', 'disabled', true);
-				
-				function changeVolumeUI(e, ui){
-					if(!stopSlide){
-						control[sliderMethod]('value', ui.volumelevel);
-					}
-				}
-				
-				control
-					.bind('slidestart', function(e, ui){
-						if (e.originalEvent) {
-							stopSlide = true;
-						}
-					})
-					.bind('slidestop', function(e, ui){
-						stopSlide = false;
-					})
-					.bind('slide', function(e, ui){
-						if(e.originalEvent && api.apis[api.name].isAPIReady){
-							api.apis[api.name].volume(ui.value);
-						}
-					})
-				;
-				
-				mm
-					.bind('volumelevelchange', changeVolumeUI)
-					.jmeReady(function(){
-						control[sliderMethod]('option', 'disabled', false);
-						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
-					})
-					.bind('loadedmeta', function(){
-						control[sliderMethod]('value', parseFloat( mm.volume(), 10 ) || 80);
-					})
-				;
-			},
-			'progressbar': function(control, mm, api, o){
-				control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
-				
-				function changeProgressUI(e, ui){
-					if ('relLoaded' in ui) {
-						control.progressbar('option', 'disabled', false).progressbar('value', ui.relLoaded);
-					} else {
-						control.progressbar('option', 'disabled', true);
-					}
-				}
-				
-				function resetProgress(e, ui){
-					control.progressbar('option', 'disabled', true).progressbar('value', 0);
-				}
-				
-				mm
-					.bind('progresschange', changeProgressUI)
-					.bind('mediareset', resetProgress)
-				;
-				
-			},
-			duration: function(control, mm, api, o){
+				duration = Number.MIN_VALUE
+			;
+			
+			if(o.addThemeRoller){
+				control.addClass('ui-widget-content ui-corner-all');
+			}
+			control.html('00:00').attr('role', 'timer');
+			
+			if( name == 'remaining-time' ){
+				mm.bind('loadedmeta', function(e, evt){
+					duration = evt.duration || Number.MIN_VALUE;
+					timeChange(false, {time: 0});
+				});
+			}
+			mm
+				.bind('timechange', timeChange)
+				.bind('mediareset', function(){
+					control.html('00:00');
+				})
+			;
+		});
+	});
+	
+	$.fn.jmeControl.addControls([
+		{
+			name: 'duration',
+			fn: function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget-content ui-corner-all');
 				}
@@ -1644,8 +1896,17 @@
 					})
 				;
 				
+			}
+		},
+		{
+			name: 'media-controls',
+			options: {
+				dynamicTimeslider: false,
+				timeSliderAdjust: 0,
+				excludeSel: false,
+				fullWindowOverlay: false
 			},
-			'media-controls': function(control, mm, api, o){
+			fn: function(control, mm, api, o){
 				if(o.addThemeRoller){
 					control.addClass('ui-widget ui-widget-header ui-corner-all');
 				}
@@ -1689,24 +1950,33 @@
 						}
 					});
 				}
-			},
-			'media-label': function(control, mm, data, o){
-				if( !data.controlWrapper || data.controlWrapper.attr('role') ){return;}
-				var id 			= control.attr('id'),
-					mediaName 	= $('.'+o.classPrefix+'media-name', control)
-				;
-				if(!id){
-					labelID++;
-					id = o.classPrefix+'media-label-'+ labelID;
-					control.attr('id', id);
-				}
-				data.controlWrapper.mediaLabel = (mediaName[0]) ? mediaName : control;
-				data.controlWrapper.attr({
-					role: 'group',
-					'aria-labelledby': id
-				});
-			},
-			fallback: function(control, mm, api, o){
+			}
+		},
+		{
+			name: 'media-label',
+			fn: function(control, mm, data, o){
+				var labelID = 0;
+				return function(control, mm, data, o){
+					if (!data.controlWrapper || data.controlWrapper.attr('role')) {
+						return;
+					}
+					var id = control.attr('id'), mediaName = $('.' + o.classPrefix + 'media-name', control);
+					if (!id) {
+						labelID++;
+						id = o.classPrefix + 'media-label-' + labelID;
+						control.attr('id', id);
+					}
+					data.controlWrapper.mediaLabel = (mediaName[0]) ? mediaName : control;
+					data.controlWrapper.attr({
+						role: 'group',
+						'aria-labelledby': id
+					});
+				};
+			}
+		},
+		{
+			name: 'fallback',
+			fn: function(control, mm, api, o){
 				if( o.embed.showFallback || !$.support.mediaElements ){return;}
 				var fallback 		= control.clone(true),
 					showFallback 	= function(){
@@ -1718,8 +1988,15 @@
 					}
 				;
 				mm.bind('totalerror', showFallback);
+			}
+		},
+		{
+			name: 'media-state',
+			options: {
+				click: 'togglePlay',
+				fullWindowOverlay: false
 			},
-			'media-state': function(control, mm, api, o){
+			fn: function(control, mm, api, o){
 				//classPrefix
 				var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
 					removeStateClasses 	= function(){
@@ -1784,270 +2061,147 @@
 					});
 				}
 			}
-		},
-		toggleModells = {
-				'play-pause': {stateMethod: 'isPlaying', actionMethod: 'togglePlay', evts: 'play playing pause ended loadedmeta mediareset', trueClass: 'ui-icon-pause', falseClass: 'ui-icon-play'},
-				'mute-unmute': {stateMethod: 'muted', actionMethod: 'toggleMuted', evts: 'mute loadedmeta', trueClass: 'ui-icon-volume-off', falseClass: 'ui-icon-volume-on'}
-			}
-	;
-	
-	$.each(['current-time', 'remaining-time'], function(i, name){
-		controls[name] = function(control, mm, api, o){
-			var timeChange = ( name == 'remaining-time' ) ? 
-				function(e, evt){
-					control.html( api.apis[api.name]._format( duration - evt.time ));
-				} :
-				function(e, evt){
-					control.html(api.apis[api.name]._format(evt.time));
-				},
-				duration = Number.MIN_VALUE
-			;
-			
-			if(o.addThemeRoller){
-				control.addClass('ui-widget-content ui-corner-all');
-			}
-			control.html('00:00').attr('role', 'timer');
-			
-			if( name == 'remaining-time' ){
-				mm.bind('loadedmeta', function(e, evt){
-					duration = evt.duration || Number.MIN_VALUE;
-					timeChange(false, {time: 0});
-				});
-			}
-			mm
-				.bind('timechange', timeChange)
-				.bind('mediareset', function(){
-					control.html('00:00');
-				})
-			;
-		};
-	});
-	
-	//create Toggle Button UI
-	$.each(toggleModells, function(name, opts){
-		controls[name] = function(control, mm, api, o){
-			var elems = $.fn.jmeControl.getBtn(control);
-			if(o.addThemeRoller){
-				control.addClass('ui-state-default ui-corner-all');
-			}		
-			function changeState(){
-				var state = mm[opts.stateMethod]();
-				if(state){
-					elems.text.text(elems.names[1]);
-					elems.title.attr('title', elems.titleText[1]);
-					elems.icon.addClass(opts.trueClass).removeClass(opts.falseClass);
-				} else {
-					elems.text.text(elems.names[0]);
-					elems.title.attr('title', elems.titleText[0]);
-					elems.icon.addClass(opts.falseClass).removeClass(opts.trueClass);
-				}
-			}
-			
-			changeState();
-			
-			mm
-				.bind(opts.evts, changeState)
-				.jmeReady(changeState)
-			;
-			control.bind('ariaclick', function(e){
-				mm[opts.actionMethod]();
-				e.preventDefault();
-			});
-		};
-	});
-	
-	
-	
-	function getElems(elem, o){
-		var jElm 	= $(elem),
-			ret 	= {},
-			mmID 	= jElm.attr('data-controls')
-		;
-		
-		ret.mm = (mmID) ? $('#'+ mmID) : $('video, audio', jElm).filter(':first');
-		ret.api = ret.mm.getJMEAPI(true) || ret.mm.jmeEmbed(o.embed).getJMEAPI(true);
-		if(!ret.api){return ret;}
-		if(jElm.is(o.controlSel)){
-			ret.controls = jElm;
 		}
-		
-		if(!ret.controls || ret.controls.hasClass(o.classPrefix+'media-controls')) {
-			if( jElm[0] && !ret.api.controlWrapper &&  $.contains( jElm[0], ret.mm[0] ) ){
-				ret.api.controlWrapper = jElm;
-			}
-			ret.controls = (ret.controls) ? $(o.controlSel, jElm).add(ret.controls) : $(o.controlSel, jElm);
-		}
-		return ret;
-	}
+	]);
 	
-	
-	function addWrapperBindings(wrapper, mm, api, o){
-		if(wrapper.data('jmePlayer')){return;}
-		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
-		wrapper.data('jmePlayer', {mediaelement: mm, api: api});
-		if( $.fn.videoOverlay ){
-			wrapper
-				.videoOverlay({
-					video: mm,
-					startCSS: {
-						width: 'auto',
-						height: 'auto',
-						zIndex: 99998
-					},
-					position: {
-						bottom: 0,
-						left: 0,
-						right: 0,
-						top: 0,
-						width: 0,
-						height: 0
-					}
-				})
-			;
-		}
-		if (!$.ui || !$.ui.keyCode) {return;}
-		wrapper
-			.bind('keydown', function(e){
-				if( e.jmeHandledEvent ){return;}
-				e.jmeHandledEvent = true;
-				if( moveKeys[e.keyCode] ){
-					//user is interacting with the slider don´t do anything
-					if($(e.target).is('.ui-slider-handle')){return;}
-					var dif = 5;
-					switch(e.keyCode) {
-						case $.ui.keyCode.UP:
-							if(e.ctrlKey){
-								dif += 5;
-							}
-							mm.volume( Math.min(100, mm.volume() + dif ) );
-							break;
-						case $.ui.keyCode.DOWN:
-							if(e.ctrlKey){
-								dif += 5;
-							}
-							mm.volume( Math.max(0, mm.volume() - dif ) );
-							break;
-						case $.ui.keyCode.LEFT:
-							if(e.ctrlKey){
-								dif += 55;
-							}
-							mm.currentTime( Math.max(0, mm.currentTime() - dif ) );
-							break;
-						case $.ui.keyCode.RIGHT:
-							if(e.ctrlKey){
-								dif += 55;
-							}
-							mm.currentTime( Math.min( mm.getDuration(), mm.currentTime() + dif ) );
-							break;
-					}
-					e.preventDefault();
-				} else if( e.keyCode === $.ui.keyCode.SPACE && ( !$.nodeName(e.target, 'button') && $.attr(e.target, 'role') !== 'button' || wrapper.hasClass('wraps-fullscreen')) ){
-					mm.togglePlay();
-					e.preventDefault();
-				}
-			})
-		;
-	}
+	(function(){
+		var sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
+		var sliderOpts = {range: false, animate: false};
 		
-	$.fn.jmeControl = function(o){
-		o = $.extend(true, {}, $.fn.jmeControl.defaults, o);
-		o.controlSel = [];
-		$.each(controls, function(name){
-			if(name !== 'media-controls'){
-				o.controlSel.push('.'+ o.classPrefix + name);
-			}
+		$(function(){
+			sliderMethod = ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
 		});
-		o.controlSel.push('.'+ o.classPrefix + 'media-controls');
-		o.controlSel = o.controlSel.join(', ');
-		function registerControl(){
-			var elems = getElems(this, o);
-			if( !elems.api ){return;}
-			elems.api.controls = elems.api.controls || [];
-			if(!elems.api){return;}
-			elems.controls.each(function(){
-				var jElm = $(this);
-				if($.inArray(this, elems.api.controls) !== -1){return;}
-				elems.api.controls.push(this);
-				$.each(controls, function(name, ui){
-					if( jElm.hasClass(o.classPrefix+name) ){
-						ui(jElm, elems.mm, elems.api, o);
-						return false;
+		
+		$.fn.jmeControl.addControls([
+			{
+				name: 'timeline-slider',
+				optionName: 'timeSlider',
+				options: sliderOpts,
+				fn: function(control, mm, api, o){
+					var stopSlide 		= false,
+						changeTimeState = function(e, ui){
+							var time = parseInt( ui.timeProgress, 10 );
+							if(ui.timeProgress !== undefined && !stopSlide ){
+								control[sliderMethod]('value', ui.timeProgress);
+							}
+						},
+						changeDisabledState = function(){
+							if(api.apis[api.name].loadedmeta && api.apis[api.name].loadedmeta.duration){
+								control[sliderMethod]('option', 'step', 100 / Math.max( 100, control[0].offsetWidth ) );
+								control[sliderMethod]('option', 'disabled', false);
+							} else {
+								control[sliderMethod]('option', 'disabled', true);
+							}
+						}
+					;
+					
+					control[sliderMethod](o.timeSlider)[sliderMethod]('option', 'disabled', true);
+					$(window).bind('resize', changeDisabledState);
+					$(document).bind('emchange', changeDisabledState);
+					mm
+						.bind('loadedmeta resize', changeDisabledState)
+						.bind('timechange', changeTimeState)
+						.bind('mediareset', function(){
+							control[sliderMethod]('value', 0);
+							changeDisabledState();
+						})
+						.bind('ended', function(){
+							control[sliderMethod]('value', 100);
+						})
+					;
+					control
+						.bind('slidestart', function(e, ui){
+							if (e.originalEvent) {
+								stopSlide = true;
+							}
+						})
+						.bind('slidestop', function(e, ui){
+							stopSlide = false;
+						})
+						.bind('slide', function(e, ui){
+							if(e.originalEvent && api.apis[api.name].isAPIReady){
+								api.apis[api.name].relCurrentTime(ui.value);
+							}
+						})
+					;
+				}
+			},
+			{
+				name: 'volume-slider',
+				options: $.extend( {mutestate: false}, sliderOpts ),
+				fn: function(control, mm, api, o){
+						var stopSlide = false;
+						
+						control[sliderMethod](o.volumeSlider)[sliderMethod]('option', 'disabled', true);
+						
+						function changeVolumeUI(e, data){
+							if (stopSlide) {return;}
+							if(e.type == 'volumelevelchange') {
+								control[sliderMethod]('value', data.volumelevel);
+							} else {
+								control[sliderMethod]('value', ( mm.muted() ) ? 0 : mm.volume() );
+							}
+							
+						}
+						
+						control
+							.bind('slidestart', function(e){
+								if (e.originalEvent) {
+									stopSlide = true;
+								}
+							})
+							.bind('slidestop', function(){
+								stopSlide = false;
+							})
+							.bind('slide', function(e, ui){
+								if(e.originalEvent && api.apis[api.name].isAPIReady){
+									api.apis[api.name].volume(ui.value);
+									if( o.volumeSlider.mutestate && api.apis[api.name].muted() ){
+										api.apis[api.name].muted(false);
+									}
+								}
+							})
+						;
+						
+						mm
+							.bind('volumelevelchange loadedmeta', changeVolumeUI)
+							.jmeReady(function(){
+								control[sliderMethod]('option', 'disabled', false);
+								changeVolumeUI({type: 'ready'});
+							})
+						;
+						//todo!!!
+						if(o.volumeSlider.mutestate){
+							mm.bind('mute', changeVolumeUI);
+						}
 					}
-				});
-			});
-			if( elems.api.controlWrapper && elems.api.controlWrapper[0] ){
-				addWrapperBindings(elems.api.controlWrapper, elems.mm, elems.api, o);
+			},
+			{
+				name: 'progressbar',
+				fn: function(control, mm, api, o){
+					control.progressbar(o.progressbar).progressbar('option', 'disabled', true);
+					
+					function changeProgressUI(e, ui){
+						if ('relLoaded' in ui) {
+							control.progressbar('option', 'disabled', false).progressbar('value', ui.relLoaded);
+						} else {
+							control.progressbar('option', 'disabled', true);
+						}
+					}
+					
+					function resetProgress(e, ui){
+						control.progressbar('option', 'disabled', true).progressbar('value', 0);
+					}
+					
+					mm
+						.bind('progresschange', changeProgressUI)
+						.bind('mediareset', resetProgress)
+					;
+					
+				}
 			}
-		}
-		
-		return this.each(registerControl);
-	};
-	
-	$.fn.jmeControl.defaults = {
-		//common
-		embed: {removeControls: true},
-		classPrefix: '',
-		addThemeRoller: true,
-		mediaControls: {
-			dynamicTimeslider: false,
-			timeSliderAdjust: 0,
-			excludeSel: false,
-			fullWindowOverlay: false
-		},
-		progressbar: {},
-		volumeSlider: {},
-		timeSlider: {},
-		currentTime: {
-			reverse: false
-		},
-		mediaState: {
-			click: 'togglePlay',
-			fullWindowOverlay: false
-		}
-	};
-	
-	$.support.waiaria = (!$.browser.msie || $.browser.version > 7);
-	
-	
-	$.fn.jmeControl.getBtn = function(control){
-		var elems = {
-			icon: $('.ui-icon', control),
-			text: $('.button-text', control),
-			title: control
-		};
-		
-		if( !control.is(':button') && !control.attr('role') ){
-			if($.support.waiaria){
-				control.removeAttr('href');
-			}
-			control.attr({role: 'button', tabindex: 0});
-		}
-			
-		if(!elems.icon[0] && !elems.text[0] && !$('*', control)[0]){
-			elems.icon = control;
-			elems.text = control;
-		}
-		
-		elems.names = elems.text.text().split(split);
-		elems.titleText = (control.attr('title') || '').split(split);
-		
-		if(elems.names.length !== 2){
-			elems.text = $([]);
-		}
-		if(elems.titleText.length !== 2){
-			elems.title = $([]);
-		}
-		return elems;
-	};
-	$.fn.jmeControl.addControl = function(name, fn){
-		controls[name] = fn;
-	};
-	
-	$.fn.registerMMControl = $.fn.jmeControl;
-	
-	$(function(){
-		sliderMethod = ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';
-	});
+		]);
+	})();
 })(jQuery);/**!
  * Part of the jMediaelement-Project | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
@@ -2069,7 +2223,7 @@
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
-					plugins: [],
+					plugins: {},
 					params: {
 						allowscriptaccess: 'always',
 						allowfullscreen: 'true'
@@ -2079,12 +2233,20 @@
 		)
 	;
 	
+	$(function(){
+		var path = ($('script.jwPlayer')[0] || {}).src;
+		$.fn.jmeEmbed.defaults.jwPlayer.path = path || $.fn.jmeEmbed.defaults.path;
+	});
 		
 	var regs = {
 			A: /&amp;/g,
 			a: /&/g,
 			e: /\=/g,
 			q: /\?/g
+		},
+		providerMatch = {
+			audio: 'sound',
+			video: 'video'
 		},
 		replaceVar = function(val){
 			return (val.replace) ? val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F') : val;
@@ -2096,10 +2258,6 @@
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
-			providerMatch 		= {
-				audio: 'sound',
-				video: 'video'
-			},
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
 					try {
@@ -2142,15 +2300,13 @@
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
 					params 		= $.extend({movie: opts.path}, opts.params),
-					provider 	= $.attr(this.element, 'data-provider')
+					plugins 	= []
 				;
+				
+				m.extendWithData(this.element, vars, ['type', 'provider']);
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
-				}
-				
-				if(provider){
-					vars.provider = provider;
 				}
 				
 				// if we can't autodetect provider by file-extension,
@@ -2182,8 +2338,11 @@
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				
-				if(opts.plugins.length){
-					params.flashvars.push( 'plugins='+ ( opts.plugins.join(',') ) );
+				$.each(opts.plugins, function(name, src){
+					plugins.push(src);
+				});
+				if(plugins.length){
+					params.flashvars.push( 'plugins='+ ( plugins.join(',') ) );
 				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
@@ -2466,7 +2625,11 @@
 				return this._$currentPos || 0;
 			}
 			this._$currentPos = t;
+			var playing = this._isPlaying();
 			this.apiElem.sendEvent('SEEK', t);
+			if(!playing){
+				this.pause();
+			}
 			this._trigger({type: 'timechange', time: t});
 		},
 		getDuration: function(){
@@ -2477,7 +2640,11 @@
 			if(!isFinite(v)){
 				return parseInt(this.apiElem.getConfig().volume, 10);
 			}
+			var wasMuted = this.muted();
 			this.apiElem.sendEvent('VOLUME', ''+v);
+			if(wasMuted){
+				this.apiElem.sendEvent('mute', 'true');
+			}
 		},
 		getCurrentSrc: function(){
 			return (this.apiElem.getConfig() || {}).file || '';

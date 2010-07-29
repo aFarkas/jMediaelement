@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<meta charset="utf-8">
-		<title>Simple Controls Demo</title>
-		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
+		<meta charset="UTF-8" />
+		<title>Accessibility/Caption Demo</title>
 		<link rel="stylesheet" href="../css/styles.css" />
+		
+		<link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/redmond/jquery-ui.css"/>
 		<link rel="stylesheet" href="../css/player-controls.css" />
 		
 		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
@@ -17,8 +18,15 @@
 		<script src="../../utils/a11y-slider.ext.js"></script>
 		<!-- END: for a11y-slider -->
 		
-		<script src="../../packages/mm.full.min.js"></script>
 		
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
+		
+		<!-- jme plugins -->
+		<script class="jme-jwPlayer" type="application/swf" src="../../packages/jmefs.swf"></script>
 		<script src="../../plugins/fullwindow.js"></script>
 		<script src="../../plugins/timerange.js"></script>
 		<script src="../../plugins/track.js"></script>
@@ -107,6 +115,9 @@
 								<ul>
 									<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
 									<li><a class="source" href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
+									<!--
+									<li><a class="track" type="application/ttaf+xml" href="caption.xml" lang="de" data-enabled="enabled">DFXP/ttml file</a></li>
+									-->
 									<li><a class="track" href="test.srt" lang="de" data-enabled="enabled">Srt file</a></li>
 								</ul>
 							</div>
@@ -120,8 +131,8 @@
 				<!-- END: optional extra flash-fallback -->
 			</video>
 			<div class="media-state"></div>
-			<div class="media-controls ui-widget ui-widget-header ui-corner-all">
-				<a class="play-pause" title="play / pause"><span class="ui-icon ui-icon-play"> </span><span class="button-text">play / pause</span></a>
+			<div class="media-controls">
+				<a class="play-pause" title="play / pause"><span class="ui-icon"> </span><span class="button-text">play / pause</span></a>
 				<span class="current-time player-display" title="current position">00:00</span>
 				<div class="timeline-slider">
 					<span class="handle-label">play position</span>
@@ -132,7 +143,7 @@
 				<a class="mute-unmute" title="mute / unmute"><span class="ui-icon ui-icon-volume-on"> </span><span class="button-text">mute / unmute</span></a>
 				<div class="volume-slider"><span class="handle-label">volume control</span><span class="ui-slider-handle" title="volume control"></span></div>
 				<a class="toggle-track" title="track on / track off"><span class="ui-icon"> </span><span class="button-text">track on / track off</span></a>
-				<a class="fullscreen" title="zoomin / zoomout"><span class="ui-icon ui-icon-circle-zoomin"> </span><span class="button-text">zoomin / zoomout</span></a>
+				<a class="fullscreen" title="zoomin / zoomout"><span class="ui-icon"> </span><span class="button-text">zoomin / zoomout</span></a>
 			</div>
 		</div>
 		<p>(c) copyright Blender Foundation | <a href="http://www.bigbuckbunny.org">www.bigbuckbunny.org</a></p>

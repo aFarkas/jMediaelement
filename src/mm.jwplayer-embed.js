@@ -19,7 +19,7 @@
 					hideIcons: 'auto',
 					vars: {},
 					attrs: {},
-					plugins: [],
+					plugins: {},
 					params: {
 						allowscriptaccess: 'always',
 						allowfullscreen: 'true'
@@ -29,12 +29,20 @@
 		)
 	;
 	
+	$(function(){
+		var path = ($('script.jwPlayer')[0] || {}).src;
+		$.fn.jmeEmbed.defaults.jwPlayer.path = path || $.fn.jmeEmbed.defaults.path;
+	});
 		
 	var regs = {
 			A: /&amp;/g,
 			a: /&/g,
 			e: /\=/g,
 			q: /\?/g
+		},
+		providerMatch = {
+			audio: 'sound',
+			video: 'video'
 		},
 		replaceVar = function(val){
 			return (val.replace) ? val.replace(regs.A, '%26').replace(regs.a, '%26').replace(regs.e, '%3D').replace(regs.q, '%3F') : val;
@@ -46,10 +54,6 @@
 	(function(){
 		$.support.flash9 = false;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
-			providerMatch 		= {
-				audio: 'sound',
-				video: 'video'
-			},
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
 					try {
@@ -92,15 +96,13 @@
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
 					params 		= $.extend({movie: opts.path}, opts.params),
-					provider 	= $.attr(this.element, 'data-provider')
+					plugins 	= []
 				;
+				
+				m.extendWithData(this.element, vars, ['type', 'provider']);
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
-				}
-				
-				if(provider){
-					vars.provider = provider;
 				}
 				
 				// if we can't autodetect provider by file-extension,
@@ -132,8 +134,11 @@
 					params.flashvars.push(replaceVar(name)+'='+replaceVar(val));
 				});
 				
-				if(opts.plugins.length){
-					params.flashvars.push( 'plugins='+ ( opts.plugins.join(',') ) );
+				$.each(opts.plugins, function(name, src){
+					plugins.push(src);
+				});
+				if(plugins.length){
+					params.flashvars.push( 'plugins='+ ( plugins.join(',') ) );
 				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));

@@ -287,7 +287,7 @@
 			return list;
 		}
 	}, true);
-	$.fn.jmeControl.defaults.playlist = {};
+	
 	$.fn.jmeControl.addControl('playlist', function(playlist, element, api, o){
 		element.playlist( playlist, o.addThemeRoller, o.playlist.activate );
 	});

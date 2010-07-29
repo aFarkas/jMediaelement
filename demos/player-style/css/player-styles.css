@@ -35,7 +35,11 @@ video {
 	width: 800px;
 	height: 450px;
 }
-
+/* you can style the .fallback if you want */
+.totalerror .media-controls,
+.totalerror .media-state {
+	display: none !important;
+}
 .media-label {
 	position: absolute;
 	z-index: 9;
@@ -175,7 +179,9 @@ html > body .timeline-slider {
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 	background: #369;
+	cursor: pointer;
 }
+
 .timeline-slider .ui-slider-handle {
 	top: -4px;
 	z-index: 9;
@@ -185,6 +191,10 @@ html > body .timeline-slider {
 	height: 15px;
 	background: url(../img/player-sprites.png) no-repeat 0 -1099px;
 	outline: none;
+	cursor: pointer;
+}
+.timeline-slider.ui-state-disabled .ui-slider-handle {
+	cursor: default;
 }
 .timeline-slider .ui-slider-handle.ui-state-active {
 	background-position: 0 -1199px;
@@ -197,6 +207,7 @@ html > body .timeline-slider {
 	-moz-border-radius: 3px;
 	border-radius: 3px;
 	background: #e3e3e3;
+	cursor: pointer;
 }
 .time-display {
 	position: absolute;
@@ -226,6 +237,34 @@ html > body .timeline-slider {
 .volume-slider .ui-slider-range {
 	background: url(../img/player-sprites.png) no-repeat 1px -499px;
 }
+.media-state {
+	position: absolute;
+	/* let the right click on video-element */
+	display: none;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	/* preload loading-image */
+	background: url(../img/loader.gif) no-repeat -9999px -9999px;
+	cursor: pointer;
+}
+/* in modern browser, don't let media-state being under fullscreen-button (enabling flash-fullscreen technique) */
+html > body .media-state {
+	height: auto;
+	top: 10px;
+	bottom: 32px;
+}
+.idle .media-state,
+.waiting .media-state {
+	display: block;
+}
+.idle .media-state {
+	background: url(../img/play-overlay.png) no-repeat center;
+}
+.waiting .media-state {
+	background: url(../img/loader.gif) no-repeat center;
+}
 /* IE6 does not support fullscreen */
 .fullscreen-unsupported .fullscreen {
 	display: none !important;
@@ -243,6 +282,10 @@ html > body .timeline-slider {
 .wraps-fullscreen .media-controls,
 .wraps-fullscreen .media-label {
 	z-index: 999999;
+}
+.wraps-fullscreen .media-state {
+	bottom: 42px;
+	z-index: 999996;
 }
 .wraps-fullscreen .media-label {
 	font-size: 16px;

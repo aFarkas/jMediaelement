@@ -10,9 +10,9 @@
 		
 		<style>
 			/* 
-			 * cut away the black
+			 * cut away the black stripes
 			 * this is special to the video
-			 * don't use, if you don't know what this isoverflow
+			 * don't use, if you don't know what this is for
 			 */
 			
 			.media-player {
@@ -69,6 +69,9 @@
 						},
 						timeSlider: {
 							range: 'min'
+						},
+						fullscreen: {
+//							tryFullScreen: false // defaults to true
 						}
 					})
 					
@@ -119,7 +122,12 @@
 			
 			<video poster="../media/tron.jpg" preload="none" controls="controls">
 				<source src="http://www.totaleclips.com/Player/Bounce.aspx?eclipid=e64779&bitrateid=449&vendorid=102&type=.mp4" type="video/mp4" />
-				<a class="source" href="http://www.totaleclips.com/Player/Bounce.aspx?eclipid=e64779&bitrateid=449&vendorid=102&type=.mp4" type="video/mp4">big buck bunny as mp4</a>
+				<div class="fallback">
+					<a class="source" href="http://www.totaleclips.com/Player/Bounce.aspx?eclipid=e64779&bitrateid=449&vendorid=102&type=.mp4" type="video/mp4">
+						<img src="../media/tron.jpg" alt="Tron Trailer" />
+					</a>
+				</div>
+				
 			</video>
 			
 			<div class="media-state"></div>
@@ -142,20 +150,18 @@
 				</div>
 			</div>
 		</div>
-<!--[if IE]>
 		<script>
 			if(location.protocol === 'file:'){
 				$('<small class="flash-hint">Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
 					.css({opacity: 0})
 					.insertAfter('div.media-player')
 					.fadeTo(1000, 1)
-					.delay(3000)
-					.fadeOut(400, function(){
+					.delay(9000)
+					.fadeOut(1400, function(){
 						$(this).remove();
 					})
 				;
 			}
 		</script>
-<![endif]-->
 	</body>
 </html>

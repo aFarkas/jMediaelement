@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vRC1.3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1012,7 +1012,9 @@
 	
 	$(function(){
 		var path = ($('script.jwPlayer')[0] || {}).src;
-		$.fn.jmeEmbed.defaults.jwPlayer.path = path || $.fn.jmeEmbed.defaults.path;
+		if(path){
+			$.fn.jmeEmbed.defaults.jwPlayer.path = path;
+		}
 	});
 		
 	var regs = {

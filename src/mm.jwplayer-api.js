@@ -157,6 +157,9 @@
 			setTimeout(function(){
 				api._trigger('jmeflashRefresh');
 			}, 20);
+		} else if(!api.apiElem.sendEvent){
+			api._$reInit();
+			return;
 		}
 		
 		//add events

@@ -31,7 +31,9 @@
 	
 	$(function(){
 		var path = ($('script.jwPlayer')[0] || {}).src;
-		$.fn.jmeEmbed.defaults.jwPlayer.path = path || $.fn.jmeEmbed.defaults.path;
+		if(path){
+			$.fn.jmeEmbed.defaults.jwPlayer.path = path;
+		}
 	});
 		
 	var regs = {

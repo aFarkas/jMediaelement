@@ -96,6 +96,7 @@ span.media-label,
 }
 .media-state {
 	position: absolute;
+	/* don't let overlay video for flash unblock */
 	display: none;
 	top: 0;
 	left: 0;

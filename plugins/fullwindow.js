@@ -181,8 +181,8 @@
 	})();
 	
 	$(function(){
-		var div = $('<div style="position: fixed; visibility: hidden; height: 0; width: 0; margin: 0; padding: 0; border: none;" />').appendTo('body');
-		supportsFullWindow = ($.curCSS(div[0], 'position', true) === 'fixed' && (!$.browser.msie || parseInt($.browser.version, 10) > 6) );
+		var div = $('<div style="visibility: hidden; postion: absolute; top: 0; left: 10px; padding: 10px;"><div style="position: fixed; top: 0;left: 0;" /></div>').appendTo('body');
+		supportsFullWindow = !($('div', div).offset().left);
 		div.remove();
 	});
 	

@@ -448,11 +448,9 @@
 					}
 				;
 				mm.jmeReady(function(){
-					if( !mm.isPlaying() ){
-						control.addClass(o.classPrefix+'idle');
-					} else {
-						control.addClass(o.classPrefix+'playing');
-					}
+					var playing = mm.isPlaying();
+					if(typeof playing !== 'boolean'){return;}
+					control.addClass(o.classPrefix+ (playing) ? 'idle' : 'playing');
 				});
 				if( typeof o.mediaState.click === 'string' && mm[o.mediaState.click] ){
 					control.click(function(){

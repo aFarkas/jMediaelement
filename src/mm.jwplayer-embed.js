@@ -93,26 +93,37 @@
 			isTechAvailable: function(){
 				return $.support.flash9;
 			},
+			_extendJWLoad: function(src, obj, elem){
+				elem = elem || this.element;
+				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength']);
+				
+				// if we can't autodetect provider by file-extension,
+				// we add a provider
+				if(!this.canPlaySrc(src)){
+					if(!obj.provider){
+						obj.provider = providerMatch[this.nodeName];
+					}
+					if(!obj.type){
+						obj.type = providerMatch[this.nodeName];
+					}
+				}
+				return obj;
+			},
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
 					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
 					params 		= $.extend({movie: opts.path}, opts.params),
-					plugins 	= []
+					plugins 	= [],
+					that 		= this
 				;
 				
-				m.extendWithData(this.element, vars, ['type', 'provider']);
+				this._extendJWLoad(src, vars);
 				
 				if(cfg.poster){
 					vars.image = cfg.poster;
 				}
-				
-				// if we can't autodetect provider by file-extension,
-				// we add a provider
-				if(!vars.provider && !this.canPlaySrc(src)){
-					vars.provider = providerMatch[this.nodeName];
-				}
-								
+												
 				vars.autostart = ''+ cfg.autoplay;
 				vars.repeat = (cfg.loop) ? 'single' : 'false';
 				vars.controlbar = (cfg.controls) ? 'bottom' : 'none';
@@ -144,6 +155,13 @@
 				}
 				params.flashvars = params.flashvars.join('&');
 				fn(m.embedObject( this.visualElem[0], id, attrs, params, aXAttrs, 'Shockwave Flash' ));
+				setTimeout(function(){
+					var swf = $('object', that.visualElem)[0];
+					if( !swf || (swf.style.display === 'none' && $('> *', that.visualElem).length > 1 ) ){
+						$('div[bgactive]', that.visualElem).css({width: '100%', height: '100%'});
+						that._trigger('flashblocker');
+					}
+				}, 9);
 			},
 			canPlaySrc: function(media){
 				var ret 	= m.fn.canPlaySrc.apply(this, arguments), 

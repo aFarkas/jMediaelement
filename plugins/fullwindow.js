@@ -377,12 +377,16 @@
 			jmefsButton = {
 			create: function(control, video, data, o){
 				if(!supportJmefsButton || !data.controlWrapper || !$.contains(data.controlWrapper[0], control[0])){return;}
-				var that = this,
-					activate = function(){
-						video.jmeReady(function(){
-							that.jwPlayer = data.apis.jwPlayer;
-							that.activate();
-						});
+				var that 		= this,
+					initActive 	= function(){
+						that.jwPlayer = data.apis.jwPlayer;
+						that.activate();
+					},
+					activate 	= function(){
+						video
+							.jmeReady(initActive)
+							.one('jmeflashRefresh', initActive)
+						;
 					}
 				;
 				
@@ -393,6 +397,7 @@
 				}
 				this.wrapper = data.controlWrapper;
 				this.video = video;
+				this.data = data;
 				video
 					.bind('apiActivated', function(e, evt){
 						if(evt.api === 'jwPlayer'){
@@ -410,7 +415,8 @@
 				}
 			},
 			activate: function(){
-				if(!this.jwPlayer.apiElem.jmefsSetButtonCursor){return;}
+				if(!this.jwPlayer.apiElem.jmefsSetButtonCursor || this.activated || this.data.name != 'jwPlayer'){return;}
+				this.activated = true;
 				var that = this,
 					rePos = function(){
 						if(that.timer){
@@ -433,6 +439,7 @@
 				this.setPos();
 			},
 			deactivate: function(){
+				this.activated = false;
 				this.control.removeClass('jme-flashbutton');
 				this.wrapper.removeClass('jme-flashbutton-wrapper').unbind('DOMSubtreeModified.jmeFSBtn');
 				this.video.unbind('resize.jmeFSBtn');

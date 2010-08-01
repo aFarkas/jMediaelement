@@ -29,6 +29,20 @@ to http://www.longtailvideo.com.
 
 III. Release notes
 
+Release 1.3
+	- added flashblocker handling + event
+	- allow configuring flash-paths through markup
+	- added some JWPlayer configuration through markup (i.e. data-type="sound")
+	- added controls-configuration through markup (i.e. <div class="timeline-slider" data-range="min" />)
+	- better flash fullscreen handling
+	- fixed "position: fixed" feature detection
+	- added minimalstic demo + styled demo (good starting examples)
+	- added simple DFXP/TTML parsing for captions
+	- dynamically changing preload-attribute through $.fn.attr/$.attr after initialzing is repsected now
+	- Background, margin, padding Styles are transfered to the fallback (fallback is transparent by default now, if wmode is also transparent and icons are false)
+	- provider/type for jw player is now calculated dynamically for loadSrc-method
+	- workaround for jw-player autoplay bug with some streams
+
 Release 1.2.4
 	- refactored preload handling to better meet the spec
 	- improved jmefs plugin

@@ -152,7 +152,6 @@
 						api.play();
 					}
 				}, 20);
-				
 			}
 			setTimeout(function(){
 				api._trigger('jmeflashRefresh');
@@ -178,8 +177,12 @@
 					api.apiElem.sendEvent('PLAY', 'true');
 					api.apiElem.sendEvent('PLAY', 'false');
 				} else if( api.nodeName === 'video' && cfg.preload !== 'none' && !cfg.poster ){
+					api.apiElem.sendEvent('PLAY', 'true');
+					api.apiElem.sendEvent('PLAY', 'false');
 					api.currentTime(0);
 				}
+			} else {
+				api._fixAutoplay();
 			}
 			api._trigger('mmAPIReady');
 		}, 20);		
@@ -227,18 +230,42 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_mmload: function(src, poster){
-			this._lastLoad = {
-				file: src
-			};
+		_fixAutoplay: function(){
+			var that 	= this,
+				clear 	= true
+			;
+			var timer = setTimeout(function(){
+				clear = false;
+				$(that.element).pause().play();
+				timer = setTimeout(function(){
+					$(that.element).pause().play();
+				}, 500);
+				setTimeout(function(){
+					clear = true;
+				}, 99);
+			}, 500);
+			$(this.element).one('pause ended mediareset', function(e){
+				if(e.type !== 'pause' || clear){
+					clearTimeout(timer);
+				}
+			});
+		},
+		_mmload: function(src, poster, jwExtras){
+			var playing = this._isPlaying();
+			this._lastLoad = {file: src};
 			if(poster){
 				this._lastLoad.image = poster;
 			}
 			this._$resetStates();
-			this.apiElem.sendEvent('LOAD', this._lastLoad);
+			this._extendJWLoad(src, this._lastLoad);
+			if(typeof jwExtras == 'object'){
+				$.extend(this._lastLoad, jwExtras);
+			}
 			
-			if( this.isAPIActive && $.attr(this.element, 'autoplay') ){
+			this.apiElem.sendEvent('LOAD', this._lastLoad);
+			if( this.isAPIActive && ($.attr(this.element, 'autoplay') || playing) ){
 				this.apiElem.sendEvent('PLAY', 'true');
+				this._fixAutoplay();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

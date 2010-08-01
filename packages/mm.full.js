@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3RC1 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3RC2 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -2623,13 +2623,15 @@
 		},
 		_fixAutoplay: function(){
 			var that 	= this,
-				clear 	= true
+				clear
 			;
 			var timer = setTimeout(function(){
 				clear = false;
 				$(that.element).pause().play();
 				timer = setTimeout(function(){
-					$(that.element).pause().play();
+					if(!that._isPlaying()){
+						$(that.element).play();
+					}
 				}, 500);
 				setTimeout(function(){
 					clear = true;

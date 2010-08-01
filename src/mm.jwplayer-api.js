@@ -232,13 +232,15 @@
 		},
 		_fixAutoplay: function(){
 			var that 	= this,
-				clear 	= true
+				clear
 			;
 			var timer = setTimeout(function(){
 				clear = false;
 				$(that.element).pause().play();
 				timer = setTimeout(function(){
-					$(that.element).pause().play();
+					if(!that._isPlaying()){
+						$(that.element).play();
+					}
 				}, 500);
 				setTimeout(function(){
 					clear = true;

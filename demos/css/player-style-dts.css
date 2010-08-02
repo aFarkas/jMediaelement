@@ -8,10 +8,6 @@ video {
 	overflow: hidden;
 	width: 510px;
 }
-/* vlc has no wmode, so we place controlbar not above videoas an video overlay */
-.media-player.vlc {
-	padding-bottom: 40px;
-}
 .media-player .video-box {
 	position: relative;
 	width: 510px;

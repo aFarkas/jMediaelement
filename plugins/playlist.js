@@ -12,16 +12,23 @@
 	var split 		= /\s*\|\s*|\s*\,\s*/g,
 		itemSel 	= 'li[data-srces], li.play-item',
 		getItemProps = function(item){
-			var img 	= $('img', item),
-				props 	= {
+			var props 	= {
 					label: item.attr('data-label'),
-					srces: [],
-					poster: (img[0]) ? img[0].src : item.attr('data-poster')
+					srces: []
 				},
+				poster 	= item.attr('data-poster'),
 				srces 	= $('a', item),
 				nameElem
 			;
 			
+			if(poster){
+				props.poster = $.multimediaSupport.makeAbsURI(poster);
+			} else {
+				poster = $('img', item)[0];
+				if(poster){
+					props.poster = poster.src;
+				}
+			}
 			if(!props.label){
 				nameElem = $('.item-name', item);
 				props.label = $.trim( ( ( nameElem[0] ) ? nameElem : item ).text() );

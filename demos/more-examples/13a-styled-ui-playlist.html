@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Styled Controls Demo</title>
+		<link rel="stylesheet" href="../css/styles.css" />
+		
+		<!-- player-styles -->
+		<link rel="stylesheet" href="../player-style/css/player-styles.css" />
+		
+		<style>
+			/* 
+			 * cut away the black stripes
+			 * this is special to the video
+			 * don't use, if you don't know what this is for
+			 */
+			.media-player {
+				height: 330px;
+				overflow: hidden;
+			}
+			
+			.mm-video-box,
+			video {
+				top: -60px;
+			}
+			
+		</style>
+		
+		<!-- jQuery -->		
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+		
+		<!-- ui-components -->
+		<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"></script>
+		<!-- END:  ui-components -->
+		
+		<!-- for a11y-slider -->
+		<script src="../../utils/a11y-slider.ext.js"></script>
+		<!-- END: for a11y-slider -->
+		
+		
+		<!-- full jme script -->
+		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
+        <script src="../../packages/mm.full.js"></script>
+		<!-- END: jme -->
+		
+		<!-- jme plugins -->
+		<!-- configure path to jme extension for jwplayer -->
+		<script class="jme-jwPlayer" type="application/swf" src="../../packages/jmefs.swf"></script>
+		<script src="../../plugins/fullwindow.js"></script>
+		
+		<script src="../../plugins/playlist.js"></script>
+		
+		<!-- uitils -->
+		<!-- useractivity/useridle event -->
+		<script src="../../utils/useractivity.js"></script>
+		
+		<style>
+			.playlist-visible .media-state {
+				display: none;
+			}
+			.playlist {
+				position: absolute;
+				z-index: 999999;
+				display: none;
+				top: 65px;
+				left: 0;
+				margin: 0;
+				width: 100%;
+			}
+			.playlist ul {
+				margin: auto;
+				width: 400px;
+				font-size: 100%;
+			}
+			.playlist li {
+				display: block;
+				overflow: hidden;
+				zoom: 1;
+				margin: 10px;
+				padding: 10px;
+				border: 4px solid rgba(155, 155, 155, 0.3);
+				border-color: rgb(50, 50, 50);
+				border-color: rgba(155, 155, 155, 0.3);
+				-moz-border-radius: 10px;
+				border-radius: 10px;
+				background: rgb(0, 0, 0);
+				background: rgba(0, 0, 0, 0.8);
+				cursor: pointer;
+			}
+			
+			.playlist li:hover,
+			.playlist li:focus {
+				border-color: rgb(150, 150, 150);
+				border-color: rgba(155, 155, 155, 0.9);
+				background: rgba(0, 0, 0, 0.9);
+			}
+			.playlist li.ui-state-active {
+				border-color: rgb(190, 190, 190);
+				border-color: rgba(155, 155, 155, 0.6);
+				background: rgba(0, 0, 0, 0.85);
+				cursor: default;
+			}
+			.playlist li.ui-state-active a {
+				cursor: default;
+			}
+			.playlist a {
+				color: #fff;
+				text-decoration: none;
+			}
+			
+			.playlist img {
+				float: left;
+				margin: 0 5px 0 0;
+				height: auto;
+				width: 100px;
+			}
+			.wraps-fullscreen .playlist {
+				top: 100px;
+			}
+			.wraps-fullscreen .playlist ul {
+				width: 800px;
+				font-size: 180%;
+			}
+			.wraps-fullscreen .playlist li {
+				margin: 15px;
+				padding: 15px;
+				border-width: 6px;
+				-moz-border-radius: 15px;
+				border-radius: 15px;
+			}
+			.wraps-fullscreen .playlist img {
+				margin-right: 10px;
+				width: 180px;
+			}
+		</style>
+		
+		<script>
+			$('html').addClass('js-on');
+			$(function(){
+				$('div.media-player')
+					// init and configure controls
+					.jmeControl({
+						//we don't need special Themeroller-Classes
+						addThemeRoller: false,
+						volumeSlider: {
+							range: 'min',
+							//changeing the volume will unmute the player
+							mutestate: true
+						},
+						timeSlider: {
+							range: 'min'
+						},
+						fullscreen: {
+							//firefox has an ugly reframe bug
+							tryFullScreen: $.browser.mozilla // defaults to true
+						}
+					})
+					
+					// add some UI behavior
+					.bind('play', function(){
+						$(this)
+							.unbind('.useridle')
+							//useractive/userinactive event is provided by utils/useractivity.js plugin
+							.bind('useractive.useridle', function(){
+								//for keyboard users: prevent scrollInToView, we handle this with animation
+								var that = this;
+								setTimeout(function(){
+									$('div.media-controls', that).scrollTop(0);
+								}, 0);
+								$('div.media-controls-box', this).stop().animate({
+									opacity: 1, 
+									bottom: 0
+								});
+							})
+							//set idletime to 1200ms (defaults to 2500) and assume that control isn't idled initially (idle defaults to true) 
+							.bind('userinactive.useridle', {idletime: 1200, idle: false}, function(){
+								$('div.media-controls-box', this).stop().animate({
+									opacity: 0, 
+									bottom: $('div.media-controls-box', this).outerHeight() * -1
+								});
+							})
+						;
+					})
+					.bind('pause ended', function(e){
+						$(this).unbind('.useridle');
+						$('div.media-controls-box', this).stop().animate({
+							opacity: 1, 
+							bottom: 0
+						});
+					})
+					
+					
+					//playlist
+					.bind('ended', function(){
+						var player = $(this);
+						//this exits fullscreen but not fullwindow
+						$('video', player).exitFullScreen();
+						player
+							.addClass('playlist-visible')
+							.unbind('.playlistui')
+							.bind('play.playlistui', function(){
+								$('div.playlist', player).fadeOut(function(){
+									player
+										.removeClass('playlist-visible')
+										.unbind('.playlistui')
+									;
+								});
+							})
+						;
+						$('div.playlist', player).fadeIn(800);
+					})
+				;
+				
+			});
+			
+		</script>
+		
+	</head>
+	<body>
+		<h1>Demo with styled controls and some UI behavior</h1>
+		<div class="media-player">
+			<span class="media-label"><span class="media-role">video:</span> <span class="media-name">Tron Legacy</span></span>
+			
+			<video></video>
+			
+			<div class="media-state"></div>
+			
+			<div class="media-controls">
+				<div class="media-controls-box">
+					<a class="play-pause btn" title="play / pause"><span class="ui-icon"> </span><span class="button-text">play / pause</span></a>
+					<div class="media-bar">
+						<div class="timeline-slider">
+							<span class="handle-label">play position</span>
+							<span class="ui-slider-handle" title="play position"></span>
+							<div class="progressbar"></div>
+						</div>
+						<span class="time-display">
+							<span class="current-time" title="current position">00:00</span> / <span class="duration" title="duration">00:00</span>
+						</span>
+						<div class="volume-slider"><span class="handle-label">volume control</span><span class="ui-slider-handle" title="volume control"></span></div>
+						<a class="fullscreen btn" title="zoomin / zoomout"><span class="ui-icon"> </span><span class="button-text">zoomin / zoomout</span></a>
+					</div>
+				</div>
+			</div>
+			<div class="playlist">
+				<ul>
+					<li class="play-item">
+						<img src="../media/tron.jpg" alt="Tron Trailer #1" />
+						<a href="http://www.totaleclips.com/Player/Bounce.aspx?eclipid=e64779&bitrateid=449&vendorid=102&type=.mp4" type="video/mp4">
+							TRON Legacy: Trailer #1
+						</a>
+					</li>
+					<li class="play-item">
+						<img src="../media/tron-2.jpg" alt="Tron Trailer #2" />
+						<a href="http://www.totaleclips.com/Player/Bounce.aspx?eclipid=e55074&bitrateid=449&vendorid=102&type=.mp4" type="video/mp4">
+							TRON Legacy: Clip
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<script>
+			if(location.protocol === 'file:'){
+				$('<small class="flash-hint">Note that you have to <a href="http://www.macromedia.com/support/documentation/en/flashplayer/help/settings_manager04.html">add your development directory to the local trusted security sandbox</a>, to get the controls work with the flash backend</small>')
+					.css({opacity: 0})
+					.insertAfter('div.media-player')
+					.fadeTo(1000, 1)
+					.delay(9000)
+					.fadeOut(1400, function(){
+						$(this).remove();
+					})
+				;
+			}
+		</script>
+	</body>
+</html>

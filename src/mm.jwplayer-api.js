@@ -181,8 +181,6 @@
 					api.apiElem.sendEvent('PLAY', 'false');
 					api.currentTime(0);
 				}
-			} else {
-				api._fixAutoplay();
 			}
 			api._trigger('mmAPIReady');
 		}, 20);		
@@ -230,28 +228,6 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_fixAutoplay: function(){
-			var that 	= this,
-				clear
-			;
-			var timer = setTimeout(function(){
-				clear = false;
-				$(that.element).pause().play();
-				timer = setTimeout(function(){
-					if(!that._isPlaying()){
-						$(that.element).play();
-					}
-				}, 500);
-				setTimeout(function(){
-					clear = true;
-				}, 99);
-			}, 500);
-			$(this.element).one('pause ended mediareset', function(e){
-				if(e.type !== 'pause' || clear){
-					clearTimeout(timer);
-				}
-			});
-		},
 		_mmload: function(src, poster, jwExtras){
 			var playing = this._isPlaying();
 			this._lastLoad = {file: src};
@@ -267,7 +243,6 @@
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && ($.attr(this.element, 'autoplay') || playing) ){
 				this.apiElem.sendEvent('PLAY', 'true');
-				this._fixAutoplay();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

@@ -24,8 +24,9 @@
 			timechange: 1,
 			progresschange: 1,
 			mmAPIReady: 1,
-			jmeflashRefresh: 1,
-			ended: 1
+			jmeflashRefresh: 1
+//			ToDo: Test Opera
+//			,ended: 1
 		},
 		fsMethods		= {}
 	;
@@ -395,15 +396,20 @@
 						});
 					}
 				})
-				.bind('play pause playing waiting', bubbleEvents)
-				.bind('play playing', function(){
-					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
+				.bind('play pause playing waiting ended', bubbleEvents)
+				.bind('play playing', function(e){
+					if( !that.isAPIActive && e.originalEvent && !that.element.paused && !that.element.ended ){
 						try{
 							that.element.pause();
 						} catch(e){}
 					}
 				})
 				.bind('mediareset', triggerLoadingErr)
+				.bind('ended play pause waiting playing', function(e){
+					if(!that.isAPIActive && e.originalEvent){
+						e.stopImmediatePropagation();
+					}
+				})
 			;
 			triggerLoadingErr( 'initial' );
 			

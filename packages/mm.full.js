@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3RC2 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3preRC3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1005,8 +1005,9 @@
 			timechange: 1,
 			progresschange: 1,
 			mmAPIReady: 1,
-			jmeflashRefresh: 1,
-			ended: 1
+			jmeflashRefresh: 1
+//			ToDo: Test Opera
+//			,ended: 1
 		},
 		fsMethods		= {}
 	;
@@ -1376,15 +1377,20 @@
 						});
 					}
 				})
-				.bind('play pause playing waiting', bubbleEvents)
-				.bind('play playing', function(){
-					if( !that.isAPIActive && !that.element.paused && !that.element.ended ){
+				.bind('play pause playing waiting ended', bubbleEvents)
+				.bind('play playing', function(e){
+					if( !that.isAPIActive && e.originalEvent && !that.element.paused && !that.element.ended ){
 						try{
 							that.element.pause();
 						} catch(e){}
 					}
 				})
 				.bind('mediareset', triggerLoadingErr)
+				.bind('ended play pause waiting playing', function(e){
+					if(!that.isAPIActive && e.originalEvent){
+						e.stopImmediatePropagation();
+					}
+				})
 			;
 			triggerLoadingErr( 'initial' );
 			
@@ -2572,8 +2578,6 @@
 					api.apiElem.sendEvent('PLAY', 'false');
 					api.currentTime(0);
 				}
-			} else {
-				api._fixAutoplay();
 			}
 			api._trigger('mmAPIReady');
 		}, 20);		
@@ -2621,28 +2625,6 @@
 			var cfg = this.apiElem.getConfig();
 			return (cfg) ? (cfg.state === 'PLAYING' ) : undefined;
 		},
-		_fixAutoplay: function(){
-			var that 	= this,
-				clear
-			;
-			var timer = setTimeout(function(){
-				clear = false;
-				$(that.element).pause().play();
-				timer = setTimeout(function(){
-					if(!that._isPlaying()){
-						$(that.element).play();
-					}
-				}, 500);
-				setTimeout(function(){
-					clear = true;
-				}, 99);
-			}, 500);
-			$(this.element).one('pause ended mediareset', function(e){
-				if(e.type !== 'pause' || clear){
-					clearTimeout(timer);
-				}
-			});
-		},
 		_mmload: function(src, poster, jwExtras){
 			var playing = this._isPlaying();
 			this._lastLoad = {file: src};
@@ -2658,7 +2640,6 @@
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && ($.attr(this.element, 'autoplay') || playing) ){
 				this.apiElem.sendEvent('PLAY', 'true');
-				this._fixAutoplay();
 			} else {
 				this.apiElem.sendEvent('PLAY', 'false');
 			}

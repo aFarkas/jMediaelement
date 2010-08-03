@@ -14,7 +14,8 @@
 			native_mediareset: 1,
 			//these are api-events, but shouldn´t throw mmAPIReady
 			totalerror: 1,
-			jmeflashRefresh: 1
+			jmeflashRefresh: 1,
+			flashblocker: 1
 		},
 		nuBubbleEvents 	= {
 			native_mediareset: 1,
@@ -25,8 +26,6 @@
 			progresschange: 1,
 			mmAPIReady: 1,
 			jmeflashRefresh: 1
-//			ToDo: Test Opera
-//			,ended: 1
 		},
 		fsMethods		= {}
 	;
@@ -80,7 +79,6 @@
 			var evt  = (e.type) ? e : {type: e},
 				type = evt.type
 			;
-			
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -107,7 +105,7 @@
 					break;
 			}
 			
-			if(!this.isAPIActive || (this.totalerror && !noAPIEvents[type])){return;}
+			if(!this.isAPIActive || (this.totalerror && !noAPIEvents[type]) || this._stoppedEvents[type]){return;}
 			if(!this.isAPIReady && !noAPIEvents[type]){
 				this._trigger('mmAPIReady');
 			}
@@ -134,6 +132,19 @@
 			}
 						
 			$.event.trigger( e, evt, this.element );
+		},
+		_stoppedEvents: {},
+		_stopEvent: function(name, autoAllow){
+			this._stoppedEvents[name] = true;
+			if(autoAllow){
+				var that = this;
+				setTimeout(function(){
+					that._allowEvent(name);
+				}, 9);
+			}
+		},
+		_allowEvent: function(name){
+			this._stoppedEvents[name] = false;
 		},
 		supportsFullScreen: function(){
 			return this._videoFullscreen || false;
@@ -203,7 +214,7 @@
 		getFormattedTime: function(){
 			return this._format(this.currentTime());
 		},
-		loadSrc: function(srces, poster, mediaName){
+		loadSrc: function(srces, poster, mediaName, extras){
 			if(srces){
 				$.attr(this.element, 'srces', srces);
 				srces = $.isArray(srces) ? srces : [srces];
@@ -221,10 +232,10 @@
 				poster = $.attr(this.element, 'poster');
 			}
 			
-			if( mediaName !== undefined ){
+			if( typeof mediaName == 'string' ){
 				var data = $.data(this.element, 'mediaElemSupport');
-				if( data.controlWrapper && data.controlWrapper.mediaLabel ){
-					data.controlWrapper.mediaLabel.text(mediaName);
+				if( data.mediaName ){
+					data.mediaName.text(mediaName);
 				}
 			}
 			
@@ -234,7 +245,7 @@
 			this._trigger('mediareset');
 			if(canPlaySrc){
 				canPlaySrc = canPlaySrc.src || canPlaySrc;
-				this._mmload(canPlaySrc, poster);
+				this._mmload(canPlaySrc, poster, extras);
 			} else {
 				$m._setAPIActive(this.element, 'nativ');
 				this._trigger('native_mediareset');
@@ -375,6 +386,7 @@
 					},
 					ended: function(){
 						if(that.isAPIActive && this.ended && !this.paused && !$.attr(this, 'loop') ){
+							that._stopEvent('pause', true);
 							this.pause();
 						}
 					},
@@ -388,6 +400,15 @@
 							e.timeProgress = e.time / e.duration * 100;
 						}
 						that._trigger(e);
+					},
+					//Opera sometimes forgets to dispatch loadedmetadata
+					progress: function(){
+						if(!that.loadedmeta && this.duration){
+							that._trigger({
+								type: 'loadedmeta',
+								duration: this.duration
+							});
+						}
 					},
 					loadedmetadata: function(){
 						that._trigger({
@@ -406,7 +427,7 @@
 				})
 				.bind('mediareset', triggerLoadingErr)
 				.bind('ended play pause waiting playing', function(e){
-					if(!that.isAPIActive && e.originalEvent){
+					if( (!that.isAPIActive && e.originalEvent && (e.originalEvent.mediaAPI === "nativ" || !e.originalEvent.mediaAPI)) || that._stoppedEvents[e.type]){
 						e.stopImmediatePropagation();
 					}
 				})
@@ -441,6 +462,7 @@
 			this.element.play();
 		},
 		pause: function(){
+			this._allowEvent('pause');
 			this.element.pause();
 		},
 		muted: function(bool){

@@ -20,7 +20,7 @@
 		<!-- full jme script -->
 		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
 		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
-        <script src="../../packages/mm.full.js"></script>
+        <script src="../../packages/mm.full.min.js"></script>
 		<!-- END: jme -->
 		
 		<!-- adds playlist markup- and dom-api -->
@@ -69,21 +69,17 @@
 					<li data-srces="../media/ANC_sketchV2n.mp3,../media/ANC_sketchV2n.ogg">
 						anc
 					</li>
-					<!-- another more unobtrusive way to write a play-item 
-					<li class="play-item">
-						<a href="http://srv2.streaming-ingenierie.fr:8142/;stream.nsv" type="jwplayer/jwplayer">shoutcast-stream</a>
-					</li>
-					-->
+					<!-- another more unobtrusive way to write a play-item -->
 					<li class="play-item">
 						<span class="item-name">chefsache</span>
 						<ul>
-							<li><a href="../media/chefsachesketch.mp3">as mp3</a></li>
+							<li><a href="../media/chefsachesketch.mp3" type="audio/mpeg">as mp3</a></li>
 							<li><a href="../media/chefsachesketch.ogg">as ogg</a></li>
 						</ul>
 					</li>
-					<!-- another more unobtrusive way to write a play-item with only one source
+					<!-- another unobtrusive way to write a play-item with only one source
 					<li>
-						<a href="../media/ANC_sketchV2n.mp3">anc</a>
+						<a href="../media/ANC_sketchV2n.mp3" type="audio/mp3">anc</a>
 					</li>
 					 -->
 				</ul>

@@ -40,6 +40,10 @@ video {
 .totalerror .media-state {
 	display: none !important;
 }
+.flashblocker .media-element-box {
+	min-width: 40px;
+	min-height: 40px;
+}
 .media-label {
 	position: absolute;
 	z-index: 9;

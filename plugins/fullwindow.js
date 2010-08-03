@@ -312,7 +312,7 @@
 			
 			$(this.element).addClass('displays-fullscreen');
 			
-			this._trigger({type: 'fullwindow', isFullwindow: true});
+			this._trigger({type: 'fullwindow', isFullwindow: true, bbox: vidCss});
 			$(this.element).triggerHandler('fullwindowresize', vidCss);
 			$(this.element).triggerHandler('resize');
 		},

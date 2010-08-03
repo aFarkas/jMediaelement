@@ -41,7 +41,7 @@
 		<!-- full jme script -->
 		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
 		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
-        <script src="../../packages/mm.full.js"></script>
+        <script src="../../packages/mm.full.min.js"></script>
 		<!-- END: jme -->
 		
 		<!-- jme plugins -->
@@ -106,6 +106,7 @@
 			}
 			.playlist a {
 				color: #fff;
+				outline: none;
 				text-decoration: none;
 			}
 			
@@ -153,7 +154,7 @@
 						},
 						fullscreen: {
 							//firefox has an ugly reframe bug
-							tryFullScreen: $.browser.mozilla // defaults to true
+							tryFullScreen: !!$.browser.mozilla // defaults to true
 						}
 					})
 					
@@ -189,8 +190,7 @@
 							bottom: 0
 						});
 					})
-					
-					
+										
 					//playlist
 					.bind('ended', function(){
 						var player = $(this);
@@ -218,7 +218,7 @@
 		
 	</head>
 	<body>
-		<h1>Demo with styled controls and some UI behavior</h1>
+		<h1>Demo with styled controls and some UI behavior + playlist onended event</h1>
 		<div class="media-player">
 			<span class="media-label"><span class="media-role">video:</span> <span class="media-name">Tron Legacy</span></span>
 			

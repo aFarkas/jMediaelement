@@ -110,9 +110,13 @@ a.fullscreen-unsupported {
 	opacity: 0.3;
 }
 
-/* on totoal error/showFallback: true */
+/* on totalerror, flashblocker or showFallback: true */
 .totalerror .media-controls {
 	display: none !important;
+}
+.flashblocker .media-element-box {
+	min-width: 40px;
+	min-height: 40px;
 }
 .fallback {
 	position: relative;

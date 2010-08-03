@@ -41,7 +41,9 @@
 		
 	}
 	
-	var controls = {};
+	var controls 	= {},
+		$m 			= $.multimediaSupport
+	;
 	
 	function getElems(elem, o){
 		var jElm 	= $(elem),
@@ -68,7 +70,7 @@
 	
 	function addWrapperBindings(wrapper, mm, api, o){
 		if(wrapper.data('jmePlayer')){return;}
-		controls['media-state'](wrapper, mm, api, $.extend({}, o, {mediaState: {click: false}}));
+		$m.addStateClasses(wrapper, mm, o.classPrefix);
 		wrapper.data('jmePlayer', {mediaelement: mm, api: api});
 		if( $.fn.videoOverlay ){
 			wrapper
@@ -161,7 +163,7 @@
 				$.each(controls, function(name, ui){
 					if( jElm.hasClass(opts.classPrefix+name) ){
 						var o = $.extend(true, {}, opts);
-						o[ui.optionsName] = $.multimediaSupport.extendWithData(jElm[0], o[ui.optionsName], opts[ui.optionsName]);
+						o[ui.optionsName] = $m.extendWithData(jElm[0], o[ui.optionsName], opts[ui.optionsName]);
 						ui(jElm, elems.mm, elems.api, o);
 						return false;
 					}
@@ -221,7 +223,7 @@
 		};
 	})();
 	
-	$.multimediaSupport.camelCase = (function(){
+	$m.camelCase = (function(){
 		var rdashAlpha = /-([a-z])/ig,
 			fcamelCase = function( all, letter ) {
 				return letter.toUpperCase();
@@ -231,10 +233,9 @@
 			return name.replace(rdashAlpha, fcamelCase);
 		};
 	})();
-	
 	$.fn.jmeControl.addControl = function(name, fn, ops, optsName){
 		ops = ops || {};
-		optsName = optsName || $.multimediaSupport.camelCase(name);
+		optsName = optsName || $m.camelCase(name);
 		$.fn.jmeControl.defaults[optsName] = ops;
 		fn.optionsName = optsName;
 		controls[name] = fn;
@@ -398,7 +399,7 @@
 		},
 		{
 			name: 'media-label',
-			fn: function(control, mm, data, o){
+			fn: (function(){
 				var labelID = 0;
 				return function(control, mm, data, o){
 					if (!data.controlWrapper || data.controlWrapper.attr('role')) {
@@ -410,13 +411,13 @@
 						id = o.classPrefix + 'media-label-' + labelID;
 						control.attr('id', id);
 					}
-					data.controlWrapper.mediaLabel = (mediaName[0]) ? mediaName : control;
+					data.mediaName = (mediaName[0]) ? mediaName : control;
 					data.controlWrapper.attr({
 						role: 'group',
 						'aria-labelledby': id
 					});
 				};
-			}
+			})()
 		},
 		{
 			name: 'fallback',
@@ -437,74 +438,59 @@
 		{
 			name: 'media-state',
 			options: {
-				click: 'togglePlay',
-				fullWindowOverlay: false
+				click: 'togglePlay'
 			},
 			fn: function(control, mm, api, o){
-				//classPrefix
-				var stateClasses 		= o.classPrefix+'playing '+ o.classPrefix +'totalerror '+o.classPrefix+'waiting '+ o.classPrefix+'idle',
-					removeStateClasses 	= function(){
-						control.removeClass(stateClasses);
-					}
-				;
-				mm.jmeReady(function(){
-					var playing = mm.isPlaying();
-					if(typeof playing !== 'boolean'){return;}
-					control.addClass(o.classPrefix+ (playing) ? 'idle' : 'playing');
-				});
-				if( typeof o.mediaState.click === 'string' && mm[o.mediaState.click] ){
+				$m.addStateClasses(control, mm, o.classPrefix);		
+				if( o.mediaState.click && mm[o.mediaState.click] ){
 					control.click(function(){
 						mm[o.mediaState.click]();
 					});
 				}
-				control.addClass(o.classPrefix+api.name);
-				mm
-					.bind({
-						apiActivated: function(e, d){
-							control.addClass(o.classPrefix+d.api);
-						},
-						apiDeActivated: function(e, d){
-							control.removeClass(o.classPrefix+d.api);
-						}
-					})
-					.bind('playing totalerror waiting', function(e){
-						removeStateClasses();
-						control.addClass(o.classPrefix+e.type);
-					})
-					.bind('play', function(){
-						control.removeClass(o.classPrefix+'idle');
-					})
-					.bind('pause ended mediareset', function(e){
-						removeStateClasses();
-						control.addClass(o.classPrefix+'idle');
-					})
-					.bind('canplay', function(e){
-						control.removeClass(o.classPrefix+'waiting');
-					})
-				;
-				if( o.mediaState.fullWindowOverlay && $.fn.videoOverlay ){
-					control.videoOverlay({
-						video: mm,
-						startCSS: {
-							width: 'auto',
-							height: 'auto',
-							padding: '0px',
-							margin: '0px',
-							borderWidth: '0px'
-						},
-						position: {
-							bottom: 0,
-							left: 0,
-							right: 0,
-							top: 0,
-							width: 0,
-							height: 0
-						}
-					});
-				}
+				
 			}
 		}
 	]);
+	
+	$m.addStateClasses = function(control, mm, prefix){
+		prefix = prefix || '';
+		var stateClasses 		= prefix+'playing '+ prefix +'totalerror '+ prefix +'waiting '+ prefix +'idle '+ prefix +'flashblocker',
+			removeStateClasses 	= function(){
+				control.removeClass(stateClasses);
+			}
+		;
+		mm.jmeReady(function(){
+			var playing = mm.isPlaying();
+			if(typeof playing !== 'boolean'){return;}
+			control.addClass(prefix+ (playing) ? 'idle' : 'playing');
+		});
+		
+		control.addClass(prefix + mm.getMediaAPI());
+		mm
+			.bind({
+				apiActivated: function(e, d){
+					control.addClass(prefix + d.api);
+				},
+				apiDeActivated: function(e, d){
+					control.removeClass(prefix + d.api);
+				}
+			})
+			.bind('playing totalerror waiting flashblocker', function(e){
+				removeStateClasses();
+				control.addClass(prefix + e.type);
+			})
+			.bind('play', function(){
+				control.removeClass(prefix + 'idle');
+			})
+			.bind('pause ended mediareset', function(e){
+				removeStateClasses();
+				control.addClass(prefix +'idle');
+			})
+			.bind('canplay', function(e){
+				control.removeClass(prefix +'waiting');
+			})
+		;
+	};
 	
 	(function(){
 		var sliderMethod 	= ($.fn.a11ySlider) ? 'a11ySlider' : 'slider';

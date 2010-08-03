@@ -114,10 +114,15 @@ span.media-label,
 	background: url(../media/loader.gif) center no-repeat;
 }
 
-/* on totoal error/showFallback: true */
+/* on totalerror, flashblocker or showFallback: true */
 .totalerror .media-controls {
 	display: none !important;
 }
+
+.flashblocker .media-element-box {
+	min-width: 40px;
+	min-height: 40px;
+} 
 .fallback {
 	position: relative;
 	zoom: 1;
@@ -173,6 +178,7 @@ span.media-label,
 	overflow: hidden;
 	zoom: 1;
 	display: block;
+	outline: none;
 }
 .playlist img {
 	float: left;

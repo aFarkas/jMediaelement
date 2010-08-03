@@ -244,14 +244,14 @@
 			if( !list.data('playlistFor') ) {
 				var items = $(itemSel, list);
 				elem
-					// ToDo: should delay ended event instead
 					.bind('ended.playlist', function(){
 						var autoplay = list.hasClass('autoplay-next');
 						if( list.hasClass('active-playlist') && ( autoplay || list.hasClass('autoload-next') ) ){
 							//opera is not responding
+							// ToDo: should delay ended event instead
 							setTimeout(function(){
 								elem.loadNextPlaylistItem(list, autoplay);
-							}, 0);
+							}, 9);
 						}
 					})
 				;

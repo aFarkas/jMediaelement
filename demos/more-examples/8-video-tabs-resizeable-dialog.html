@@ -26,6 +26,9 @@
 		<!-- useractivity -->
 		<script src="../../utils/useractivity.js"></script>
 		
+		<!-- workaround for flash bug in ie -->
+		<script src="../../utils/reinitjme.js"></script>
+		
 		<!-- fullwindow plugin -->
 		<script class="jme-jwPlayer" type="application/swf" src="../../packages/jmefs.swf"></script>
 		<script src="../../plugins/fullwindow.js"></script>
@@ -84,7 +87,11 @@
 							$('#dialog video').pause();
 						},
 						open: function(){
-							$('#dialog video').play();
+							$('#dialog video')
+								//prevents a Flash-Bug in IE with newest Flash-Player
+								.reinitMedia({timeout: true})
+								.play()
+							;
 						}
 					})
 					.each(function(){
@@ -121,7 +128,12 @@
 						//pause all videos
 						$('video').pause();
 						//start current tabvideo
-						$(ui.panel).find('video').play();
+						$(ui.panel)
+							.find('video')
+							//prevents a Flash-Bug in IE with newest Flash-Player
+							.reinitMedia({timeout: true})
+							.play()
+						;
 					}
 				});
 				

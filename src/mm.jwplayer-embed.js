@@ -94,6 +94,7 @@
 				return $.support.flash9;
 			},
 			_extendJWLoad: function(src, obj, elem){
+				if(!src){return;}
 				elem = elem || this.element;
 				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength']);
 				

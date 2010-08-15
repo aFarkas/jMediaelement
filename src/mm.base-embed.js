@@ -892,7 +892,9 @@
 		}
 		
 		return this.each(function(){
-			var elemName 	= this.nodeName.toLowerCase();
+			var elemName 	= this.nodeName.toLowerCase(),
+				supported 	= false
+			;
 			
 			if(elemName !== 'video' && elemName !== 'audio'){return;}
 			var elem = this;
@@ -934,13 +936,28 @@
 				})
 			;
 			
-			if(opts.debug || !$.support.mediaElements){
-				 findInitFallback(this, opts);
-				 apiData.apis.nativ.isAPIReady = true;
-			} else {
-				apiData.apis.nativ._init();
+			if($.support.flash9 && opts.activateFlash){
+				supported = m.getSuitedPlayers(elem, ['jwPlayer']);
+				if( supported == 'noSource' ){
+					supported = {name: 'jwPlayer'};
+				}
+				apiData.apis.nativ.isAPIReady = true;
+				if(supported.name == 'jwPlayer' && !m._setAPIActive(this, 'jwPlayer')){
+					m._embedApi(this, supported, apiData, elemName);
+				} else {
+					supported = false;
+				}
+			} 
+			if( !supported ){
+				if(opts.debug || !$.support.mediaElements){
+					 findInitFallback(this, opts);
+					 apiData.apis.nativ.isAPIReady = true;
+				} else {
+					apiData.apis.nativ._init();
+				}
 			}
 			$.attr(this, 'preload', $.attr(this, 'preload'), true);
+			
 			$(this)
 				.trigger('jmeEmbed', {
 					options: opts,
@@ -955,7 +972,8 @@
 		debug: false,
 		removeControls: false,
 		showFallback: false,
-		apiOrder: []
+		apiOrder: [],
+		activateFlash: false
 	};
 	
 	// deprecated

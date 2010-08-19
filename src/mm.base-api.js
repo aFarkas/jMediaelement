@@ -111,15 +111,7 @@
 			}
 			
 			if(e.type === 'progresschange'){
-				//firefox buffer bug
-				if(isFinite( this._bufferLoaded ) && isFinite( e.relLoaded ) && this._bufferLoaded >= e.relLoaded){return;}
 				this._bufferLoaded = e.relLoaded;
-				//should we support multiple buffer? if not remove relStart
-//				e.relStart = e.relStart || 0;
-//				if(this._concerningBufferStart !== e.relStart){
-//					this._concerningBufferStart = e.relStart;
-//					this._trigger({type: 'bufferrange', relStart: e.relStart, relLoaded: e.relLoaded});
-//				}
 			}
 			
 			e.target = this.element;
@@ -544,7 +536,9 @@
 			jmeReady: 1,
 			isJMEReady: 1,
 			getMediaAPI: 1,
-			supportsFullScreen: 1
+			supportsFullScreen: 1,
+			//todo
+			loadSrc: 1
 		}
 	;
 	$m.registerAPI = function(names){
@@ -561,7 +555,7 @@
 					this.each(function(){
 						var api = $(this).getJMEAPI();
 						if(!api){return;}
-						if(  noAPIMethods[name] || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
+						if(  noAPIMethods[name] || (api.name == 'nativ' && name == 'loadSrc') || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 							return !(ret !== undefined);
 						} else {

@@ -39,7 +39,7 @@
 				if(!jme){return;}
 				var elem = this;
 				if(jme.name == 'jwPlayer' && o.msie && $.browser.msie && jme.apis.jwPlayer.apiElem){
-					if(o.timeout){
+					if(o.queue){
 						var oldReady = jme.apis.jwPlayer.isAPIReady;
 						jme.apis.jwPlayer.isAPIReady = false;
 						setTimeout(function(){
@@ -58,6 +58,6 @@
 	})();
 	$.fn.reinitMedia.defaults = {
 		msie: true,
-		timeout: false
+		queue: false
 	};
 })(jQuery);

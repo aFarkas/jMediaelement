@@ -866,7 +866,10 @@
 			} catch(e){}
 			return;
 		}
-		if(supported === 'noSource'){return;}
+		if(supported === 'noSource'){
+			apiData.noSource = true;
+			return;
+		}
 		//_setAPIActive returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);
@@ -1222,13 +1225,14 @@
 			} else {
 				poster = $.attr(this.element, 'poster');
 			}
-			
+			var data = $.data(this.element, 'mediaElemSupport');
 			if( typeof mediaName == 'string' ){
-				var data = $.data(this.element, 'mediaElemSupport');
 				if( data.mediaName ){
 					data.mediaName.text(mediaName);
 				}
 			}
+			
+			data.noSource = !!(srces.length);
 			
 			this._isResetting = true;
 			
@@ -1535,9 +1539,7 @@
 			jmeReady: 1,
 			isJMEReady: 1,
 			getMediaAPI: 1,
-			supportsFullScreen: 1,
-			//todo
-			loadSrc: 1
+			supportsFullScreen: 1
 		}
 	;
 	$m.registerAPI = function(names){
@@ -1554,7 +1556,7 @@
 					this.each(function(){
 						var api = $(this).getJMEAPI();
 						if(!api){return;}
-						if(  noAPIMethods[name] || (api.name == 'nativ' && name == 'loadSrc') || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
+						if(  noAPIMethods[name] || (name == 'loadSrc' && $.data(this, 'mediaElemSupport').noSource) || (api.isJMEReady() && !api.totalerror && (api.name !== 'nativ' || $.support.mediaElements) ) ){
 							ret = api[name].apply(api, args);
 							return !(ret !== undefined);
 						} else {
@@ -2657,7 +2659,7 @@
 			if(typeof jwExtras == 'object'){
 				$.extend(this._lastLoad, jwExtras);
 			}
-			
+			if(!this.apiElem.sendEvent){return;}
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && ($.attr(this.element, 'autoplay') || playing) ){
 				this.apiElem.sendEvent('PLAY', 'true');

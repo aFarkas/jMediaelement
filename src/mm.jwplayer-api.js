@@ -239,7 +239,7 @@
 			if(typeof jwExtras == 'object'){
 				$.extend(this._lastLoad, jwExtras);
 			}
-			
+			if(!this.apiElem.sendEvent){return;}
 			this.apiElem.sendEvent('LOAD', this._lastLoad);
 			if( this.isAPIActive && ($.attr(this.element, 'autoplay') || playing) ){
 				this.apiElem.sendEvent('PLAY', 'true');

@@ -866,7 +866,10 @@
 			} catch(e){}
 			return;
 		}
-		if(supported === 'noSource'){return;}
+		if(supported === 'noSource'){
+			apiData.noSource = true;
+			return;
+		}
 		//_setAPIActive returns false if player isn´t embeded
 		if(!m._setAPIActive(elem, supported.name)){
 			m._embedApi(elem, supported, apiData, elemName);

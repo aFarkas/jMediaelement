@@ -113,7 +113,7 @@
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
-					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
+					attrs	 	= $.extend({name: id}, opts.attrs, swfAttr, !(window.ActiveXObject) ? {data: opts.path} : {}),
 					params 		= $.extend({movie: opts.path}, opts.params),
 					plugins 	= [],
 					that 		= this

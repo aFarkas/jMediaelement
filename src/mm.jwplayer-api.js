@@ -151,11 +151,11 @@
 					if(api._$isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
 						api.play();
 					}
-				}, 20);
+				}, 8);
 			}
 			setTimeout(function(){
 				api._trigger('jmeflashRefresh');
-			}, 20);
+			}, 8);
 		} else if(!api.apiElem.sendEvent){
 			api._$reInit();
 			return;
@@ -172,7 +172,8 @@
 		setTimeout(function(){
 			api._$lastMuteState = api.muted();
 			var cfg = $.attr(api.element, 'getConfig');
-			if(!cfg.autoplay){
+			api._trigger('mmAPIReady');
+			if(!cfg.autoplay && !api._$isPlaystate && (api.apiElem.getConfig() || {}).state === 'IDLE'){
 				if( api.nodeName === 'audio' && cfg.preload === 'auto' ){
 					api.apiElem.sendEvent('PLAY', 'true');
 					api.apiElem.sendEvent('PLAY', 'false');
@@ -182,8 +183,7 @@
 					api.currentTime(0);
 				}
 			}
-			api._trigger('mmAPIReady');
-		}, 20);		
+		}, 9);		
 	};
 	
 	var jwAPI = {

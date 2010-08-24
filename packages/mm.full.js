@@ -821,9 +821,9 @@
 				});
 				obj += ' name="'+ id +'"';
 				obj += ' id="'+ id +'"';
-				obj += '>';
+				obj += '>\n';
 				$.each(params, function(name, val){
-					obj += ' <param name="'+ name +'" value="'+ val +'" />';
+					obj += ' <param name="'+ name +'" value="'+ val +'" />\n';
 				});
 				obj += '</object>';
 				elem.outerHTML = obj;
@@ -2343,7 +2343,7 @@
 			_embed: function(src, id, cfg, fn){
 				var opts 		= this.embedOpts.jwPlayer,
 					vars 		= $.extend({}, opts.vars, {file: src, id: id}),
-					attrs	 	= $.extend({name: id, data: opts.path}, opts.attrs, swfAttr),
+					attrs	 	= $.extend({name: id}, opts.attrs, swfAttr, !(window.ActiveXObject) ? {data: opts.path} : {}),
 					params 		= $.extend({movie: opts.path}, opts.params),
 					plugins 	= [],
 					that 		= this
@@ -2571,11 +2571,11 @@
 					if(api._$isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
 						api.play();
 					}
-				}, 20);
+				}, 8);
 			}
 			setTimeout(function(){
 				api._trigger('jmeflashRefresh');
-			}, 20);
+			}, 8);
 		} else if(!api.apiElem.sendEvent){
 			api._$reInit();
 			return;
@@ -2592,7 +2592,8 @@
 		setTimeout(function(){
 			api._$lastMuteState = api.muted();
 			var cfg = $.attr(api.element, 'getConfig');
-			if(!cfg.autoplay){
+			api._trigger('mmAPIReady');
+			if(!cfg.autoplay && !api._$isPlaystate && (api.apiElem.getConfig() || {}).state === 'IDLE'){
 				if( api.nodeName === 'audio' && cfg.preload === 'auto' ){
 					api.apiElem.sendEvent('PLAY', 'true');
 					api.apiElem.sendEvent('PLAY', 'false');
@@ -2602,8 +2603,7 @@
 					api.currentTime(0);
 				}
 			}
-			api._trigger('mmAPIReady');
-		}, 20);		
+		}, 9);		
 	};
 	
 	var jwAPI = {

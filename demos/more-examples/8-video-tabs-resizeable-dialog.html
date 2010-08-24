@@ -89,7 +89,7 @@
 						open: function(){
 							$('#dialog video')
 								//prevents a Flash-Bug in IE with newest Flash-Player
-								.reinitMedia({timeout: true})
+								.reinitMedia({queue: true})
 								.play()
 							;
 						}
@@ -131,7 +131,7 @@
 						$(ui.panel)
 							.find('video')
 							//prevents a Flash-Bug in IE with newest Flash-Player
-							.reinitMedia({timeout: true})
+							.reinitMedia({queue: true})
 							.play()
 						;
 					}

@@ -28,6 +28,11 @@ wich is Open Source for non-commercial use. For more information go
 to http://www.longtailvideo.com.
 
 III. Release notes
+Release 1.3.1
+	- activateFlash option (always use flash, if available)
+	- workaround for flash in newst flash version with IE (http://bugs.adobe.com/jira/browse/FP-5056)
+	- preload none is respected in newest Chrome (due to the fact, that chrome has implemented the preload-interface, but not the preload feature, we are forced to do browser sniffing here)
+	- better flash embedding
 
 Release 1.3
 	- added flashblocker handling + event

@@ -28,6 +28,9 @@ wich is Open Source for non-commercial use. For more information go
 to http://www.longtailvideo.com.
 
 III. Release notes
+Release 1.3.2
+	- corrected browser sniffing for chrome (preload feature)
+	
 Release 1.3.1
 	- activateFlash option (always use flash, if available)
 	- workaround for flash in newst flash version with IE (http://bugs.adobe.com/jira/browse/FP-5056)

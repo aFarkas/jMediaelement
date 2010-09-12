@@ -103,15 +103,15 @@ span.media-label,
 	width: 100%;
 	height: 100%;
 	cursor: pointer;
-	background: url(../media/loader.gif) -9000px -9000px no-repeat;
+	background: url(../css-img/loader.gif) -9000px -9000px no-repeat;
 }
 .idle .media-state {
 	display: block;
-	background: url(../media/play-icon.png) center no-repeat;
+	background: url(../css-img/play-icon.png) center no-repeat;
 }
 .waiting .media-state {
 	display: block;
-	background: url(../media/loader.gif) center no-repeat;
+	background: url(../css-img/loader.gif) center no-repeat;
 }
 
 /* on totalerror, flashblocker or showFallback: true */

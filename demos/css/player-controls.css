@@ -154,6 +154,9 @@ span.media-label,
 }
 .wraps-fullscreen .media-controls-wrapper {
 	z-index: 999999;
+	position: absolute;
+	width: 100%;
+	bottom: 10px;
 }
 
 /*

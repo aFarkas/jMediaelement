@@ -48,6 +48,27 @@
 	video = null;
 	
 	$.extend($m, {
+		capturingEvents: function(names){
+			if(!document.addEventListener){return;}
+			if(typeof names == 'string'){
+				names = [names];
+			}
+			$.each(names, function(i, name){
+				var handler = function( e ) { 
+					e = $.event.fix( e );
+					return $.event.handle.call( this, e );
+				};
+				$.event.special[name] = $.event.special[name] || {};
+				$.extend($.event.special[name], {
+					setup: function() {
+						this.addEventListener(name, handler, true);
+					}, 
+					teardown: function() { 
+						this.removeEventListener(name, handler, true);
+					}
+				});
+			});
+		},
 		formatTime: function(sec){
 			return $.map(
 				[
@@ -62,6 +83,8 @@
 		}
 	});
 	
+	//mediaevents/most html5 events do not bubble normally, except in ff, we make them bubble, because we love this feature
+	$m.capturingEvents('play pause playing waiting ended'.split(' '));
 	//ToDo add jmeReady/mmAPIReady
 	$.event.special.loadedmeta = {
 	    add: function( details ) {
@@ -79,6 +102,7 @@
 			var evt  = (e.type) ? e : {type: e},
 				type = evt.type
 			;
+			
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -337,17 +361,6 @@
 		_init: function(){
 			var that 				= this,
 				curMuted 			= this.apiElem.muted,
-				//mediaevents do not bubble normally, except in ff, we make them bubble, because we love this feature
-				bubbleEvents 		= function(e, data){
-					if(!that.isAPIActive || that.totalerror || e.bubbles){return;}
-					var parent = this.parentNode || this.ownerDocument;
-					if ( !e.isPropagationStopped() && parent ) {
-						e.bubbles = true;
-						data = $.makeArray( data );
-						data.unshift( e );
-						$.event.trigger( e, data, parent, true );
-					}
-				},
 				//bug: firefox loadingerror
 				loadingTimer 		= false,
 				triggerLoadingErr 	= function(e){
@@ -367,6 +380,7 @@
 			
 			//addEvents
 			fixProgressEvent(this);
+			
 			$(this.element)
 				.bind({
 					volumechange: function(){
@@ -410,7 +424,6 @@
 						});
 					}
 				})
-				.bind('play pause playing waiting ended', bubbleEvents)
 				.bind('play playing', function(e){
 					if( !that.isAPIActive && e.originalEvent && !that.element.paused && !that.element.ended ){
 						try{
@@ -425,6 +438,7 @@
 					}
 				})
 			;
+			
 			triggerLoadingErr( 'initial' );
 			
 			if( !$.support.mediaLoop  ){

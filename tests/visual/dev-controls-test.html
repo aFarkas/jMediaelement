@@ -45,6 +45,7 @@
         
         
         $(function(){
+			
 			$('html').addClass('js-ready');
             if (!window.console) {
                 if (window.opera) {
@@ -78,12 +79,12 @@
 					path: '../../mediaplayers/cortado/cortado.jar'
 				}
             });
+			
             //test apiready
 //			$('audio').jmeReady(function(){		
 //				$(this).loadSrc(['../../demos/media/ANC_sketchV2n.mp3', '../../demos/media/ANC_sketchV2n.ogg']);
 //			});
             
-			        
             $('div[data-controlwrapper]').jmeControl({
 				mediaControls: {
 					dynamicTimeslider: true,

@@ -55,6 +55,7 @@
 	
 	(function(){
 		$.support.flash9 = false;
+		$.support.flashVersion = 0;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
@@ -65,12 +66,16 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
+							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
 				
 			}
 		;
+		if(swf && swf[0]){
+			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result
 			

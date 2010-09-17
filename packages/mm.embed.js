@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3.2 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.3.3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -896,14 +896,13 @@
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase(),
-				supported 	= false
+				supported 	= false,
+				elem = this
 			;
 			
-			if(elemName !== 'video' && elemName !== 'audio'){return;}
-			var elem = this;
+			if(elemName !== 'video' && elemName !== 'audio' || ($.support.flash9 && $.nodeName(elem.parentNode, 'object'))){return;}
 			
 			//remove swf fallback
-			
 			$('object, embed', this)
 				.each(function(){
 					$('> *:not(param, embed, object)', this).appendTo(elem);
@@ -1057,6 +1056,7 @@
 	
 	(function(){
 		$.support.flash9 = false;
+		$.support.flashVersion = 0;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
@@ -1067,12 +1067,16 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
+							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
 				
 			}
 		;
+		if(swf && swf[0]){
+			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result
 			

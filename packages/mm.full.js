@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3.2 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.3.3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -896,14 +896,13 @@
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase(),
-				supported 	= false
+				supported 	= false,
+				elem = this
 			;
 			
-			if(elemName !== 'video' && elemName !== 'audio'){return;}
-			var elem = this;
+			if(elemName !== 'video' && elemName !== 'audio' || ($.support.flash9 && $.nodeName(elem.parentNode, 'object'))){return;}
 			
 			//remove swf fallback
-			
 			$('object, embed', this)
 				.each(function(){
 					$('> *:not(param, embed, object)', this).appendTo(elem);
@@ -1050,6 +1049,27 @@
 	video = null;
 	
 	$.extend($m, {
+		capturingEvents: function(names){
+			if(!document.addEventListener){return;}
+			if(typeof names == 'string'){
+				names = [names];
+			}
+			$.each(names, function(i, name){
+				var handler = function( e ) { 
+					e = $.event.fix( e );
+					return $.event.handle.call( this, e );
+				};
+				$.event.special[name] = $.event.special[name] || {};
+				$.extend($.event.special[name], {
+					setup: function() {
+						this.addEventListener(name, handler, true);
+					}, 
+					teardown: function() { 
+						this.removeEventListener(name, handler, true);
+					}
+				});
+			});
+		},
 		formatTime: function(sec){
 			return $.map(
 				[
@@ -1064,6 +1084,8 @@
 		}
 	});
 	
+	//mediaevents/most html5 events do not bubble normally, except in ff, we make them bubble, because we love this feature
+	$m.capturingEvents('play pause playing waiting ended'.split(' '));
 	//ToDo add jmeReady/mmAPIReady
 	$.event.special.loadedmeta = {
 	    add: function( details ) {
@@ -1081,6 +1103,7 @@
 			var evt  = (e.type) ? e : {type: e},
 				type = evt.type
 			;
+			
 			switch(type){
 				case 'mmAPIReady':
 					if(this.isAPIReady){
@@ -1339,17 +1362,6 @@
 		_init: function(){
 			var that 				= this,
 				curMuted 			= this.apiElem.muted,
-				//mediaevents do not bubble normally, except in ff, we make them bubble, because we love this feature
-				bubbleEvents 		= function(e, data){
-					if(!that.isAPIActive || that.totalerror || e.bubbles){return;}
-					var parent = this.parentNode || this.ownerDocument;
-					if ( !e.isPropagationStopped() && parent ) {
-						e.bubbles = true;
-						data = $.makeArray( data );
-						data.unshift( e );
-						$.event.trigger( e, data, parent, true );
-					}
-				},
 				//bug: firefox loadingerror
 				loadingTimer 		= false,
 				triggerLoadingErr 	= function(e){
@@ -1369,6 +1381,7 @@
 			
 			//addEvents
 			fixProgressEvent(this);
+			
 			$(this.element)
 				.bind({
 					volumechange: function(){
@@ -1412,7 +1425,6 @@
 						});
 					}
 				})
-				.bind('play pause playing waiting ended', bubbleEvents)
 				.bind('play playing', function(e){
 					if( !that.isAPIActive && e.originalEvent && !that.element.paused && !that.element.ended ){
 						try{
@@ -1427,6 +1439,7 @@
 					}
 				})
 			;
+			
 			triggerLoadingErr( 'initial' );
 			
 			if( !$.support.mediaLoop  ){
@@ -2285,6 +2298,7 @@
 	
 	(function(){
 		$.support.flash9 = false;
+		$.support.flashVersion = 0;
 		var swf 				= m.getPluginVersion('Shockwave Flash'),
 			supportsMovieStar 	= function(obj, _retest){
 				$.support.flash9 = false;
@@ -2295,12 +2309,16 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
+							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
 				
 			}
 		;
+		if(swf && swf[0]){
+			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result
 			

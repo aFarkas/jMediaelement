@@ -896,14 +896,13 @@
 		
 		return this.each(function(){
 			var elemName 	= this.nodeName.toLowerCase(),
-				supported 	= false
+				supported 	= false,
+				elem = this
 			;
 			
-			if(elemName !== 'video' && elemName !== 'audio'){return;}
-			var elem = this;
+			if(elemName !== 'video' && elemName !== 'audio' || ($.support.flash9 && $.nodeName(elem.parentNode, 'object'))){return;}
 			
 			//remove swf fallback
-			
 			$('object, embed', this)
 				.each(function(){
 					$('> *:not(param, embed, object)', this).appendTo(elem);

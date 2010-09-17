@@ -68,13 +68,11 @@
 						},
 						timeSlider: {
 							range: 'min'
-						},
-						fullscreen: {
-//							tryFullScreen: false // defaults to true
 						}
 					})
 					
 					// add some UI behavior
+					//if video starts to play, make controls invisible on userinactivity
 					.bind('play', function(){
 						$(this)
 							.unbind('.useridle')
@@ -99,6 +97,7 @@
 							})
 						;
 					})
+					//if video is paused/ended make video controls always visible
 					.bind('pause ended', function(){
 						$(this).unbind('.useridle');
 						$('div.media-controls-box', this).stop().animate({

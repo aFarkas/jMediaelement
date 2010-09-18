@@ -66,7 +66,7 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
-							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+							$.support.flashVersion = obj[0];
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
@@ -74,7 +74,7 @@
 			}
 		;
 		if(swf && swf[0]){
-			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+			$.support.flashVersion = swf[0];
 		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result

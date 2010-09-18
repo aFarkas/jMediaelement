@@ -92,8 +92,8 @@
 				}
 			});
 			
-			$('video').bind('ended', function(){
-				//$(this).exitFullScreen();
+			$('video').bind('play playing', function(e){
+				//console.log(e.type)
 			});
             
 			$('button.play-pause').jmeControl();

@@ -264,8 +264,9 @@
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
-			function changeState(){
-				var state = mm[opts.stateMethod]();
+			function changeState(e){
+				var state = (name == 'play-pause' && e && e.type == 'playing') ? true : mm[opts.stateMethod]();
+				
 				if(state){
 					elems.text.text(elems.names[1]);
 					elems.title.attr('title', elems.titleText[1]);

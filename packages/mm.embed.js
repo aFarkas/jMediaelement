@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.3.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3.3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1067,7 +1067,7 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
-							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+							$.support.flashVersion = obj[0];
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
@@ -1075,7 +1075,7 @@
 			}
 		;
 		if(swf && swf[0]){
-			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+			$.support.flashVersion = swf[0];
 		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result

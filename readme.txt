@@ -28,6 +28,18 @@ wich is Open Source for non-commercial use. For more information go
 to http://www.longtailvideo.com.
 
 III. Release notes
+Release 1.3.3
+Fixed:
+	- updated jQuery UI to 1.8.5
+	- changed meaning of isPlaying in native mediaelements due to a IE9 bug with readyState (isPlaying means now: isPlaying or willBePlayingSoon)
+	- changed bubbling events for nativ HTML5 (events are now captured/fixes IE9 beta bug)
+	- making browser sniffing more moderate for preload feature (I hate this)
+	- reinit-plugin is only taking effect on IE + Flash 10.1 and higher
+	
+Known Issues:
+	- IE9beta only: return from fullwindow mode, can create strange layout in some cases (IE9 beta doesn't fully reset the old styles)
+	- IE9beta only: poster image is disappearing, if first video frame is loaded (neither preload="none" is implemented nor fixed for IE9beta)
+	
 Release 1.3.2
 	- corrected browser sniffing for chrome (preload feature)
 	
@@ -35,7 +47,7 @@ Release 1.3.1
 	- activateFlash option (always use flash, if available)
 	- workaround for flash in newst flash version with IE (http://bugs.adobe.com/jira/browse/FP-5056)
 	- preload none is respected in newest Chrome (due to the fact, that chrome has implemented the preload-interface, but not the preload feature, we are forced to do browser sniffing here)
-	- better flash embedding
+	- better flash embedding (params are visible through innerHTML in IE)
 
 Release 1.3
 	- added flashblocker handling + event

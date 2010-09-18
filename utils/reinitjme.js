@@ -38,7 +38,7 @@
 				var jme = $.data(this, 'mediaElemSupport');
 				if(!jme){return;}
 				var elem = this;
-				if(jme.name == 'jwPlayer' && o.msie && $.browser.msie && jme.apis.jwPlayer.apiElem){
+				if(jme.name == 'jwPlayer' && o.msie && $.browser.msie && jme.apis.jwPlayer.apiElem && $.support.flashVersion >= 10.1){
 					if(o.queue){
 						var oldReady = jme.apis.jwPlayer.isAPIReady;
 						jme.apis.jwPlayer.isAPIReady = false;

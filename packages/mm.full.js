@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.3.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3.3 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -1501,7 +1501,8 @@
 			}
 		},
 		_isPlaying: function(){
-			return (!this.element.paused && this.element.readyState > 2 && !this.element.error && !this.element.ended);
+			//readyState should be above 1, but IE9 has a bug here above 1 means isPlaying means now isPlaying or will be playing
+			return (!this.element.paused && this.element.readyState > 1 && !this.element.error && !this.element.ended);
 		},
 		getDuration: function(){
 			return this.element.duration;
@@ -1875,8 +1876,9 @@
 			if(o.addThemeRoller){
 				control.addClass('ui-state-default ui-corner-all');
 			}		
-			function changeState(){
-				var state = mm[opts.stateMethod]();
+			function changeState(e){
+				var state = (name == 'play-pause' && e && e.type == 'playing') ? true : mm[opts.stateMethod]();
+				
 				if(state){
 					elems.text.text(elems.names[1]);
 					elems.title.attr('title', elems.titleText[1]);
@@ -2309,7 +2311,7 @@
 							obj = m.getPluginVersion('', {
 								description: version
 							});
-							$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+							$.support.flashVersion = obj[0];
 							$.support.flash9 = !!(obj[0] > 9 || (obj[0] === 9 && obj[1] >= 115));
 						}
 					} catch (e) {}
@@ -2317,7 +2319,7 @@
 			}
 		;
 		if(swf && swf[0]){
-			$.support.flashVersion = parseInt(swf[0] +'.'+ swf[1], 10);
+			$.support.flashVersion = swf[0];
 		}
 		if(swf[0] > 9 || (swf[0] === 9 && swf[1] >= 115)){
 			//temp result

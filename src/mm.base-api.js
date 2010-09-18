@@ -500,7 +500,8 @@
 			}
 		},
 		_isPlaying: function(){
-			return (!this.element.paused && this.element.readyState > 2 && !this.element.error && !this.element.ended);
+			//readyState should be above 1, but IE9 has a bug here above 1 means isPlaying means now isPlaying or will be playing
+			return (!this.element.paused && this.element.readyState > 1 && !this.element.error && !this.element.ended);
 		},
 		getDuration: function(){
 			return this.element.duration;

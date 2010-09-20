@@ -427,7 +427,9 @@
 						}, 30);
 					}
 				;
-				this.jwPlayer.apiElem.jmefsSetButtonCursor(true);
+				try{
+					this.jwPlayer.apiElem.jmefsSetButtonCursor(true);
+				} catch(e){return;}
 				this.control.addClass('jme-flashbutton');
 				this.wrapper.addClass('jme-flashbutton-wrapper');
 				if(!this.setBtnCallback){
@@ -447,8 +449,10 @@
 					clearTimeout(this.timer);
 				}
 				if(this.jwPlayer && this.jwPlayer.apiElem && this.jwPlayer.apiElem.jmefsSetButtonSize){
-					this.jwPlayer.apiElem.jmefsSetButtonSize(0, 0);
-					this.jwPlayer.apiElem.jmefsSetButtonPosition(-1, -1);
+					try{
+						this.jwPlayer.apiElem.jmefsSetButtonSize(0, 0);
+						this.jwPlayer.apiElem.jmefsSetButtonPosition(-1, -1);
+					} catch(e){return;}
 				}
 			},
 			setPos: function(){

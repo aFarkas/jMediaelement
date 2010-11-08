@@ -396,7 +396,7 @@
 				//ogm shouldn´t be used!
 				'audio/ogg': ['ogg','oga', 'ogm'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
-				'audio/mp4': ['mp4','mpg4'],
+				'audio/mp4': ['mp4','mpg4', 'm4r'],
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
 				'audio/x-m4p': ['m4p'],

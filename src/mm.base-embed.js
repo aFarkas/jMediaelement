@@ -381,16 +381,16 @@
 		}
 	};
 	
-	function getExt(src){
+	m.getExt = function(src){
 		var pos = src.indexOf('?'),
 			ext = ''
 		;
 		src = (pos > 0) ? src.substring(0, pos) : src;
 		pos = src.lastIndexOf('.') + 1;
 		ext = src.substr(pos);
-		return ext;
-	}
-	
+		return (ext && ext.toLowerCase) ? ext.toLowerCase() : ext;
+	};
+	var getExt = m.getExt;
 	var mimeTypes = {
 			audio: {
 				//ogm shouldn´t be used!

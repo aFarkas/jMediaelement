@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3.3 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3.4RC | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -54,40 +54,6 @@
 	
 	
 	var cssShow 		= { left: "0px", position: "absolute", visibility: "hidden", display:"block" },
-		getHiddenDim 	= function(jElm, ancestorFrom){
-			var parent 	= ancestorFrom.parentNode,
-				body 	= document.body,
-				ret 	= {width: 0, height: 0}
-			;
-			while(parent && parent !== body){
-				if( $.curCSS(parent, 'display') === 'none' ){
-					$.swap( parent, cssShow, function(){
-						var styles = false;
-						// if !important is used
-						if( $.curCSS(parent, 'display', true) === 'none' ){
-							//for IE6/7 we need to remove inline-style first
-							parent.style.display = '';
-							styles = $.attr(parent, 'style');
-							$.attr(parent, 'style', styles+'; display: block !important;');
-						}
-						ret.height = jElm.innerHeight();
-						ret.width = jElm.innerWidth();
-						if( !ret.width && !ret.height ){
-							ret = getHiddenDim(jElm, parent);
-						}
-						if( styles !== false ){
-							$.attr(parent, 'style', styles);
-						}
-					} );
-					if( ret.width || ret.height ){
-						break;
-					}
-				}
-				
-				parent = parent.parentNode;
-			}
-			return ret;
-		},
 		dimStyles = ['float']
 	;
 	
@@ -108,20 +74,12 @@
 			;
 			// assume that inline style is correct
 			// enables %, em etc. feature with inline-style (i.e.: 100%)
-			ret.height = elmS.height;
-			ret.width = elmS.width;
+			ret.height = elmS.height || this.innerHeight();
+			ret.width = elmS.width || this.innerWidth();
 			$.each(dimStyles, function(i, name){
 				// assume that inline style is correct
 				ret[name] = elmS[name] || elem.css(name);
 			});
-			if( !ret.width || !ret.height || ret.height == 'auto' || ret.width == 'auto' ){
-				ret.height = this.innerHeight();
-				ret.width = this.innerWidth();
-				
-				if( !ret.width && !ret.height ){
-					ret = getHiddenDim(this, this[0]);
-				}
-			}
 		}
 		return ret;
 	};
@@ -1186,7 +1144,7 @@
 				return ret;
 			},
 			canPlayCodecs: ['avc1.42E01E', 'mp4a.40.2', 'avc1.58A01E', 'avc1.4D401E', 'avc1.64001E', 'VP6', 'mp3', 'AAC'],
-			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/x-fla', 'audio/fla', 'youtube/flv', 'jwplayer/jwplayer']
+			canPlayContainer: ['video/3gpp', 'video/x-msvideo', 'video/quicktime', 'video/x-m4v', 'video/mp4', 'video/m4p', 'video/x-flv', 'video/flv', 'audio/mpeg', 'audio/mp3', 'audio/m4a', 'audio/mp4', 'audio/x-fla', 'audio/fla', 'audio/x-m4a', 'youtube/flv', 'jwplayer/jwplayer']
 		}
 	;
 	

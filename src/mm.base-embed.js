@@ -339,22 +339,22 @@
 		}
 	};
 	
-	function getExt(src){
+	m.getExt = function(src){
 		var pos = src.indexOf('?'),
 			ext = ''
 		;
 		src = (pos > 0) ? src.substring(0, pos) : src;
 		pos = src.lastIndexOf('.') + 1;
 		ext = src.substr(pos);
-		return ext;
-	}
-	
+		return (ext && ext.toLowerCase) ? ext.toLowerCase() : ext;
+	};
+	var getExt = m.getExt;
 	var mimeTypes = {
 			audio: {
 				//ogm shouldn´t be used!
 				'audio/ogg': ['ogg','oga', 'ogm'],
 				'audio/mpeg': ['mp2','mp3','mpga','mpega'],
-				'audio/mp4': ['mp4','mpg4'],
+				'audio/mp4': ['mp4','mpg4', 'm4r'],
 				'audio/wav': ['wav'],
 				'audio/x-m4a': ['m4a'],
 				'audio/x-m4p': ['m4p'],

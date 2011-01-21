@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project v1.3.4 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project vpre1.3.5 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -74,8 +74,8 @@
 			;
 			// assume that inline style is correct
 			// enables %, em etc. feature with inline-style (i.e.: 100%)
-			ret.height = elmS.height || this.innerHeight();
-			ret.width = elmS.width || this.innerWidth();
+			ret.height = elmS.height || this.height();
+			ret.width = elmS.width || this.width();
 			$.each(dimStyles, function(i, name){
 				// assume that inline style is correct
 				ret[name] = elmS[name] || elem.css(name);
@@ -112,7 +112,7 @@
 	var fixPreload = {
 		change: function(elem, setPreload, force){
 			if( !$.support.mediaElements ){return;}
-			var _preload = elem.getAttribute('preload') || 'metadata3';
+			var _preload = elem.getAttribute('preload') || 'metadata';
 			if( force || setPreload !== _preload ){
 				if( !supportMediaPreload ){
 					if( setPreload === 'none' || (_preload === 'none' && (setPreload === 'auto' || !elem.getAttribute('poster')) ) ){

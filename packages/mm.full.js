@@ -12,7 +12,7 @@
 		doc		= document,
 		tVid 	= $('<video />')[0],
 		//this bad assumption isn't really true, but our workaround-implementation doesn't really hurt
-		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && parseFloat($.browser.version, 10) < 534.7 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
+		supportMediaPreload = !( 'webkitPreservesPitch' in tVid && parseFloat($.browser.version, 10) < 535 && (navigator.userAgent.indexOf('Chrome') !== -1 || navigator.userAgent.indexOf('Mac') === -1) )
 	;
 	// support test + document.createElement trick
 	$.support.video = !!(tVid.canPlayType);
@@ -348,6 +348,8 @@
 		ext = src.substr(pos);
 		return (ext && ext.toLowerCase) ? ext.toLowerCase() : ext;
 	};
+
+
 	var getExt = m.getExt;
 	var mimeTypes = {
 			audio: {
@@ -2303,9 +2305,10 @@
 			},
 			_extendJWLoad: function(src, obj, elem){
 				if(!src){return;}
-				elem = elem || this.element;
-				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength']);
 				
+				elem = elem || this.element;
+				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength', 'streamer']);
+				obj.file = (elem.getAttribute('data-jwprefixsrc') || '') + obj.file; 
 				// if we can't autodetect provider by file-extension,
 				// we add a provider
 				var ext = m.getExt(src),

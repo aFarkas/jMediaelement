@@ -100,9 +100,10 @@
 			},
 			_extendJWLoad: function(src, obj, elem){
 				if(!src){return;}
-				elem = elem || this.element;
-				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength']);
 				
+				elem = elem || this.element;
+				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength', 'streamer']);
+				obj.file = (elem.getAttribute('data-jwprefixsrc') || '') + obj.file; 
 				// if we can't autodetect provider by file-extension,
 				// we add a provider
 				var ext = m.getExt(src),

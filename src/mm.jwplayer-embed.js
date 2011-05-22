@@ -102,6 +102,7 @@
 				if(!src){return;}
 				
 				elem = elem || this.element;
+				var changeVars = this.embedOpts.jwPlayer.changeVars;
 				m.extendWithData(elem, obj, ['type', 'provider', 'stretching', 'bufferlength', 'streamer']);
 				obj.file = (elem.getAttribute('data-jwprefixsrc') || '') + obj.file; 
 				// if we can't autodetect provider by file-extension,
@@ -116,6 +117,9 @@
 					if(!obj.type){
 						obj.type = providerMatch[name];
 					}
+				}
+				if(changeVars){
+					changeVars(src, obj, elem, this);
 				}
 				return obj;
 			},

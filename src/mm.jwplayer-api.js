@@ -251,8 +251,8 @@
 			if(typeof state !== 'boolean'){
 				var cfg = this.apiElem.getConfig();
 				return (cfg || {}).mute;
-			} 
-			this.apiElem.sendEvent('mute', (state) ? 'true' : false);
+			}
+			this.apiElem.sendEvent('mute', ''+state);
 		},
 		currentTime: function(t){
 			if(!isFinite(t)){

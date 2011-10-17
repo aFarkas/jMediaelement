@@ -4,6 +4,7 @@
 
 	<property name="version" value="pre1.3.5" />
     <property name="mediafull" value="${dist}/mm.full.js" />
+	<property name="mediaflowplayer" value="${dist}/mm.full.flowplayer.js" />
     <property name="mediafullmin" value="${dist}/mm.full.min.js" />
 	
     <target name="jMediaelementFull" description="Main jMediaelement build, concatenates source files">
@@ -15,6 +16,20 @@
             <fileset file="src/mm.base-controls.js" />
             <fileset file="src/mm.jwplayer-embed.js" />
             <fileset file="src/mm.jwplayer-api.js" />
+        </concat>
+		<replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${mediafull}" />
+        <echo message="${mediafull} built." />
+    </target>
+	
+	<target name="jMediaelementFullFlowplayer" description="Main jMediaelement build, concatenates source files">
+        <echo message="Building ${mediaflowplayer}" />
+        <mkdir dir="${dist}" />
+        <concat destfile="${mediaflowplayer}">
+            <fileset file="src/mm.base-embed.js" />
+            <fileset file="src/mm.base-api.js" />
+            <fileset file="src/mm.base-controls.js" />
+            <fileset file="src/mm.flowplayer-embed.js" />
+            <fileset file="src/mm.flowplayer-api.js" />
         </concat>
 		<replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${mediafull}" />
         <echo message="${mediafull} built." />
@@ -51,7 +66,18 @@
 	
 	
 	<property name="mediaembed" value="${dist}/mm.embed.js" />
+	<property name="mediaembedflowplayer" value="${dist}/mm.embed.flowplayer.js" />
     <property name="mediaembedmin" value="${dist}/mm.embed.min.js" />
+	
+	<target name="mediaembedflowplayer" depends="jMediaelementFull" description="Main jMediaelement build, concatenates source files">
+        <echo message="Building ${mediaembedflowplayer}" />
+        <concat destfile="${mediaembedflowplayer}">
+            <fileset file="src/mm.base-embed.js" />
+            <fileset file="src/mm.flowplayer-embed.js" />
+        </concat>
+		<replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${mediaembed}" />
+        <echo message="${mediaembed} built." />
+    </target>
 	
     <target name="mediaembed" depends="jMediaelementFull" description="Main jMediaelement build, concatenates source files">
         <echo message="Building ${mediaembed}" />

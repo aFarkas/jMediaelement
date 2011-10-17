@@ -85,6 +85,7 @@
 	 */
 	var capTypes = {		
 		'text/srt': ['text', 'parseSrt'],
+		'application/x-srt': ['text', 'parseSrt'],
 		'application/ttaf+xml': ['xml', 'parseDfxp']
 	};
 	$.multimediaSupport.fn._extend({

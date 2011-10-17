@@ -898,13 +898,13 @@
 				})
 			;
 			
-			if($.support.flash9 && opts.activateFlash){
-				supported = m.getSuitedPlayers(elem, ['jwPlayer']);
+			if($.support.flash9 && opts.activateFlash && opts.flashPlayer){
+				supported = m.getSuitedPlayers(elem, [opts.flashPlayer]);
 				if( supported == 'noSource' ){
-					supported = {name: 'jwPlayer'};
+					supported = {name: opts.flashPlayer};
 				}
 				apiData.apis.nativ.isAPIReady = true;
-				if(supported.name == 'jwPlayer' && !m._setAPIActive(this, 'jwPlayer')){
+				if(supported.name == opts.flashPlayer && !m._setAPIActive(this, opts.flashPlayer)){
 					m._embedApi(this, supported, apiData, elemName);
 				} else {
 					supported = false;
@@ -935,7 +935,8 @@
 		removeControls: false,
 		showFallback: false,
 		apiOrder: [],
-		activateFlash: false
+		activateFlash: false,
+		flashPlayer: ''
 	};
 	
 	// deprecated
@@ -2219,6 +2220,7 @@
 	
 	$.extend($.fn.jmeEmbed.defaults, 
 			{
+				flashPlayer: 'jwPlayer',
 				jwPlayer: {
 					path: m.jsPath + 'player.swf',
 					hideIcons: 'auto',

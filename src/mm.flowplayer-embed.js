@@ -249,6 +249,7 @@ $f.addPlugin("controls", function(wrap, options) {
   
   $.extend($.fn.jmeEmbed.defaults, 
       {
+	  	flashPlayer: 'flowPlayer',
         flowPlayer: {
           path: m.jsPath + 'flowplayer-3.2.7.swf',
           hideIcons: 'auto',

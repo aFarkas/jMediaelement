@@ -14,6 +14,7 @@
 	
 	$.extend($.fn.jmeEmbed.defaults, 
 			{
+				flashPlayer: 'jwPlayer',
 				jwPlayer: {
 					path: m.jsPath + 'player.swf',
 					hideIcons: 'auto',

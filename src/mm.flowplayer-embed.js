@@ -175,6 +175,19 @@ $f.addPlugin("controls", function(wrap, options) {
   self.onBegin(function() {
     //$(play).removeClass(opts.playClass).addClass(opts.pauseClass);
   });
+
+  self.onLoad(function() {
+    console.log('player loaded');
+    flowPlayerReady(self);
+  });
+
+  self.onUnload(function() {
+    console.log('player unloaded');
+  });
+  
+  self.onFullscreenExit(function() {
+    console.log('player onFullscreenExit');
+  });
   
   // TODO: Probably don't need this.
   self.onBufferEmpty(function(e) {
@@ -404,7 +417,8 @@ $f.addPlugin("controls", function(wrap, options) {
           id: id,
           bgcolor: attrs.bgcolor,
           wmode: params.wmode,
-          loop: params.loop
+          loop: params.loop, // FIXME: This may not be a valid param.
+          allowfullscreen: params.allowfullscreen
         };
         
         var clip = {
@@ -433,24 +447,8 @@ $f.addPlugin("controls", function(wrap, options) {
         });
         
         $(this.visualElem).flowplayer(0).controls(mediaControls, {
-          // CSS class name for the playhead
-          //playHeadClass: 'playhead',
-          // CSS class name for the track - default is track
-          //trackClass: 'timeline-slider',
-          // CSS class name for the playhead when in a playing state
-          //playClass: 'play',
-          // CSS class name for the playhead when in a paused state
-          //pauseClass: 'pause',
           // CSS class name for the buffer bar
           bufferClass: 'buffer',
-          // CSS class name for the progress bar
-          //progressClass: 'progress',
-          // CSS class name for the time display
-          //timeClass: 'time',
-          // CSS class name for mute button
-          //muteClass: 'mute',
-          // CSS class name for the unmute button
-          //unmuteClass: 'unmute',
           // a default duration for the time display in seconds
           duration: 0
         });

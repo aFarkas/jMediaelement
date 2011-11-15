@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <link href="player-style/css/player-styles.css" rel="stylesheet" />
+		
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.js"></script>
+        <!-- only slider + dependencies are required -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+		<!-- END: slider -->
+		
+        <!-- polyfill: only needed if you want to make it cross browser -->
+        <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
+        <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/polyfiller.js"></script>
+        <script>
+            $.webshims.polyfill('mediaelement');
+        </script>
+		<!-- END: polyfill -->
+		
+        <script src="../src/jme.js"></script>
+        
+        <title>jme2</title>
+    </head>
+    <body>
+        <div class="intro">
+			<p>JME is a declarative HTML component library including DOM APIs and CSS-hooks to extend/customize HTML5 mediaelements (audio/video)</p>
+		</div>
+		<div class="mediaplayer" preload="none" data-jme='{"controlbar": true}'>
+			<video poster="http://protofunc.com/jme/media/bbb_watchtrailer.gif">
+				<source src="http://protofunc.com/jme/media/bbb_trailer_mobile.m4v" type="video/mp4" />
+				<source src="http://protofunc.com/jme/media/bbb_trailer_400p.ogg" type="video/ogg" />
+			</video>
+		</div>
+			
+		
+		<div class="element">
+			<h3>mediaplayer</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>mediaplayer</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>div</code>
+				</dd>
+				<dt>
+					jme pseudo classes
+				</dt>
+				<dd>
+					<dl>
+						<dt>media state classes</dt>
+						<dd><code>state-idle</code></dd>
+						<dd><code>state-waiting</code></dd>
+						<dd><code>state-playing</code></dd>
+						<dd><code>state-ended</code></dd>
+						<dd><code>state-error</code></dd>
+						<dt>user state classes</dt>
+						<dd><code>focusenter</code></dd>
+						<dd><code>useractive</code></dd>
+						<dd><code>fover</code></dd>
+						<dd><code>(:hover)</code></dd>
+					</dl>
+				</dd>
+				
+				<dt>
+					jme content attributes
+				</dt>
+				<dd>
+					<code>controlbar</code>
+				</dd>
+				<dd>
+					<code>controls</code>
+				</dd>
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						property boolean controlbar;
+						readonly property jQuery media; 
+						jQuery addControls(controls);
+						jQuery enterFullscreen();
+						jQuery exitFullscreen();
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		
+		<div class="element">
+			<h3>JME extensions for native audio/video element</h3>
+			<dl class="element">
+				<dt>
+					elements
+				</dt>
+				<dd>
+					<code>audio</code> / <code>video</code>
+				</dd>
+				
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						property mixed srces;
+						readonly property boolean isPlaying;
+						jQuery togglePlay();
+						Rangearray concerningRange([type:string ("buffered"), time:string (currentTime)]);
+						jQuery/formatedTime formatTime(seconds:number[, format:Array]); 
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		
+		<div class="element">
+			<h3>play-pause button</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>play-pause</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>button</code>
+				</dd>
+				<dt>
+					jme pseudo classes
+				</dt>
+				<dd>
+					<code>state-paused</code>,  <code>state-playing</code>
+				</dd>
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						readonly property jQuery media;
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		<div class="element">
+			<h3>mute-unmute button</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>mute-unmute</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>button</code>
+				</dd>
+				<dt>
+					jme pseudo classes
+				</dt>
+				<dd>
+					<code>state-mute</code>,  <code>state-unmute</code>
+				</dd>
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						readonly property jQuery media;
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		<div class="element">
+			<h3>buffer-progress</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>buffer-progress</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>div</code>
+				</dd>
+				
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						readonly property jQuery media;
+						readonly proptery Number progress;
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		<div class="element">
+			<h3>volume-slider</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>volume-slider</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>div</code>
+				</dd>
+				
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						readonly property jQuery media;
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		<div class="element">
+			<h3>time-slider</h3>
+			<dl class="element">
+				<dt>
+					jme element class
+				</dt>
+				<dd>
+					<code>time-slider</code>
+				</dd>
+				<dt>
+					prefered elements
+				</dt>
+				<dd>
+					<code>div</code>
+				</dd>
+				<dt>
+					jme content attributes
+				</dt>
+				<dd>
+					<code>format</code>
+				</dd>
+				<dt>jme interface</dt>
+				<dd>
+					<pre class="idl">{
+						readonly property jQuery player;
+						readonly property jQuery media;
+						property mixed format;
+					};</pre>
+				</dd>
+			</dl>
+		</div>
+		
+    </body>
+</html>

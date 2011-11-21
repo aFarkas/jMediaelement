@@ -12,13 +12,13 @@
         <!-- polyfill: only needed if you want to make it cross browser -->
         <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
         <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/polyfiller.js"></script>
-        <script>
-            $.webshims.polyfill('mediaelement');
-        </script>
 		<!-- END: polyfill -->
 		
         <script src="../src/jme.js"></script>
-        
+		<!-- start polyfill (only if webshims is included) -->
+        <script>
+            $.webshims.polyfill('mediaelement');
+        </script>
         <title>jme2</title>
     </head>
     <body>
@@ -57,6 +57,7 @@
 						<dd><code>state-idle</code></dd>
 						<dd><code>state-waiting</code></dd>
 						<dd><code>state-playing</code></dd>
+						<dd><code>state-initial</code></dd>
 						<dd><code>state-ended</code></dd>
 						<dd><code>state-error</code></dd>
 						<dt>user state classes</dt>
@@ -80,10 +81,9 @@
 				<dd>
 					<pre class="idl">{
 						property boolean controlbar;
+						property boolean fullscreen;
 						readonly property jQuery media; 
 						jQuery addControls(controls);
-						jQuery enterFullscreen();
-						jQuery exitFullscreen();
 					};</pre>
 				</dd>
 			</dl>
@@ -105,9 +105,10 @@
 						readonly property jQuery player;
 						property mixed srces;
 						readonly property boolean isPlaying;
+						readonly property number progress;
 						jQuery togglePlay();
 						Rangearray concerningRange([type:string ("buffered"), time:string (currentTime)]);
-						jQuery/formatedTime formatTime(seconds:number[, format:Array]); 
+						formatedTime formatTime(seconds:number[, format:Array]); 
 					};</pre>
 				</dd>
 			</dl>
@@ -250,7 +251,7 @@
 					<pre class="idl">{
 						readonly property jQuery player;
 						readonly property jQuery media;
-						property mixed format;
+						property mixed format; //not implemented yet
 					};</pre>
 				</dd>
 			</dl>

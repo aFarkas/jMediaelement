@@ -222,9 +222,11 @@
 			var mediaData = $.jme.data(media[0]);
 			var init;
 			mediaData.player = base;
+			mediaData.media = media;
 			if(!jmeData.media){
 				init = true;
 				jmeData.media = media;
+				jmeData.player = base;
 				media
 					.bind('emptied waiting playing ended pause updateJMEState mediaerror', function(e){
 						var state = e.type;
@@ -250,6 +252,20 @@
 						}
 						 
 						base.removeClass(removeClasses).addClass(ns +'state-'+ state);
+					})
+					.bind('volumechange updateJMEState', function(){
+						base[$.prop(this, 'muted') ? 'addClass' : 'removeClass'](ns +'state-muted');
+					})
+					.bind('emptied updateJMEState play playing waiting', function(e){
+						var action;
+						if(e.type == 'emptied'){
+							action = 'addClass';
+						} else if(e.type == 'play' || e.type == 'waiting' || e.type == 'playing'){
+							action = 'removeClass';
+						} else if($.prop(this, 'paused')){
+							action = 'addClass';
+						}
+						base[action](ns + 'state-initial');
 					})
 					.triggerHandler('updateJMEState')
 				;
@@ -337,14 +353,14 @@
 	$.jme.defineProp('controlbar', {
 		set: function(elem, value){
 			value = !!value;
-			var controlBar = $('div.jme-default-media-overlay, div.jme-default-control-bar', elem);
 			var data = $.jme.data(elem);
+			var controlBar = $('div.jme-default-media-overlay, div.jme-default-control-bar', data.player);
 			var mediaControls = $.jme.plugins["media-controls"] ;
 			var structure = '';
 			var controls;
 			if(value && !controlBar[0]){
 				if(data._controlbar){
-					data._controlbar.appendTo(elem);
+					data._controlbar.appendTo(data.player);
 				} else {
 					data.media.prop('controls', false);
 					$.each(mediaControls.pluginOrder, function(i, name){
@@ -361,8 +377,8 @@
 					controls = data._controlbar.filter('div.jme-default-media-overlay').addClass(ns+'play-pause');
 					controls =  controls.add(  controlBar );
 					controls = controls.add( $(structure).appendTo(controlBar) );
-					data._controlbar.appendTo(elem);
-					$(elem).jmeFn('addControls', controls);
+					data._controlbar.appendTo(data.player);
+					data.player.jmeFn('addControls', controls);
 				}
 				
 			} else if(!value) {
@@ -375,9 +391,9 @@
 	});
 	
 	$.jme.defineMethod('addControls', function(controls){
-		var media = $.jme.data(this, 'media', media);
-		var base = $(this);
-		if(!media){return;}
+		var data = $.jme.data(this) || {};
+		
+		if(!data.media){return;}
 		controls = $(controls);
 		$.each($.jme.plugins, function(name, plugin){
 			controls
@@ -386,8 +402,8 @@
 				.each(function(){
 					var control = $(this);
 					var options = $.jme.data(this);
-					options.player = base;
-					options.media = media;
+					options.player = data.player;
+					options.media = data.media;
 					if(options.rendered){return;}
 					options.rendered = true;
 					if(plugin.options){
@@ -397,18 +413,17 @@
 							}
 						});
 					}
-					plugin._create(control, media, base, options);
+					plugin._create(control, data.media, data.player, options);
 					control = null;
 				})
 			;
 		});
-		base.triggerHandler('controlsadded');
+		data.player.triggerHandler('controlsadded');
 	});
 	
 	
 	
 	$.jme.defineMethod('updateControlbar', function(){
-		
 		
 		var timeSlider = $('.'+ $.jme.classNS +'time-slider', this);
 		var width = timeSlider.parent().width();
@@ -774,7 +789,13 @@
 	
 	$.jme.defineProp('progress', {
 		get: function(elem){
-			return ($.jme.data(elem) || {}).progress || 0;
+			var data = $.jme.data(elem);
+			if(!data.media){return 0;}
+			var progress = data.media.jmeFn('concerningRange').end / data.media.prop('duration') * 100;
+			if(progress > 99.4){
+				progress = 100;
+			}
+			return progress || 0;
 		},
 		readonly: true
 	});
@@ -783,10 +804,8 @@
 		_create: function(control, media, base, options){
 			var indicator = $('<div class="'+ $.jme.classNS +'buffer-progress-indicator" />').appendTo(control);
 			var drawBufferProgress = function(){
-				var progress = media.jmeFn('concerningRange').end / media.prop('duration') * 100;
-				if(progress > 99.4){
-					progress = 100;
-				}
+				var progress = media.jmeProp('progress');
+				
 				
 				if(options.progress !== progress){
 					options.progress = progress;
@@ -812,11 +831,13 @@
 		ms: 1/1000
 	};
 	var formatTime = function(sec, format){
+		var data;
 		if(!format){
 			format = ['mm', 'ss'];
 		}
 		if(sec == null){
-			sec = $.prop(this, 'duration');
+			data = $.jme.data(this);
+			sec = $.prop(data.media, 'duration');
 		}
 		if(!sec){
 			sec = 0;
@@ -1009,74 +1030,86 @@
 	
 		return fullScreenApi;
 	})();
-	
-	
-	$.jme.defineMethod('enterFullscreen', function(){
-		if($(this).hasClass($.jme.classNS+'player-fullscreen')){return;}
-		var elem = this;
-		var data = $.jme.data(elem);
-		data.scrollPos = {
-			top: $(window).scrollTop(),
-			left: $(window).scrollLeft()
-		};
-		
-		$(document)
-			.unbind('.jmefullscreen')
-			.bind('keydown.jmefullscreen', function(e){
-				if(e.keyCode == 27){
-					$(elem).jmeFn('exitFullscreen');
-					return false;
+	$.jme.defineProp('fullscreen', {
+		set: function(elem, value){
+			var data = $.jme.data(elem);
+			value = !!value;
+			if(!data || !data.player){return 'noDataSet';}
+			if(value){
+				if(data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
+				
+				data.scrollPos = {
+					top: $(window).scrollTop(),
+					left: $(window).scrollLeft()
+				};
+				
+				$(document)
+					.unbind('.jmefullscreen')
+					.bind('keydown.jmefullscreen', function(e){
+						if(e.keyCode == 27){
+							data.player.jmeProp('fullscreen', false);
+							return false;
+						}
+					})
+				;
+				
+				try {
+					$.jme.fullscreen.requestFullScreen(data.player[0]);
+				} catch(er){}
+				
+				
+				$('html').addClass($.jme.classNS+'has-media-fullscreen');
+				
+				data.player.addClass($.jme.classNS+'player-fullscreen');
+					
+				data.media.addClass($.jme.classNS+'media-fullscreen');
+				
+				if($.jme.fullscreen.supportsFullScreen){
+					$(document)
+						.bind($.jme.fullscreen.eventName+'.jmefullscreen', function(e){
+							var isFullscreen = $.jme.fullscreen.isFullScreen();
+							if(isFullscreen && elem == e.target){
+								$(elem).triggerHandler('playerdimensionchange', ['fullscreen']);
+							} else if(!isFullscreen) {
+								data.player.jmeProp('fullscreen', false);
+							}
+						})
+					;
+					
 				}
-			})
-		;
-		
-		try {
-			$.jme.fullscreen.requestFullScreen(elem);
-		} catch(er){}
-		
-		
-		$('html').addClass($.jme.classNS+'has-media-fullscreen');
-		
-		$(this).addClass($.jme.classNS+'player-fullscreen');
-			
-		data.media.addClass($.jme.classNS+'media-fullscreen');
-		
-		if($.jme.fullscreen.supportsFullScreen){
-			$(document)
-				.bind($.jme.fullscreen.eventName+'.jmefullscreen', function(e){
-					var isFullscreen = $.jme.fullscreen.isFullScreen();
-					if(isFullscreen && elem == e.target){
-						$(elem).triggerHandler('playerdimensionchange', ['fullscreen']);
-					} else if(!isFullscreen) {
-						$(elem).jmeFn('exitFullscreen');
-					}
-				})
-			;
-			
-		}
-		$(this).triggerHandler('playerdimensionchange', ['fullwindow']);
-		data.media.callProp('play');
-	});
-	$.jme.defineMethod('exitFullscreen', function(){
-		if(!$(this).hasClass($.jme.classNS+'player-fullscreen')){return;}
-		var data = $.jme.data(this);
-		$(document).unbind('.jmefullscreen');
-		$('html').removeClass($.jme.classNS+'has-media-fullscreen');
-		$(this).removeClass($.jme.classNS+'player-fullscreen');
-		data.media.removeClass($.jme.classNS+'media-fullscreen');
-		
-		try {
-			$.jme.fullscreen.cancelFullScreen();
-		} catch(er){}
-		
-		
-		$(this).triggerHandler('playerdimensionchange');
-		if(data.scrollPos){
-			$(window).scrollTop(data.scrollPos.top);
-			$(window).scrollLeft(data.scrollPos.left);
-			delete data.scrollPos;
+				data.player.triggerHandler('playerdimensionchange', ['fullwindow']);
+				data.media.callProp('play');
+			} else {
+				if(!data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
+				$(document).unbind('.jmefullscreen');
+				$('html').removeClass($.jme.classNS+'has-media-fullscreen');
+				data.player.removeClass($.jme.classNS+'player-fullscreen');
+				data.media.removeClass($.jme.classNS+'media-fullscreen');
+				
+				try {
+					$.jme.fullscreen.cancelFullScreen();
+				} catch(er){}
+				
+				
+				data.player.triggerHandler('playerdimensionchange');
+				if(data.scrollPos){
+					$(window).scrollTop(data.scrollPos.top);
+					$(window).scrollLeft(data.scrollPos.left);
+					delete data.scrollPos;
+				}
+			}
+			return 'noDataSet';
+		},
+		get: function(elem){
+			var data = $.jme.data(elem);
+			if(!data || !data.player){return;}
+			var fs = data.player.hasClass($.jme.classNS+'player-fullscreen');
+			if(!fs){return false;}
+			return $.jme.fullscreen.isFullScreen() || 'fullwindow';
 		}
 	});
+	
+	
 	
 	$.jme.registerPlugin('fullscreen', {
 		pseudoClasses: {
@@ -1092,7 +1125,7 @@
 			};
 			base.bind('playerdimensionchange', updateControl);
 			control.bind('click', function(){
-				base.jmeFn(base.hasClass($.jme.classNS+'player-fullscreen') ? 'exitFullscreen' : 'enterFullscreen');
+				base.jmeProp('fullscreen', !base.hasClass($.jme.classNS+'player-fullscreen'));
 				return false;
 			});
 			updateControl();

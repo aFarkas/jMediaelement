@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JME Demo</title>
+        <link class="ui-theme" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/redmond/jquery-ui.css"/>
+        <link rel="stylesheet" href="css/player-controls.css" />
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js">
+        </script>
+        <!-- ui-components -->
+        <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js">
+        </script>
+        <!-- END:  ui-components --><!-- for a11y-slider -->
+        <script src="../utils/a11y-slider.ext.js">
+        </script>
+        <!-- END: for a11y-slider -->
+        <script class="jwPlayer" type="application/swf" src="../packages/player.swf">
+        </script>
+        <script src="../packages/mm.full.min.js">
+        </script>
+        <!-- END: jme --><!-- jme plugins -->
+        <script class="jme-jwPlayer" type="application/swf" src="../packages/jmefs.swf">
+        </script>
+        <script src="../plugins/fullwindow.js">
+        </script>
+        <script src="../plugins/timerange.js">
+        </script>
+        <script src="../plugins/track.js">
+        </script>
+        <!-- useractivity -->
+        <script src="../utils/useractivity.js">
+        </script>
+        <!-- jmeEmbedControls is a very simple plugin, that you should use as a starting point for your own theme -->
+        <script src="../utils/jmeEmbedControls.js">
+        </script>
+        <script src="../plugins/audio-track.js">
+        </script>
+        <style>
+            /*
+             * extend simple controls with fullwindow and track display
+             */
+            .media-controls {
+                padding-right: 225px;
+            }
+            
+            div.volume-slider {
+                width: 40px;
+                right: 70px;
+            }
+            
+            .toggle-track {
+                right: 34px;
+            }
+            
+            .fullscreen {
+                right: 8px;
+            }
+            
+            .track-display {
+                position: absolute;
+                width: 100%;
+                margin-bottom: 2.6em;
+                bottom: 0;
+                text-align: center;
+            }
+            
+            .track-display div {
+                display: inline-block;
+                padding: 3px;
+                background-color: #000;
+                background: rgba(0, 0, 0, 0.75);
+                color: #fff;
+            }
+            
+            /* track-display in fullscreen */
+            .wraps-fullscreen .track-display div {
+                padding: 5px;
+                font-size: 200%;
+            }
+            
+            .wraps-fullscreen .media-controls {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: auto;
+                z-index: 99999;
+            }
+        </style>
+        <script>
+            $('html').addClass('js-on');
+            $(function(){
+				$('audio, video').jmeEmbed();
+                $('div.media-player').jmeEmbedControls();
+            });
+        </script>
+    </head>
+    <body>
+		<div class="media-player audio-track-active">
+			<span class="media-label">video: big buck bunny</span>
+			<video poster="media/bbb_watchtrailer.gif" controls="controls" preload="none">
+				<source src="media/bbb_trailer_mobile.m4v" type="video/mp4" />
+				<source src="media/bbb_trailer_400p.ogg" />
+			</video>
+			 <audio preload="none" class="audio-track" src="media/chefsachesketch.mp3" type="audio/mpeg"></audio>
+			 <button class="toggle-audio-track btn" title="Audiodescription an / Audiodescription aus"><span class="ui-icon"></span><span class="button-text">Audiodescription an / Audiodescription aus</span></button>
+		</div>
+        
+    </body>
+</html>

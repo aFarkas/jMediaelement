@@ -26,7 +26,7 @@
 			<p>JME is a declarative HTML component library including DOM APIs and CSS-hooks to extend/customize HTML5 mediaelements (audio/video)</p>
 		</div>
 		<div class="mediaplayer" preload="none" data-jme='{"controlbar": true}'>
-			<video poster="http://protofunc.com/jme/media/bbb_watchtrailer.gif">
+			<video poster="http://protofunc.com/jme/media/bbb_watchtrailer.gif" controls="controls">
 				<source src="http://protofunc.com/jme/media/bbb_trailer_mobile.m4v" type="video/mp4" />
 				<source src="http://protofunc.com/jme/media/bbb_trailer_400p.ogg" type="video/ogg" />
 			</video>
@@ -87,6 +87,48 @@
 					};</pre>
 				</dd>
 			</dl>
+			<div class="element-intro">
+				<p>The <code>mediaplayer</code> element class wraps a mediaelement (audio/video) and associates this mediaelement with its control elements. The <code>mediaplayer</code> element class serves also as an user interaction wrapper for the player.</p>
+			</div>
+			<p>Using jme pseudo classes to build the user interface.</p>
+			<pre class="example">
+				<code>
+					.mediaplayer .media-controls {
+						transition: all 400ms ease 0s;
+					}
+					/* hide player controls, if mediaelement is playing,... */
+					.mediaplayer.state-playing .media-controls {
+						opacity: 0;
+					}
+					/* ...but show controls if user is moving his mouse */
+					.mediaplayer.useractive .media-controls {
+						opacity: 1;
+					}
+				</code>
+			</pre>
+			<p>Using jme interface to switch to custom styleable controls:</p>
+			<pre class="example">
+				<code>
+					$('div.mediaplayer').jmeProp('controlbar', true);
+				</code>
+			</pre>
+			<p>Using jme interface to toggle fullscreen:</p>
+			<pre class="example">
+				<code>
+					$('div.mediaplayer').jmeProp('fullscreen', function(i, state){
+					    return !state;
+					});
+				</code>
+			</pre>
+			
+			<p>Dynamically add a new control to a mediaplayer:</p>
+			<pre class="example">
+				<code>
+					$('div.mediaplayer')
+						.jmeFn('addControls', $('&lt;button class="play-pause"&gt;play/pause&lt;/button&gt;').prependTo('body') )
+					;
+				</code>
+			</pre>
 		</div>
 		
 		<div class="element">

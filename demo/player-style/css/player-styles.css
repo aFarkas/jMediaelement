@@ -149,9 +149,11 @@ video {
 .media-controls button {
     cursor: pointer;
     display: inline-block;
+	overflow: visible;
 	border: 0;
 	padding: 0;
     border-radius: 5px;
+	-webkit-appearance: none;
 	background: url("../img/player-sprites.png") no-repeat 0 -200px;
 }
 .media-controls button:hover,
@@ -302,6 +304,11 @@ html > body .media-controls .media-bar {
 }
 .media-controls .fullscreen {
 	margin-left: 5px;
+}
+.media-controls .fullscreen,
+.media-controls .mute-unmute {
+	width: 16px;
+	height: 16px;
 }
 .media-controls .fullscreen .jme-icon {
 	margin: 0 2px 1px 1px;

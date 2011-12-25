@@ -143,11 +143,15 @@
 			e.preventDefault();
 			
 			evt.mediaAPI = this.name;
-			if(nuBubbleEvents[type]){
-				e.stopPropagation();
+			
+			if($.fn.on){
+				$.event.trigger( e, evt, this.element, !!(nuBubbleEvents[type]) );
+			} else {
+				if(nuBubbleEvents[type]){
+					e.stopPropagation();
+				}
+				$.event.trigger( e, evt, this.element );
 			}
-						
-			$.event.trigger( e, evt, this.element );
 		},
 		_stoppedEvents: {},
 		_stopEvent: function(name, autoAllow){
@@ -406,6 +410,7 @@
 							e.duration = this.duration;
 							e.timeProgress = e.time / e.duration * 100;
 						}
+						
 						that._trigger(e);
 					},
 					//Opera sometimes forgets to dispatch loadedmetadata

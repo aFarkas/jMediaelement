@@ -7,8 +7,7 @@
 			$(function(){
 				fn(document, $([]));
 			});
-		},
-		mediaelement: {}
+		}
 	};
 	var webshims = $.webshims;
 	
@@ -38,8 +37,6 @@
 	
 	
 	
-	var mediaelement = webshims.mediaelement;
-	
 	
 	var props = {};
 	
@@ -48,6 +45,7 @@
 	
 	
 	$.jme = {
+		version: '2.0.0',
 		classNS: '',
 		options: {},
 		plugins: {},
@@ -89,6 +87,9 @@
 			props[name] = desc;
 		},
 		prop: function(elem, name, value){
+			if(!props[name]){
+				return $.prop(elem, name, value);
+			}
 			if(value === undefined){
 				return props[name].get( elem );
 			} else {
@@ -332,16 +333,47 @@
 	
 	$.jme.defineProp('srces', {
 		get: function(elem){
-			var srces = mediaelement.srces(elem);
-			srces.forEach(function(src){
-				delete src.elem;
-				delete src.container;
-				delete src.srcProp;
+			var data = $.jme.data(elem);
+			var src = data.media.prop('src');
+			var srces = [];
+			if(src){
+				return [{src: src}];
+			}
+			srces = $.map($('source', data.media).get(), function(source){
+				var src = {
+					src: $.prop(source, 'src')
+				};
+				var tmp = $.attr(source, 'media');
+				if(tmp){
+					src.media = tmp;
+				}
+				tmp = $.attr(source, 'type');
+				if(tmp){
+					src.type = tmp;
+				}
+				return src;
 			});
 			return srces;
 		},
 		set: function(elem, srces){
-			mediaelement.srces(elem, srces);
+			var data = $.jme.data(elem);
+			
+			var setSrc = function(i, src){
+				if(typeof src == 'string'){
+					src = {src: src};
+				}
+				$(document.createElement('source')).attr(src).appendTo(data.media);
+				
+			};
+			data.media.removeAttr('src').find('source').remove();
+			if($.isArray(srces)){
+				$.each(srces, setSrc);
+			} else {
+				setSrc(0, srces);
+			}
+			setTimeout(function(){
+				data.media.callProp('load');
+			}, 0);
 			return 'noDataSet';
 		}
 	});

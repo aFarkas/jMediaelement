@@ -209,33 +209,39 @@
     if(!api){return;}
     var cfg = $.attr(api.element, 'getConfig');
     
+    console.log('flowPlayerReady');
     //https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
     if(api.isAPIReady){
       console.info('api.isAPIReady');
       // orig -> if(!api.apiElem.sendEvent){
       if(!$f(api.visualElem[0]).onMute){
-        console.log('new -> $f(api.apiElem).onMute is false or undefined');
+        console.log('flowPlayerReady. call api._$reInit()');
         api._$reInit();
         return;
       } else {
         setTimeout(function(){
+          console.log('flowPlayerReady. setTimeout. api._lastLoad: ' + api._lastLoad);
           if( api._lastLoad ){
-            console.log('api._lastLoad is: ' + api._lastLoad);
             api._mmload(api._lastLoad.file, api._lastLoad.image);
           }
           // orig -> if(api._$isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
           if(api._$isPlaystate && !cfg.autoplay){
+            console.log('flowPlayerReady. setTimeout. api._$isPlaystate: ' + api._$isPlaystate);
             api.play();
           }
         }, 8);
       }
       setTimeout(function(){
+        console.log('flowPlayerReady. setTimeout. jmeflashRefresh ');
         api._trigger('jmeflashRefresh');
       }, 8);
     // orig -> } else if(!api.apiElem.sendEvent){
-    } else if(!$f(api.visualElem[0]).onMute) {
+    } else if(!$f(api.visualElem[0])) {
+      console.log('flowPlayerReady. else if !$f(api.visualElem[0]) ');
       api._$reInit();
       return;
+    } else {
+      console.log('flowPlayerReady. else  ');
     }
     
     //preload workaround
@@ -334,6 +340,7 @@
         $fPlayer.play();
       } else {
         // orig -> this.apiElem.sendEvent('PLAY', 'false');
+        console.log('_mmload. before $fPlayer.toggle()');
         $fPlayer.toggle();
       }
     },
@@ -399,11 +406,14 @@
     isJMEReady: function(){
       var ret = false,
           $fPlayer = $f(this.visualElem[0]);
+			console.log('flowPlayerAPI. isJMEReady');
       // orig -> if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
       if(this.isAPIReady && $fPlayer.isLoaded && $fPlayer.getConfig){
         // seems stupid, but helps :-)
         // orig -> ( $.browser.mozilla && this.apiElem.getConfig() );
+
         ( $.browser.mozilla && $fPlayer.getConfig() );
+				console.log('flowPlayerAPI. $.browser.mozilla && $fPlayer.getConfig()');
         ret = true;          
       }
       return ret;
@@ -412,7 +422,22 @@
   
   
   $m.add('flowPlayer', 'video', $.extend({}, flowPlayerAPI, {
+    enterFullScreen: function(){
+      console.log('enterFullScreen');
+			if(!this._isPlaying()){
+				var that = this;
+				
+				/* $(that.element).one('playing.enterFullscreen', function(){
+					that.apiElem.video.fullscreen = true;
+				}); */
+				$f(this.visualElem[0]).play();
+			} else {
+				//this.apiElem.video.fullscreen = true;
+			}
+			return true;
+		},
     exitFullScreen: function(){
+      console.log('exitFullScreen');
       if($f(this.visualElem[0]).jmeExitFullScreen){
         try {
           $f(this.visualElem[0]).jmeExitFullScreen();

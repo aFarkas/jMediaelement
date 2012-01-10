@@ -138,22 +138,27 @@
 		
 		var api = getAPI(obj.id);
 		if(!api){return;}
+		console.log('playerReady');
 		//https://bugzilla.mozilla.org/show_bug.cgi?id=90268 every html5video shim has this problem fix it!!!
 		if(api.isAPIReady){
 			if(!api.apiElem.sendEvent){
+			  console.log('playerReady. call api._$reInit()');
 				api._$reInit();
 				return;
 			} else {
 				setTimeout(function(){
+				  console.log('playerReady. setTimeout. api._lastLoad: ' +  api._lastLoad);
 					if( api._lastLoad ){
 						api._mmload(api._lastLoad.file, api._lastLoad.image);
 					}
 					if(api._$isPlaystate && !(api.apiElem.getConfig() || {}).autostart){
+					  console.log('playerReady. setTimeout. api._$isPlaystate: ' + api._$isPlaystate);
 						api.play();
 					}
 				}, 8);
 			}
 			setTimeout(function(){
+			  console.log('playerReady. setTimeout. jmeflashRefresh ');
 				api._trigger('jmeflashRefresh');
 			}, 8);
 		} else if(!api.apiElem.sendEvent){
@@ -289,10 +294,12 @@
 	// opera also has some problems here
 	$.extend(jwAPI, {
 		isJMEReady: function(){
+			console.log('jwAPI. isJMEReady');
 			var ret = false;
 			if(this.isAPIReady && this.apiElem.sendEvent && this.apiElem.getConfig){
 				// seems stupid, but helps :-)
 				( $.browser.mozilla && this.apiElem.getConfig() );
+				console.log('jwAPI. $.browser.mozilla && this.apiElem.getConfig()');
 				ret = true;					
 			}
 			return ret;

@@ -20,9 +20,16 @@
 		
 		
 		<!-- full jme script -->
-		<!-- configure path to swf-fallback: script.jwPlayer[src] -->
+        <script src="../../packages/flowplayer-3.2.6.js"></script>
+		<!--
+		<script src="../../packages/mm.full.flowplayer.js"></script>
+		-->
 		<script class="jwPlayer" type="application/swf" src="../../packages/player.swf"></script>
-        <script src="../../packages/mm.full.min.js"></script>
+		<script src="../../src/mm.base-embed.js"></script>
+		<script src="../../src/mm.base-api.js"></script>
+		<script src="../../src/mm.base-controls.js"></script>
+		<script src="../../src/mm.jwplayer-embed.js"></script>
+		<script src="../../src/mm.jwplayer-api.js"></script>
 		<!-- END: jme -->
 		
 		<!-- jme plugins -->
@@ -78,6 +85,7 @@
 		<script>
 			$('html').addClass('js-on');
 			$(function(){
+				$.fn.jmeEmbed.defaults.apiOrder.reverse();
 				$('div.media-player').jmeControl({
 					fullscreen: {
 						tryFullScreen: false
@@ -98,37 +106,7 @@
 				<source src="../media/bbb_trailer_mobile.m4v" type="video/mp4" />
 				<!-- <source src="../media/bbb_trailer_400p.ogg" type="video/ogg" /> -->
 				
-				<!-- optional extra flash-fallback, don't use if you don't like :-) -->
-				<object id="flash-msie-video" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="430" height="280">
-					<param name="movie" value="../../packages/player.swf" />
-					<!--[if !IE]>-->
-					<object id="flash-w3c-video" type="application/x-shockwave-flash" data="../../packages/player.swf" width="430" height="280">
-					<!--<![endif]-->
-						<param name="allowfullscreen" value="true">
-						<param name="flashvars" value="file=../demos/media/bbb_trailer_mobile.m4v&amp;&amp;image=../media/bbb_watchtrailer.gif">
-						
-						<!-- optional extra html-fallback -->
-						<div class="fallback">
-							<img src="../media/bbb_watchtrailer.gif" alt="" />
-							<div class="fallback-text">
-								<p>Please use a modern browser or install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
-								<ul>
-									<li><a class="source" href="../media/bbb_trailer_mobile.m4v">Big Buck Bunny (mp4)</a></li>
-									<li><a class="source" href="../media/bbb_trailer_400p.ogg">Big Buck Bunny (ogg)</a></li>
-									<!--
-									<li><a class="track" type="application/ttaf+xml" href="caption.xml" lang="de" data-enabled="enabled">DFXP/ttml file</a></li>
-									-->
-									<li><a class="track" href="test.srt" lang="de" data-enabled="enabled">Srt file</a></li>
-								</ul>
-							</div>
-						</div>
-						<!-- END: optional extra html-fallback -->
-						
-					<!--[if !IE]>-->
-					</object>
-					<!--<![endif]-->
-				</object>
-				<!-- END: optional extra flash-fallback -->
+				
 			</video>
 			<div class="media-state"></div>
 			<div class="media-controls">

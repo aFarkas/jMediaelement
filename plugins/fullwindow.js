@@ -495,7 +495,6 @@
 				return;
 			}
 			var elems = $.fn.jmeControl.getBtn(control), changeState = function(){
-				console.log('fullwindow. changeState.');
 				if (video.hasClass('displays-fullscreen')) {
 					elems.text.text(elems.names[1]);
 					elems.title.attr('title', elems.titleText[1]);
@@ -515,7 +514,6 @@
 			}
 			
 			control.bind('ariaclick', function(){
-				console.log('fullwindow. ariaclick.');
 				var isFullscreen = video.hasClass('displays-fullscreen');
 				if( !isFullscreen ){
 					video.play();

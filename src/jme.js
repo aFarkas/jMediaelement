@@ -1,7 +1,7 @@
 (function($){
 	$.webshims = $.webshims || {
 		ready: function(type, fn){
-			setTimeout(fn, 0);
+			fn();
 		},
 		addReady: function(fn){
 			$(function(){
@@ -206,6 +206,36 @@
 		};
 	};
 	
+	$.jme.timedClass = {
+		add: function(elem, className, max){
+			$.jme.timedClass.remove(elem, className);
+			elem = $(elem);
+			if(!max){
+				max = 20;
+			}
+			var data = $.data(elem[0], 'timedClass'+className, {
+				i: 0,
+				timer: setInterval(function(){
+					elem.removeClass(className+'-'+ data.i);
+					data.i++;
+					if(data.i > max){
+						data.i = 0;
+					}
+					elem.addClass(className+'-'+ data.i);
+				}, 25)
+			});
+		},
+		remove: function(elem, className){
+			elem = $(elem);
+			var data = $.data(elem[0], 'timedClass'+className);
+			if(data){
+				elem.removeClass(className+'-'+ data.i);
+				clearInterval(data.timer);
+				$.removeData(elem[0], 'timedClass'+className);
+			}
+		}
+	};
+	
 	$.fn.jmePlayer = function(opts){
 		var removeClasses = ['idle', 'playing', 'ended', 'waiting', 'mediaerror'].map(function(state){
 			return ns+'state-'+state;
@@ -251,7 +281,11 @@
 						if(idlStates[state]){
 							state = 'idle';
 						}
-						 
+						if(state == 'waiting'){
+							$.jme.timedClass.add(base, ns +'state-'+ state);
+						} else {
+							$.jme.timedClass.remove(base, ns +'state-'+ state);
+						}
 						base.removeClass(removeClasses).addClass(ns +'state-'+ state);
 					})
 					.bind('volumechange updateJMEState', function(){
@@ -456,18 +490,19 @@
 	
 	
 	$.jme.defineMethod('updateControlbar', function(){
-		
 		var timeSlider = $('.'+ $.jme.classNS +'time-slider', this);
-		var width = timeSlider.parent().width();
-		var elemWidths = 0; 
-		timeSlider.siblings()
-			.each(function(){
-				if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute'){
-					elemWidths += $(this).outerWidth(true);
-				}
-			})
-		;
-		timeSlider.width(width - elemWidths - (timeSlider.outerWidth(true) - timeSlider.width()) - 1);
+		if(timeSlider[0] && timeSlider.css('position') !== 'absolute'){
+			var width = timeSlider.parent().width();
+			var elemWidths = 0; 
+			timeSlider.siblings()
+				.each(function(){
+					if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute'){
+						elemWidths += Math.floor($(this).outerWidth(true));
+					}
+				})
+			;
+			timeSlider.width(width - elemWidths - (timeSlider.outerWidth(true) - timeSlider.width()) - 0.5);
+		}
 	});
 	
 	$.jme.registerPlugin('media-controls', {
@@ -667,15 +702,21 @@
 	});
 	
 	var onSliderReady = function(fn){
+		var complete = function(){
+			if(!$.fn._uiSlider){
+				if(!$.mobile || !$.mobile.slider){
+					$.fn._uiSlider = $.fn.slider;
+				} else {
+					$.widget('jme._uiSlider', $.ui.slider.prototype);
+				}
+			}
+			fn();
+		};
 		$.webshims.ready('jquery-ui', function(){
-			if(!$.fn.slider){
-				$.webshims.ready('input-widgets', function(){
-					if($.fn.slider){
-						fn();
-					}
-				});
+			if(!$.ui || !$.ui.slider){
+				$.webshims.ready('input-widgets', complete);
 			} else {
-				fn();
+				complete();
 			}
 		});
 	};
@@ -714,7 +755,7 @@
 				function(){
 					var volume = media.prop('volume');
 					if(volume !== undefined){
-						control.slider('value', volume);
+						control._uiSlider('value', volume);
 					}
 				},
 				function(value){
@@ -725,7 +766,7 @@
 				}
 			);
 			var createFn = function(){
-				control.slider({
+				control._uiSlider({
 					range: 'min',
 					max: 1,
 					step: 0.05,
@@ -754,7 +795,7 @@
 				function(){
 					var time = media.prop('currentTime');
 					if(!isNaN(time)){
-						control.slider('value', time);
+						control._uiSlider('value', time);
 					}
 				},
 				function(value){
@@ -765,7 +806,7 @@
 			);
 			var createFn = function(){
 				var duration = media.prop('duration');
-				control.slider({
+				control._uiSlider({
 					range: 'min',
 					max: duration || 1,
 					disabled: !duration,
@@ -780,12 +821,12 @@
 				media.bind({
 					timeupdate: time.get,
 					emptied: function(){
-						control.slider('option', 'disabled', true);
+						control._uiSlider('option', 'disabled', true);
 					},
 					durationchange: function(){
 						control
-							.slider('option', 'disabled', false)
-							.slider('option', 'max', media.prop('duration'))
+							._uiSlider('option', 'disabled', false)
+							._uiSlider('option', 'max', media.prop('duration'))
 						;
 					}
 				});
@@ -877,8 +918,8 @@
 		var formated = [];
 		var frac;
 		for(var i = 0, len = format.length; i < len; i++){
-			if(i == len -1){
-				frac = Math.round(sec / times[format[i]]);
+			if(format[i] == 'ms' && i == len -1 ){
+				frac = Math.round( (sec / times[format[i]]) / 10);
 			} else {
 				frac = parseInt(sec / times[format[i]], 10);
 				sec = sec % times[format[i]];

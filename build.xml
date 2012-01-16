@@ -1,0 +1,23 @@
+<project name="jme2" default="jme" basedir=".">
+
+    <property name="dist" value="./demo/js"/>
+    <property name="src" value="./src"/>
+	
+    <target name="jme">
+        <mkdir dir="${dist}" />
+        <apply executable="java" parallel="false" verbose="true" dest="${dist}">
+			<fileset dir="${src}">
+				<include name="jme.js" />
+			</fileset>
+			<arg line="-jar" />
+			<arg path="build/compiler.jar" />
+			<arg value="--warning_level" />
+			<arg value="QUIET" />
+			<arg value="--js_output_file" />
+			<targetfile />
+			<arg value="--js" />
+			<mapper type="glob" from="jme.js" to="jme.js" />
+		</apply>
+    </target>
+	
+</project>

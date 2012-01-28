@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+        <link rel="stylesheet" href="jqm-style/css/player-styles.css" />
+        
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.js"></script>
+        <!-- only slider + dependencies are required -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+         <!-- END: slider -->
+        
+        <!-- polyfill: only needed if you want to make it cross browser (do not hotlink) -->
+        <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
+        <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/polyfiller.js"></script>
+        <!-- END: polyfill -->
+        
+        <!-- polyfill: only needed if you want track element support -->
+        <script src="js/captionator-0.5.1.min.js"></script>
+        
+        <script src="js/jme-jqm.js"></script>
+        <!-- start polyfill (only if webshims is included) -->
+        <script>
+            
+            jQuery.noConflict();
+            (function($){
+                
+                if($.webshims){
+                    $.webshims.polyfill('mediaelement');
+                }
+                
+                function callOnPageInit() {
+                    
+                    // Call captionator's captionify method to add track support to all media elements.
+                    captionator.captionify(null, null, {
+                      appendCueCanvasTo: $('video+div.captions-display')[0]
+                    });
+                }
+                
+                $( '#wrapper' ).live('pageinit',function(event){
+                    callOnPageInit();
+                });
+                
+            })(jQuery);
+            
+        </script>
+        <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js"></script>
+        <title>JME 2 + jQuery Mobile</title>
+    </head>
+    <body>
+        
+        <div id="wrapper" data-role="page">
+            <header data-role="header">
+                <h1>JME 2 + jQuery Mobile</h1>
+                <a href="javascript:history.go(-1)" title="Back" data-role="button" data-rel="back" data-icon="arrow-l" data-iconpos="notext">Back</a>
+                <a rel="home" href="/" title="Home" data-role="button" data-icon="home" data-iconpos="notext" data-direction="reverse">Home</a>
+            </header><!-- end header -->
+            
+            <div id="content-wrapper" data-role="content">
+                <div id="wrapper-2" class="ui-corner-all">
+                    <div id="wrapper-3">
+                        <div id="main" role="main">
+                            <article itemscope="itemscope" itemprop="video" itemtype="http://schema.org/VideoObject" class="hmedia video">
+                                <div class="mediaplayer" role="group" aria-labeledby="video-label-1"  data-jme='{"controlbar": true}'>
+                                    <video poster="media/sintel/sintel-trailer.png" preload="none" class="player">
+                                        <source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
+                                        <source src="media/sintel/sintel-trailer.webm" type="video/webm" />
+                                        <track kind="captions" src="media/sintel/sintel-trailer_en.srt" srclang="en" label="English captions" />
+
+                                        <div class="fallback">
+                                            <img src="media/sintel/sintel-trailer.png" alt="Sintel Trailer" itemprop="thumbnail" class="photo" />
+                                            <div class="fallback-text">
+                                                <p>Please use a modern browser or install <a href="http://get.adobe.com/flashplayer/">Flash-Plugin</a></p>
+                                                <ul>
+                                                    <li><a rel="enclosure" itemprop="contentURL" class="source" href="media/sintel/sintel-trailer.m4v" download="sintel-trailer.m4v" type="video/mp4">Video: Sintel Trailer (<span itemprop="encodingFormat">mp4</span>)</a></li>
+                                                    <li><a rel="enclosure" itemprop="contentURL" class="source" href="media/sintel/sintel-trailer.webm" download="sintel-trailer.webm" type="video/webm">Video: Sintel Trailer (<span itemprop="encodingFormat">webm</span>)</a></li>
+                                                    <li><a href="media/sintel/sintel-trailer_en.srt" type="application/x-srt">Closed Captions (srt)</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </video>
+                                    <div class="captions-display"></div>
+                                    <div class="jme-default-poster-overlay poster-display"></div>
+                                    <div class="jme-default-media-overlay media-state play-pause"></div>
+                                    <div class="jme-default-control-bar">
+                                        <div class="jme-cb-box media-controls ui-bar-a" role="application">
+                                            <div class="media-bar">
+                                                <div class="toggle-control toggle-controlgroup">
+                                                    <fieldset data-role="controlgroup" data-type="horizontal">
+                                                        <input id="play-toggle-1" name="play-toggle-1" type="checkbox" title="Play/Pause" class="play-pause" />
+                                                        <label for="play-toggle-1" title="Play/Pause" class="play-toggle"><span class="jme-icon"></span><span class="jme-text">Play/Pause</span></label>
+                                                        <input id="captions-toggle-1" name="captions-toggle-1" type="checkbox" title="Captions On/Captions Off" class="captions" />
+                                                        <label for="captions-toggle-1" title="Captions On/Captions Off" class="captions-toggle"><span class="jme-icon"></span><span class="jme-text">Captions On/Captions Off</span></label>
+                                                        <div class="volume-controls">
+                                                            <input id="mute-toggle-1" name="mute-toggle-1" type="checkbox" title="Mute/Unmute" class="mute-unmute" />
+                                                            <label for="mute-toggle-1" title="Mute/Unmute" class="mute-toggle"><span class="jme-icon"></span><span class="jme-text">Mute/Unmute</span></label>
+                                                            <div class="volume-slider"></div>
+                                                        </div>
+                                                    </fieldset>
+                                                </div>
+                                                <div class="currenttime-display">00:00</div>
+                                                <div class="time-slider ui-btn-down-a"></div>
+                                                <div class="duration-display">00:52</div>
+
+                                                <div class="toggle-control fullscreen-toggle">
+                                                    <label for="fullscreen-toggle-1" title="Enter Fullscreen/Exit Fullscreen" class="ui-hidden-accessible"><span class="jme-text">Enter Fullscreen/Exit Fullscreen:</span></label>
+                                                    <select id="fullscreen-toggle-1" name="fullscreen-toggle-1" title="Enter Fullscreen/Exit Fullscreen" class="fullscreen" data-role="slider">
+                                                        <option value="off">Exit Fullscreen</option>
+                                                        <option value="on">Enter Fullscreen</option>
+                                                    </select>
+                                                </div>
+                                            </div> <!-- end media-bar -->
+                                        </div> <!-- end media-controls -->
+                                    </div> <!-- end jme-default-control-bar -->
+                                </div> <!-- end mediaelement -->
+                                <footer>
+                                    <div data-role="collapsible" data-theme="a" data-content-theme="a" class="details">
+                                        <h2 id="video-label-1" itemprop="name" class="fn">Video: Sintel Trailer</h2>
+                                        <p itemprop="description" class="description"><q>Sintel</q> is an independently produced short film, initiated by the Blender Foundation as a means to further improve and validate the free/open source 3D creation suite Blender. With initial funding provided by 1000s of donations via the internet community, it has again proven to be a viable development model for both open 3D technology as for independent animation film.</p>
+                                        <dl class="media-info">
+                                            <dt>File Size:</dt>
+                                            <dd itemprop="contentSize">10 MB</dd>
+                                            <dt>Duration:</dt>
+                                            <dd><meta itemprop="duration" content="PT00M52S" />00:52</dd>
+                                            <dt>Contributor:</dt>
+                                            <dd itemprop="contributor" itemscope="itemscope" itemtype="http://schema.org/Organization" class="vcard contributor">
+                                                <span>© copyright</span>
+                                                <span itemprop="name" class="fn">Blender Foundation</span> 
+                                                <a itemprop="url" rel="external" href="http://www.sintel.org/" class="url">http://www.sintel.org</a></dd>
+                                        </dl>
+                                    </div>
+                                </footer>
+                            </article>
+                        </div><!-- end main -->
+                    </div><!-- end wrapper-3 -->
+                </div><!-- end wrapper-2 -->
+                
+                
+            </div><!-- end content-wrapper -->
+            
+            <footer data-role="footer">
+                <div class="nav-utility">
+                    <ul class="menu">
+                        <li class="back">
+                            <a href="javascript:history.go(-1)" title="Back" data-role="button" data-rel="back" data-icon="arrow-l" data-iconpos="notext">Back</a>
+                        </li>
+                        <li class="home">
+                            <a rel="home" href="/" title="Home" data-role="button" data-icon="home" data-iconpos="notext">Home</a>
+                        </li>
+                    </ul>
+                </div><!-- end nav-utility -->
+            </footer><!-- end footer -->
+        </div><!-- end page -->
+        
+    </body>
+</html>

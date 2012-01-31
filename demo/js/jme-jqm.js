@@ -170,7 +170,7 @@
 
 		$.jme.getButtonText = function(button, classes){
 			/* Added +label span.jme-text to selector so we can use JQM's Checkbox controls. 
-			 * TODO: Still need to add query selector for JQM's Flip Toggle Switch control that uses label+select. -mderting */
+			 * TODO: Still need to add query selector for JQM's Flip Toggle Switch control that uses label -mderting */
 			var btnTextElem = $('span.jme-text, +label span.jme-text', button);
 			var btnLabelElem = $('+label', button);
 			if(!btnTextElem[0]){
@@ -1314,13 +1314,21 @@
 		text: 'captions on / captions off',
 		_create: function(control, media, base, options){
 			
-			var track = media.find('track[kind="captions"]'),
-					trackData = $.data(track[0], 'jmeTrack');
-			
+			var track = media.find('track[kind="captions"]');
+			 
 			var textFn = $.jme.getButtonText(control, [this[pseudoClasses].captionsenabled, this[pseudoClasses].captionsdisabled]);
 			
 			var captionsDisplay = $('<div class="'+ $.jme.classNS +'captions-display" />').insertAfter(media);
 			media.prop('captionsDisplay', captionsDisplay);
+			
+			// Call captionator's captionify method to add track support to this media element.
+			if (!Modernizr.video){ 
+				// FIXME: Currently, captionator only supports HTML5 video elements. Need to add solution for mediaelement fallback here. -mderting
+			} else {
+				captionator.captionify(media[0], null, {
+					appendCueCanvasTo: $('video+div.captions-display')[0]
+				});
+			}
 			
 			media
 				.bind('updateJMEState', function(e){

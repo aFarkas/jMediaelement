@@ -209,6 +209,8 @@ ul.menu { list-style: none; margin: 0; padding: 0; }
 /* MEDIA ELEMENTS 
 -------------------- */
 .hmedia { margin: 5px; }
+.hmedia .polyfill-video { width: 100% !important; height: 100% !important; }
+.hmedia .polyfill-video object { display: block; width: 100%; height: 100%; }
 .hmedia video { width: 100%; height: auto; }
 .hmedia footer { margin: 0 8px; }
 .hmedia footer h2 { font-size: 1em; }
@@ -393,6 +395,7 @@ top: 50%; left: 10px; width: 24px; height: 24px; margin-top: -12px; }
   /* Style adjustments for viewports 980px and over go here */
   
   #wrapper-2 { width: 940px; margin: 0 auto; border: 2px solid #636363; }
+  .mediaplayer { width: 930px; height: 523px; }
 }
 
 

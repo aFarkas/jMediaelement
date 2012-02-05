@@ -211,7 +211,7 @@
 					button.attr("checked", isChecked)
 					/* FIXME: This is a not-so-clever hack to check whether JQM's checkboxradio has been initialized before we call it's refresh method.
 						Dies ist eine nicht-so-klug hack zu prüfen, ob JQM ist checkboxradio initialisiert wurde, bevor wir es refresh-Methode aufrufen. -mderting */
-					if ($.mobile && button.parent().hasClass('ui-checkbox')){ 
+					if ($.mobile && button.parent().hasClass('ui-checkbox')){
 						button.checkboxradio("refresh");
 					}
 				}
@@ -1262,7 +1262,10 @@
 			if(typeof options.restoreOnEnd == 'string'){
 				options.restoreOnEnd = (options.restoreOnEnd == "true") ? true : false;
 			}
-			var posterImg = $('<img src="'+ media.prop('poster') +'" class="'+ $.jme.classNS +'poster-image" />').appendTo(control);
+			/* Empty span element used for vertical centering in IE7 - thanks to Bruno Fassino.
+			 * @see http://www.brunildo.org/test/img_center.html
+			 */
+			var posterImg = $('<span></span><img src="'+ media.prop('poster') +'" class="'+ $.jme.classNS +'poster-image" />').appendTo(control);
 			control.hide();
 			
 			var showPoster = function(e){

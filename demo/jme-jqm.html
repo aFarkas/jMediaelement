@@ -44,6 +44,7 @@
                     // TODO: May need to move call to webshims here to support JQM's AJAX navigation. -mderting
                 }
                 
+                // TODO: Use delegate instead of live, since live is deprecated in jQuery 1.7.1. -mderting
                 $( '#wrapper' ).live('pageinit',function(event){
                     callOnPageInit();
                 });
@@ -70,7 +71,6 @@
                             <article itemscope="itemscope" itemprop="video" itemtype="http://schema.org/VideoObject" class="hmedia video">
                                 <div class="mediaplayer" role="group" aria-labeledby="video-label-1"  data-jme='{"controlbar": true}'>
                                     <video poster="media/sintel/sintel-trailer.png" preload="none" class="player">
-                                        <!-- FIXME: Remove IP before checking in. -mderting -->
                                         <source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
                                         <source src="media/sintel/sintel-trailer.webm" type="video/webm" />
                                         <track kind="captions" src="media/sintel/sintel-trailer_en.srt" srclang="en" label="English captions" />

@@ -170,7 +170,9 @@
 
 		$.jme.getButtonText = function(button, classes){
 			/* Added +label span.jme-text to selector so we can use JQM's Checkbox controls. 
-			 * TODO: Still need to add query selector for JQM's Flip Toggle Switch control that uses label -mderting */
+			 * TODO: Still need to add query selector for JQM's Flip Toggle Switch control that uses label.
+			 *   Look at line 23 of jquery.mobile.forms.checkboxradio for a filter that works with Windows Phone. 
+			 *   <code>label = input.closest( "form,fieldset,:jqmData(role='page')" ).find( "label" ).filter( "[for='" + input[ 0 ].id + "']" )</code> -mderting */
 			var btnTextElem = $('span.jme-text, +label span.jme-text', button);
 			var btnLabelElem = $('+label', button);
 			if(!btnTextElem[0]){
@@ -208,7 +210,11 @@
 				/* Added so we could use jQuery Mobile's Checkbox and Flip Toggle Switch controls. -mderting */
 				if (button.is('input[type="checkbox"]')){
 					var isChecked = (state) ? true : false;
-					button.attr("checked", isChecked)
+					if (!button.is(":checked") && state) {
+						button.attr('checked', 'checked');
+					} else if (button.is(":checked") && !state) {
+						button.attr('checked', false);
+					}
 					/* FIXME: This is a not-so-clever hack to check whether JQM's checkboxradio has been initialized before we call it's refresh method.
 						Dies ist eine nicht-so-klug hack zu prüfen, ob JQM ist checkboxradio initialisiert wurde, bevor wir es refresh-Methode aufrufen. -mderting */
 					if ($.mobile && button.parent().hasClass('ui-checkbox')){
@@ -692,13 +698,21 @@
 				;
 				/* Added bind for change event so we could use jQuery Mobile's Checkbox Control or Flip Toggle Switch -mderting */
 				if (control.is('input[type="checkbox"]') || control.is('select')){
-					control.bind('change', function(){
+					/* control.bind('change', function(){
 						media.jmeFn('togglePlay');
 						return false;
+					}); */
+					control.bind('click', function(){
+						media.jmeFn('togglePlay');
+						// Don't return false here so JQM has a chance to handle the event. -mderting
 					});
 				} else {
 					control.bind('click', function(){
 						media.jmeFn('togglePlay');
+						var playPauseToggle = $('input[type="checkbox"].play-pause', base);
+						if (playPauseToggle[0]){
+							playPauseToggle.attr('checked', !playPauseToggle.attr('checked')).checkboxradio('refresh');
+						}
 						return false;
 					});
 				}
@@ -723,9 +737,13 @@
 				;
 				/* Added bind for change event so we could use jQuery Mobile's Checkbox Control or Flip Toggle Switch -mderting */
 				if (control.is('input[type="checkbox"]') || control.is('select')){
-					control.bind('change', function(){
+					/* control.bind('change', function(){
 						media.prop('muted', !media.prop('muted'));
 						return false;
+					}); */
+					control.bind('click', function(){
+						media.prop('muted', !media.prop('muted'));
+						// Don't return false here so JQM has a chance to handle the event. -mderting
 					});
 				} else {
 					control.bind('click', function(){
@@ -1234,6 +1252,7 @@
 				base.bind('playerdimensionchange', updateControl);
 				/* Added bind for change event so we could use jQuery Mobile's Checkbox Control or Flip Toggle Switch -mderting */
 				if (control.is('input[type="checkbox"]') || control.is('select')){
+					/* FIXME: May need to bind to click event instead of change. -mderting */
 					control.bind('change', function(){
 						base.jmeProp('fullscreen', !base.hasClass($.jme.classNS+'player-fullscreen'));
 						return false;
@@ -1341,13 +1360,21 @@
 			;
 			/* Added bind for change event so we could use jQuery Mobile's Checkbox Control or Flip Toggle Switch -mderting */
 			if (control.is('input[type="checkbox"]') || control.is('select')){
-				control.bind('change', function(){
+				/* control.bind('change', function(){
+					media.prop('captionsenabled', !media.prop('captionsenabled'));
+					// TODO: Maybe move this to captionsenabled prop so we don't repeat ourselves, since we'll need this to happen for click events too. -mderting
+					var videoEl = media[0];
+					var state = (videoEl.tracks[0].mode !== captionator.TextTrack.SHOWING) ? captionator.TextTrack.SHOWING : captionator.TextTrack.HIDDEN;
+					videoEl.tracks[0].mode = state;
+					return false;
+				}); */
+				control.bind('click', function(){
 					media.prop('captionsenabled', !media.prop('captionsenabled'));
 					/* TODO: Maybe move this to captionsenabled prop so we don't repeat ourselves, since we'll need this to happen for click events too. -mderting */
 					var videoEl = media[0];
 					var state = (videoEl.tracks[0].mode !== captionator.TextTrack.SHOWING) ? captionator.TextTrack.SHOWING : captionator.TextTrack.HIDDEN;
 					videoEl.tracks[0].mode = state;
-					return false;
+					// Don't return false here so JQM has a chance to handle the event. -mderting
 				});
 			} else {
 				control.bind('click', function(){

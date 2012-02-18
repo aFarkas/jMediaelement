@@ -29,7 +29,11 @@
         <script src="js/extras/captionator-0.5.1.min.js"></script>
         
         <script src="../src/jme.js"></script>
-		<script src="../src/jme-caption.js"></script>
+        <script>
+            (!$.jme && document.write('<script src="js\/jme.js"><\/script>'));
+        </script>
+        <script src="../src/jme-caption.js"></script>
+
         <!-- start polyfill (only if webshims is included) -->
         <script>
             

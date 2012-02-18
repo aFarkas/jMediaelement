@@ -209,6 +209,8 @@ ul.menu { list-style: none; margin: 0; padding: 0; }
 /* MEDIA ELEMENTS 
 -------------------- */
 .hmedia { margin: 5px; }
+.hmedia .polyfill-video { width: 100% !important; height: 100% !important; }
+.hmedia .polyfill-video object { display: block; width: 100%; height: 100%; }
 .hmedia video { width: 100%; height: auto; }
 .hmedia footer { margin: 0 8px; }
 .hmedia footer h2 { font-size: 1em; }
@@ -218,7 +220,6 @@ ul.menu { list-style: none; margin: 0; padding: 0; }
 .hmedia audio { height: 30px; }
 
 .mediaplayer { overflow: hidden; position: relative; }
-.rack-teaser .mediaplayer { height: 100%; }
 
 /* Media State */
 .jme-default-media-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; background: url("../img/loader.gif") no-repeat -9999px -9999px; opacity: 0.7;
@@ -262,12 +263,20 @@ ul.menu { list-style: none; margin: 0; padding: 0; }
 .player-fullscreen .jme-minimal-control-bar .media-controls .volume-slider,
 .player-fullscreen .jme-minimal-control-bar .media-controls .time-slider { display: block; } /* Display all controls when in fullscreen mode. */
 
-/* Additions for poster-display plugin */
-.poster-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+/* Additions for poster-display plugin.
+ * NOTE: Rules to vertically center poster image inspired by Bruno Fassino.
+ * @see http://www.brunildo.org/test/img_center.html
+ */
+.poster-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; vertical-align: middle; display: none; }
+.opacity .poster-display {display: table-cell; opacity: 0; -moz-transition: all 900ms; -webkit-transition: all 900ms; -ms-transition: all 900ms; -o-transition: all 900ms; transition: all 900ms;}
+.state-ended .poster-display {display: block; display: table-cell; opacity: 1;}
+.poster-display * { vertical-align: middle; }
+.poster-display span { display: inline-block; height: 100%; }
 .poster-display .poster-image { width: 100%; height: 100%; }
+.player-fullscreen .poster-display .poster-image { display: inline-block; height: auto; }
 
 /* Additions for captions plugin */
-.captions-display { position: absolute; bottom: 0; z-index: 0; width: 100%; height: 100%; margin-bottom: 0; color: #fff; text-align: center; text-shadow: 0 1px 0 #000; } /* NOTE: Captionator adds inline styles to the generated div.captionator-cue-canvas, one of which is z-index: 100;. We need to set z-index: 0; here in to force the Captionator generated elements to stack within this element, without effecting the stacking order of siblings of .captions-display. -mderting */
+.captions-display { position: absolute; bottom: 0; z-index: 0; width: 100%; height: 100%; margin-bottom: 0; color: #fff; text-align: center; text-shadow: 0 1px 0 #000; } /* NOTE: Captionator adds inline styles to the generated div.captionator-cue-canvas, one of which is z-index: 100;. We need to set z-index: 0; here to force the Captionator generated elements to stack within this element, without effecting the stacking order of siblings of .captions-display. -mderting */
 
 /* Media Bar */
 .media-controls .media-bar  { overflow: hidden; position: relative; height: 2em; min-height: 2em; margin: 0; padding: 0; }
@@ -280,13 +289,21 @@ html > body .media-controls .media-bar { height: auto; background-color: transpa
 .media-controls .volume-controls > * { float: left; }
 .media-controls .volume-slider { top: 0; width: 30px; height: 30px; margin: 3px; background: transparent url("../img/player-sprites.png") -460px 50% no-repeat; cursor: pointer; }
 .media-controls .volume-slider .ui-slider-range { top: 0; left: 0; height: 100%; min-width: 1px; min-height: 1px; background: transparent url("../img/player-sprites.png") -420px 50% no-repeat; }
-.media-controls .volume-slider .ui-slider-handle { top: 0; left: 0; width: 1px; height: 100%; background: none; }
+.media-controls .volume-slider .ui-slider-handle { width: 1px; height: 100%; margin-left: 0; background: none; } /* Overrides JQM a.ui-slider-handle { width: 28px; height: 28px; margin-left: -15px; } */
+.media-controls .volume-slider .ui-slider-handle.ui-state-focus,
+.media-controls .volume-slider .ui-slider-handle.ui-state-active { outline: thin dotted; }
 
 
 /* Timeline Slider */
 .media-controls .time-slider { margin: 0.7em 15px 0 20px; border-radius: .6em; } /* Inherits rules from JQM div.ui-slider. Overrides div.ui-slider { margin: 0 2% 0 20px; } */
 .media-controls .ui-slider-disabled { background: #111; }
-.media-controls .time-slider .ui-slider-handle { z-index: 9; outline: medium none; border: 1px solid #222; color: #fff; font-weight: bold; text-shadow: 0 -1px 1px #000; 
+.media-controls .time-slider .ui-slider-handle { 
+    z-index: 9; 
+    outline: medium none; 
+    border: 1px solid #222; 
+    color: #fff; 
+    font-weight: bold; 
+    text-shadow: 0 -1px 1px #000; 
     background: #333333;
     background-image: -webkit-gradient(linear, left top, left bottom, from(#555), to(#333)); /* Saf4+, Chrome */
     background-image: -webkit-linear-gradient(#555,#333); /* Chrome 10+, Saf5.1+ */
@@ -296,7 +313,7 @@ html > body .media-controls .media-bar { height: auto; background-color: transpa
     background-image: linear-gradient(#555,#333 );
 }
 .media-controls .time-slider .ui-slider-handle.ui-state-focus,
-.media-controls .time-slider .ui-slider-handle.ui-state-active {  }
+.media-controls .time-slider .ui-slider-handle.ui-state-active { -moz-box-shadow: 0px 0px 12px #387bbe; -webkit-box-shadow: 0px 0px 12px #387bbe; box-shadow: 0px 0px 12px #387bbe; } /* FIXME: Duplicates JQM rules defined for .ui-btn:focus, .ui-focus. Investigate why .ui-btn:focus isn't being applied. Once fixed, we should be able to remove these rules. -mderting */
 .media-controls .time-slider .ui-slider-range { position: absolute; top: 0; left: 0; height: 100%; border-radius: .6em; background: #e1e1e1; cursor: pointer; }
 
 /* Buffer Progress Bar */
@@ -338,7 +355,9 @@ top: 50%; left: 10px; width: 24px; height: 24px; margin-top: -12px; }
 .fullscreen-toggle { width: 66px; margin-right: 8px; }
 .fullscreen-toggle span.ui-slider-label-a { background-position: -273px 50%; background-size: 403px 18px; -moz-background-size: 403px 18px; -o-background-size: 403px 18px; -webkit-background-size: 403px 18px; }
 .fullscreen-toggle span.ui-slider-label-b { background-position: -240px 50%; background-size: 403px 18px; -moz-background-size: 403px 18px; -o-background-size: 403px 18px; -webkit-background-size: 403px 18px; }
-
+.media-controls .fullscreen-toggle .ui-slider-handle { outline: medium none; }
+.media-controls .fullscreen-toggle .ui-slider-handle:focus,
+.media-controls .fullscreen-toggle .ui-slider-handle:active { -moz-box-shadow: 0px 0px 12px #387bbe; -webkit-box-shadow: 0px 0px 12px #387bbe; box-shadow: 0px 0px 12px #387bbe; } /* FIXME: Duplicates JQM rules defined for .ui-btn:focus, .ui-focus. Investigate why .ui-btn:focus isn't being applied. Once fixed, we should be able to remove these rules. -mderting */
 
 
 
@@ -393,6 +412,7 @@ top: 50%; left: 10px; width: 24px; height: 24px; margin-top: -12px; }
   /* Style adjustments for viewports 980px and over go here */
   
   #wrapper-2 { width: 940px; margin: 0 auto; border: 2px solid #636363; }
+  .mediaplayer { width: 930px; height: 523px; }
 }
 
 

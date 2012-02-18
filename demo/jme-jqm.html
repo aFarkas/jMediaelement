@@ -1,8 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--[if lt IE 7]> <html xmlns="http://www.w3.org/1999/xhtml" class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html xmlns="http://www.w3.org/1999/xhtml" class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html xmlns="http://www.w3.org/1999/xhtml" class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html xmlns="http://www.w3.org/1999/xhtml" class="no-js" lang="en"> <!--<![endif]-->
     <head>
         <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
         <meta name="viewport" content="width=device-width, initial-scale=1" /> 
+        
+        <title>JME 2 + jQuery Mobile</title>
+        <meta name="description" content="A demo page for jMediaelement (JME) and jQuery Mobile. Uses HTML5Boilerplate, Captionator and HTML5 microdata for SEO." />
         
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
         <link rel="stylesheet" href="jqm-style/css/player-styles.css" />
@@ -14,13 +21,15 @@
         
         <!-- polyfill: only needed if you want to make it cross browser (do not hotlink) -->
         <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
+        
         <script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/polyfiller.js"></script>
         <!-- END: polyfill -->
         
         <!-- polyfill: only needed if you want track element support -->
-        <script src="js/captionator-0.5.1.min.js"></script>
+        <script src="js/extras/captionator-0.5.1.min.js"></script>
         
-        <script src="js/jme-jqm.js"></script>
+        <script src="../src/jme.js"></script>
+		<script src="../src/jme-caption.js"></script>
         <!-- start polyfill (only if webshims is included) -->
         <script>
             
@@ -33,12 +42,10 @@
                 
                 function callOnPageInit() {
                     
-                    // Call captionator's captionify method to add track support to all media elements.
-                    captionator.captionify(null, null, {
-                      appendCueCanvasTo: $('video+div.captions-display')[0]
-                    });
+                    // TODO: May need to move call to webshims here to support JQM's AJAX navigation. -mderting
                 }
                 
+                // TODO: Use delegate instead of live, since live is deprecated in jQuery 1.7.1. -mderting
                 $( '#wrapper' ).live('pageinit',function(event){
                     callOnPageInit();
                 });
@@ -47,7 +54,7 @@
             
         </script>
         <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js"></script>
-        <title>JME 2 + jQuery Mobile</title>
+        
     </head>
     <body>
         
@@ -81,7 +88,6 @@
                                             </div>
                                         </div>
                                     </video>
-                                    <div class="captions-display"></div>
                                     <div class="jme-default-poster-overlay poster-display"></div>
                                     <div class="jme-default-media-overlay media-state play-pause"></div>
                                     <div class="jme-default-control-bar">

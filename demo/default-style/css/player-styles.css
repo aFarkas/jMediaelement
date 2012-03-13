@@ -327,7 +327,8 @@ body.has-media-fullscreen {
 	background: #000;
 }
 .player-fullscreen,
-.media-fullscreen {
+.media-fullscreen,
+.player-fullscreen .polyfill-mediaelement {
 	top: 0 !important;
 	left: 0 !important;
 	right: 0 !important;

@@ -771,7 +771,7 @@
 				obj.setAttribute('name', id);
 				if(params.wmode === 'transparent'){
 					obj.style.minHeight = '1px';
-					obj.style.minHeight = '1px';
+					obj.style.minWidth = '1px';
 				} 
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){

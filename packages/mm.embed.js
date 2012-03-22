@@ -1,5 +1,5 @@
 /**!
- * Part of the jMediaelement-Project vpre1.3.5 | http://github.com/aFarkas/jMediaelement
+ * Part of the jMediaelement-Project v1.3.5 | http://github.com/aFarkas/jMediaelement
  * @author Alexander Farkas
  * Copyright 2010, Alexander Farkas
  * Dual licensed under the MIT or GPL Version 2 licenses.
@@ -771,7 +771,7 @@
 				obj.setAttribute('name', id);
 				if(params.wmode === 'transparent'){
 					obj.style.minHeight = '1px';
-					obj.style.minHeight = '1px';
+					obj.style.minWidth = '1px';
 				} 
 				elem.parentNode.replaceChild(obj, elem);
 			} else if(window.ActiveXObject){

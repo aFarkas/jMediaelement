@@ -101,13 +101,37 @@
 						$.jme.data(elem, name, setValue);
 					}
 				}
+			},
+			setText: function(name, text){
+				var obj = name;
+				if(name && text){
+					obj = {};
+					obj[name] = text;
+				}
+				$.each(obj, function(name, text){
+					if($.jme.plugins[name]){
+						$.jme.plugins[name].text = text;
+					}
+				});
 			}
 		};
+		
+		var oldAccess = true;
+		try {
+			$.access( $(document.documentElement), 't', undefined, true, $.noop );
+		} catch(er){
+			oldAccess = false;
+		}
 
-		$.fn.jmeProp = function(name, value){
-			return $.access( this, name, value, true, $.jme.prop );
-		};
-
+		$.fn.jmeProp = oldAccess ?
+			function(name, value){
+				return $.access( this, name, value, true, $.jme.prop );
+			} :
+			function(name, value){
+				return $.access( this, $.jme.prop, name, value, true );
+			}
+		;
+		
 		$.fn.jmeFn = function(fn){
 
 			var args = Array.prototype.slice.call( arguments, 1 );
@@ -1293,7 +1317,7 @@
 			var updatePoster = function(){
 				var poster = media.prop('poster');
 				if(poster){
-					control.html('<span></span><img src="'+ poster +'" class="'+ $.jme.classNS +'poster-image" />')
+					control.html('<span></span><img src="'+ poster +'" class="'+ $.jme.classNS +'poster-image" />');
 				} else {
 					control.empty();
 				}

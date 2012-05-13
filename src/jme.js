@@ -128,7 +128,7 @@
 				return $.access( this, name, value, true, $.jme.prop );
 			} :
 			function(name, value){
-				return $.access( this, $.jme.prop, name, value, true );
+				return $.access( this, $.jme.prop, name, value, arguments.length > 1 );
 			}
 		;
 		
@@ -491,12 +491,11 @@
 				} else {
 					setSrc(0, srces);
 				}
-				setTimeout(function(){
-					data.media.callProp('load');
-				}, 0);
+				data.media.callProp('load');
 				return 'noDataSet';
 			}
 		});
+		
 		$.jme.defineMethod('togglePlay', function(){
 			$(this).callProp( ( props.isPlaying.get(this) ) ? 'pause' : 'play' );
 		});

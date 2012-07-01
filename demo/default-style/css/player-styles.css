@@ -2,8 +2,8 @@ button {
 	overflow: visible;
 }
 button::-moz-focus-inner {
-    padding:0;
-    border:0;
+	padding:0;
+	border:0;
 }
 
 /* default */
@@ -62,12 +62,12 @@ button::-moz-focus-inner {
 }
 .buffer-progress .buffer-progress-indicator {
 	display: block;
-    height: 100%;
+	height: 100%;
 	width: 0;
-    left: 0;
-    min-height: 1px;
-    position: absolute;
-    top: 0;
+	left: 0;
+	min-height: 1px;
+	position: absolute;
+	top: 0;
 	background: #E3E3E3;
 }
 .time-slider .buffer-progress-indicator {
@@ -106,6 +106,33 @@ video {
 	width: 400px;
 	height: 224px;
 }
+
+.mediaplayer.ratio-16-9,
+.mediaplayer.ratio-4-3 {
+	position: relative;
+	height: 0;
+	width: 100%;
+}
+
+.mediaplayer.ratio-16-9 {
+	padding-bottom: 56.25%;
+}
+
+.mediaplayer.ratio-4-3 {
+	padding-bottom: 75%;
+}
+
+.mediaplayer.ratio-16-9 video,
+.mediaplayer.ratio-16-9 .polyfill-video,
+.mediaplayer.ratio-4-3 video,
+.mediaplayer.ratio-4-3  .polyfill-video {
+	position: absolute !important;
+	top: 0;
+	left: 0;
+	width: 100% !important;
+	height: 100% !important;
+}
+
 .jme-default-control-bar {
 	position: absolute;
 	overflow: hidden;
@@ -147,12 +174,12 @@ video {
 	display: block;
 }
 .media-controls button {
-    cursor: pointer;
-    display: inline-block;
+	cursor: pointer;
+	display: inline-block;
 	overflow: visible;
 	border: 0;
 	padding: 0;
-    border-radius: 5px;
+	border-radius: 5px;
 	-webkit-appearance: none;
 	background: url("../img/player-sprites.png") no-repeat 0 -200px;
 }
@@ -189,7 +216,7 @@ video {
 	float: left;
 	margin: 0 10px 0 0;
 	height: 22px;
-    width: 42px;
+	width: 42px;
 }
 .media-controls button.play-pause .jme-icon {
 	margin: 2px 0 0 2px;
@@ -199,21 +226,20 @@ video {
 	background-position: 1px -799px;
 }
 .media-controls .media-bar  {
+	position: relative;
 	overflow: hidden;
-	background: url("../img/player-sprites.png") repeat-x scroll 0 0 #333333;
-    border-radius: 5px 5px 5px 5px;
-    color: #FFFFFF;
-    font-size: 11px;
-    height: 100%;
-	padding: 3px 5px 1px;
-	height: 18px;
-	min-height: 18px;
 	margin: 0 0 0 5px;
-    position: relative;
+	padding: 3px 5px 1px;
+	height: 100%;
+	min-height: 18px;
+	border-radius: 5px 5px 5px 5px;
+	color: #FFFFFF;
+	font-size: 11px;
+	background: url("../img/player-sprites.png") repeat-x scroll 0 0 #333333;
 }
 html > body .media-controls .media-bar {
 	height: auto;
-    background-color: transparent;
+	background-color: transparent;
 }
 .media-controls .media-bar > * {
 	float: left;
@@ -257,8 +283,8 @@ html > body .media-controls .media-bar {
 }
 .media-controls .buffer-progress .buffer-progress-indicator {
 	background: #E3E3E3;
-    border-radius: 3px 3px 3px 3px;
-    cursor: pointer;
+	border-radius: 3px 3px 3px 3px;
+	cursor: pointer;
 }
 
 
@@ -266,6 +292,7 @@ html > body .media-controls .media-bar {
 	margin: 0 10px 0 0;
 }
 .media-controls .volume-controls {
+	width: 49px; /* IE7*/
 	zoom: 1;
 	overflow: hidden;
 }

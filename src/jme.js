@@ -515,7 +515,6 @@
 					} else {
 						data.media.prop('controls', false);
 						$.each(mediaControls.pluginOrder, function(i, name){
-
 							var plugin = $.jme.plugins[name];
 							if(plugin && plugin.structure){
 								structure += plugin.structure.replace('{%class%}', ns+name).replace('{%text%}', plugin.text || '');
@@ -526,7 +525,7 @@
 						data._controlbar = $( mediaControls.barStructure );
 						controlBar = data._controlbar.find('div.jme-cb-box').addClass(ns+'media-controls');
 						controls = data._controlbar.filter('div.jme-default-media-overlay').addClass(ns+'play-pause');
-						controls =  controls.add(  controlBar );
+						controls =  controls.add( controlBar );
 						controls = controls.add( $(structure).appendTo(controlBar) );
 						data._controlbar.appendTo(data.player);
 						data.player.jmeFn('addControls', controls);
@@ -577,16 +576,21 @@
 		$.jme.defineMethod('updateControlbar', function(){
 			var timeSlider = $('.'+ $.jme.classNS +'time-slider', this);
 			if(timeSlider[0] && timeSlider.css('position') !== 'absolute'){
-				var width = timeSlider.parent().width();
+				var width = Math.floor(timeSlider.parent().width()) - 0.1;
+				
 				var elemWidths = 0; 
-				timeSlider.siblings()
+				timeSlider
+					.hide()
+					.siblings()
 					.each(function(){
 						if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute'){
-							elemWidths += Math.floor($(this).outerWidth(true));
+							elemWidths += Math.ceil($(this).outerWidth(true)) + 0.1;
 						}
 					})
+					.end()
+					.show()
 				;
-				timeSlider.width(width - elemWidths - (timeSlider.outerWidth(true) - timeSlider.width()) - 0.5);
+				timeSlider.width(width - elemWidths - Math.ceil(timeSlider.outerWidth(true) - timeSlider.width()) - 0.3);
 			}
 		});
 
@@ -605,6 +609,7 @@
 				setTimeout(function(){
 					media.bind('loadedmetadata volumechange play pause ended emptied', update);
 					base.bind('updatetimeformat controlsadded playerdimensionchange', update);
+					$(window).bind('resize emchange', update);
 				}, 1);
 				update();
 			}

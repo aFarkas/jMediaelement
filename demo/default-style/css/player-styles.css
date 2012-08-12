@@ -103,8 +103,8 @@ button::-moz-focus-inner {
 video {
 	position: relative;
 	display: block;
-	width: 400px;
-	height: 224px;
+	width: 512px;
+	height: 288px;
 }
 
 .mediaplayer.ratio-16-9,
@@ -135,9 +135,8 @@ video {
 
 .jme-default-control-bar {
 	position: absolute;
-	overflow: hidden;
 	left: 0;
-	bottom: 15px;
+	bottom: 10px;
 	width: 100%;
 }
 
@@ -152,11 +151,11 @@ video {
 	transition: all 400ms;
 }
 .mediaplayer.state-playing .media-controls {
-	-moz-transform: translate(0, 100%);
-	-webkit-transform: translate(0, 100%);
-	-ms-transform: translate(0, 100%);
-	-o-transform: translate(0, 100%);
-	transform: translate(0, 100%);
+	-moz-transform: translate(0, 60%);
+	-webkit-transform: translate(0, 60%);
+	-ms-transform: translate(0, 60%);
+	-o-transform: translate(0, 60%);
+	transform: translate(0, 60%);
 	opacity: 0;
 }
 .no-opacity .mediaplayer.state-playing .media-controls {
@@ -227,8 +226,7 @@ video {
 }
 .media-controls .media-bar  {
 	position: relative;
-	overflow: hidden;
-	margin: 0 0 0 5px;
+	margin: 0 0 0 55px;
 	padding: 3px 5px 1px;
 	height: 100%;
 	min-height: 18px;
@@ -237,6 +235,7 @@ video {
 	font-size: 11px;
 	background: url("../img/player-sprites.png") repeat-x scroll 0 0 #333333;
 }
+
 html > body .media-controls .media-bar {
 	height: auto;
 	background-color: transparent;
@@ -367,4 +366,51 @@ body.has-media-fullscreen {
 }
 .media-fullscreen {
 	position: relative;
+}
+
+.media-controls .subtitle-controls {
+	position: relative;
+	zoom: 1;
+	margin-left: 5px;
+	display: none;
+}
+.media-controls .subtitle-controls .subtitle-menu {
+	position: absolute;
+	bottom: 20px;
+	right: 0px;
+	overflow: hidden;
+}
+.has-track  .media-controls .subtitle-controls {
+	display: block;
+}
+.media-controls .subtitle-menu div {
+	color: #fff;
+	background: #000;
+	background: rgba(0, 0, 0, 0.7);
+	border-radius: 8px;
+	padding: 5px;
+	visibility: hidden;
+}
+
+.media-controls .subtitle-menu.visible-menu div {
+	visibility: visible;
+	
+}
+
+.media-controls .subtitle-menu ul {
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.media-controls .subtitle-menu button {
+	background: none;
+	color: #fff;
+	padding: 2px;
+	margin: 1px 0;
+	white-space: nowrap;
+}
+.media-controls .captions .jme-icon {
+	width: 16px;
+	height: 16px;
+	background-position: 3px -1797px;
 }

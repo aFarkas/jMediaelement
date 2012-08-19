@@ -888,12 +888,16 @@
 		},
 		_create: function(control, media, base){
 			loadJqueryUI();
+			
 			var time = createGetSetHandler(
 				function(){
 					var time = media.prop('currentTime');
 					if(!isNaN(time)){
-						control._uiSlider('value', time);
+						try {
+							control._uiSlider('value', time);
+						} catch(er){}
 					}
+					
 				},
 				function(value){
 					try {
@@ -903,10 +907,11 @@
 			);
 			var createFn = function(){
 				var duration = media.prop('duration');
+				
 				control._uiSlider({
 					range: 'min',
 					max: duration || 1,
-					disabled: !duration,
+					disabled: !duration || !isFinite(duration),
 					step: 0.1,
 					value: media.prop('currentTime'),
 					slide: function(e, data){
@@ -919,12 +924,16 @@
 					timeupdate: time.get,
 					emptied: function(){
 						control._uiSlider('option', 'disabled', true);
+						control._uiSlider('value', 0);
 					},
 					durationchange: function(){
-						control
-							._uiSlider('option', 'disabled', false)
-							._uiSlider('option', 'max', media.prop('duration'))
-						;
+						duration = media.prop('duration');
+						if(duration && isFinite(duration)){
+							control
+								._uiSlider('option', 'disabled', false)
+								._uiSlider('option', 'max', duration)
+							;
+						}
 					}
 				});
 			};

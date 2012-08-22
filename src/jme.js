@@ -585,7 +585,7 @@
 					.hide()
 					.siblings()
 					.each(function(){
-						if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute'){
+						if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute' && $.css(this, 'display') !== 'none'){
 							elemWidths += Math.ceil($(this).outerWidth(true)) + 0.1;
 						}
 					})
@@ -1432,7 +1432,7 @@
 		text: 'subtitles on / subtitles off',
 		_create: function(control, media, base, options){
 			var that = this;
-			var tracks = media.find('track').filter('[kind="subtitles"], [kind="caption"], :not([kind])');
+			var tracks = media.find('track').filter('[kind="subtitles"], [kind="caption"], :not([kind]), [data-kind="subtitles"], [data-kind="caption"]');
 			var textFn;
 			var updateControl;
 			var menuObj;

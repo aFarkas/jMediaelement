@@ -22,7 +22,10 @@
 	<!-- start polyfill (only if webshims is included) -->
 	<script>
 		if($.webshims){
-			$.webshims.polyfill('mediaelement');
+			$.webshims.setOptions({
+				track: {override: true}
+			});
+			$.webshims.polyfill('mediaelement track');
 		}
 	</script>
 	<title>jme2</title>

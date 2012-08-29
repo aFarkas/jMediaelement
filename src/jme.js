@@ -1126,7 +1126,7 @@
 			requestFullScreen: function(elem){
 				parentData = [];
 				$(elem).parentsUntil('body').each(function(){
-					var pos =  $.curCSS(this, 'position');
+					var pos =  $.css(this, 'position');
 					var left = this.scrollLeft;
 					var top = this.scrollTop;
 					var changed;

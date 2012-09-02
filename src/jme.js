@@ -1448,7 +1448,7 @@
 					if(tracks.length > 1){
 						menuObj = new $.jme.ButtonMenu(control, '<div class="'+that[pseudoClasses].menu +'" >'+ (getTrackMenu(tracks)) +'</div>', function(index, button){
 							tracks.each(function(i){
-								$.prop(this, 'track').mode = (i == index) ? 2 : 0;
+								$.prop(this, 'track').mode = (i == index) ? 'showing' : 'disabled';
 								updateControl();
 							});
 						});
@@ -1457,7 +1457,7 @@
 								if(tracks.eq(i).prop('readyState') == 3){
 									$(this).prop('disabled', true);
 								} else {
-									$(this)[(tracks.eq(i).prop('track').mode == 2) ? 'addClass' : 'removeClass']('active-track');
+									$(this)[(tracks.eq(i).prop('track').mode == 'showing') ? 'addClass' : 'removeClass']('active-track');
 								}
 							});
 						};
@@ -1476,13 +1476,13 @@
 								control.prop('disabled', true);
 								textFn(1);
 							} else {
-								textFn( (tracks.prop('track').mode == 2) ? 0 : 1);
+								textFn( (tracks.prop('track').mode == 'showing') ? 0 : 1);
 							}
 						};
 						control
 							.bind('click', function(){
 								var textTrack = tracks.prop('track');
-								textTrack.mode = (textTrack.mode < 2) ? 2 : 0;
+								textTrack.mode = (textTrack.mode != 'showing') ? 'showing' : 'disabled';
 								updateControl();
 							})
 						;

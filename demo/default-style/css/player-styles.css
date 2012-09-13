@@ -379,6 +379,8 @@ body.has-media-fullscreen {
 	bottom: 20px;
 	right: 0px;
 	overflow: hidden;
+	min-width: 130px;
+	max-width: 400px;
 }
 .has-track  .media-controls .subtitle-controls {
 	display: block;
@@ -394,7 +396,6 @@ body.has-media-fullscreen {
 
 .media-controls .subtitle-menu.visible-menu div {
 	visibility: visible;
-	
 }
 
 .media-controls .subtitle-menu ul {
@@ -409,6 +410,11 @@ body.has-media-fullscreen {
 	margin: 1px 0;
 	white-space: nowrap;
 }
+.media-controls .subtitle-menu button.active-track {
+	text-decoration: underline;
+}
+
+
 .media-controls .captions .jme-icon {
 	width: 16px;
 	height: 16px;

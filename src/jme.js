@@ -45,7 +45,7 @@
 
 
 		$.jme = {
-			version: '2.0.0',
+			version: '2.0.1',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -610,7 +610,7 @@
 				};
 				setTimeout(function(){
 					media.bind('loadedmetadata volumechange play pause ended emptied', update);
-					base.bind('updatetimeformat controlsadded playerdimensionchange', update);
+					base.bind('updatetimeformat controlsadded controlschanged playerdimensionchange', update);
 					$(window).bind('resize emchange', update);
 				}, 1);
 				update();
@@ -1318,9 +1318,10 @@
 	 */
 	
 	$.jme.ButtonMenu = function(button, menu, clickHandler){
-		this.menu = $(menu);
+		
 		this.button = $(button).attr({'aria-haspopup': 'true'});
-		this.buttons = $('button', this.menu);
+		
+		
 		
 		this.clickHandler = clickHandler;
 		
@@ -1328,19 +1329,26 @@
 		this.keyIndex = $.proxy(this, 'keyIndex');
 		this._buttonClick = $.proxy(this, '_buttonClick');
 		
-		this.menu.insertAfter(this.button);
 		
+		this.addMenu(menu);
 		this._closeFocusOut();
 		this.button.bind('click', this.toggle);
-		
-		this.menu
-			.bind('keydown', this.keyIndex)
-			.delegate('button', 'click', this._buttonClick)
-		;
 		
 	};
 	
 	$.jme.ButtonMenu.prototype = {
+		addMenu: function(menu){
+			if(this.menu){
+				this.menu.remove();
+			}
+			this.menu = $(menu);
+			this.buttons = $('button', this.menu);
+			this.menu.insertAfter(this.button);
+			this.menu
+				.bind('keydown', this.keyIndex)
+				.delegate('button', 'click', this._buttonClick)
+			;
+		},
 		_closeFocusOut: function(){
 			var that  = this;
 			var timer;
@@ -1388,7 +1396,7 @@
 			}
 			
 			setTimeout(function(){
-				buttons.eq(0).focus();
+				$(buttons.filter('.active-track')[0] || buttons[0]).focus();
 			}, 60);
 		},
 		toggle: function(){
@@ -1407,18 +1415,18 @@
 		}
 	};
 	
+	var showKinds = {subtitles: 1, caption: 1};
 	var getTrackMenu = function(tracks){
-		var items = tracks
-			.map(function(){
-				var className = ($.prop(this, 'kind') == 'caption') ? 'caption-type' : 'subtitle-type';
-				var lang = $.prop(this, 'srclang');
+		var items = $.map(tracks, function(track){
+				var className = (track.kind == 'caption') ? 'caption-type' : 'subtitle-type';
+				var lang = track.language;
 				lang = (lang) ? ' <span class="track-lang">'+ lang +'</span>' : '';
-				return '<li class="'+ className +'" role="presentation"><button role="menuitem">'+ $.prop(this, 'label') + lang +'</button></li>';
+				return '<li class="'+ className +'" role="presentation"><button role="menuitem">'+ track.label + lang +'</button></li>';
 			})
-			.get()
 		;
 		return '<div><ul>' + items.join('') +'</ul></div>';
 	};
+	
 	
 	$.jme.registerPlugin('captions', {
 		pseudoClasses: {
@@ -1429,70 +1437,95 @@
 			menu: 'subtitle-menu'
 		},
 		structure: btnStructure,
-		text: 'subtitles on / subtitles off',
+		text: 'subtitles menu',
 		_create: function(control, media, base, options){
 			var that = this;
-			var tracks = media.find('track').filter('[kind="subtitles"], [kind="caption"], :not([kind]), [data-kind="subtitles"], [data-kind="caption"]');
-			var textFn;
-			var updateControl;
-			var menuObj;
-			var btnTextElem;
 			
-			if(!tracks.length){
+			var trackElems = media.find('track');
+			var btnTextElem = $('span.jme-text, +label span.jme-text', control);
+			if(!btnTextElem[0]){
+				btnTextElem = control;
+			}
+			btnTextElem.html(that.text);
+			if(!trackElems.length){
 				control.prop('disabled', true);
 				base.addClass(that[pseudoClasses].noTrack);
 			} else {
 				base.addClass(that[pseudoClasses].hasTrack);
-				
-				$.webshims.ready('track', function(){
-					if(tracks.length > 1){
-						menuObj = new $.jme.ButtonMenu(control, '<div class="'+that[pseudoClasses].menu +'" >'+ (getTrackMenu(tracks)) +'</div>', function(index, button){
-							tracks.each(function(i){
-								$.prop(this, 'track').mode = (i == index) ? 'showing' : 'disabled';
-								updateControl();
-							});
-						});
-						updateControl = function(){
-							$('button', menuObj.menu).each(function(i){
-								if(tracks.eq(i).prop('readyState') == 3){
-									$(this).prop('disabled', true);
-								} else {
-									$(this)[(tracks.eq(i).prop('track').mode == 'showing') ? 'addClass' : 'removeClass']('active-track');
-								}
-							});
-						};
-						btnTextElem = $('span.jme-text, +label span.jme-text', control);
-						
-						
-						if(!btnTextElem[0]){
-							btnTextElem = control;
-						}
-						btnTextElem.html(that.text);
-						
-					} else {
-						textFn = $.jme.getButtonText(control, [that[pseudoClasses].enabled, that[pseudoClasses].disabled]);
-						updateControl = function(){
-							if(tracks.prop('readyState') == 3){
-								control.prop('disabled', true);
-								textFn(1);
-							} else {
-								textFn( (tracks.prop('track').mode == 'showing') ? 0 : 1);
-							}
-						};
-						control
-							.bind('click', function(){
-								var textTrack = tracks.prop('track');
-								textTrack.mode = (textTrack.mode != 'showing') ? 'showing' : 'disabled';
-								updateControl();
-							})
-						;
-					}
-					tracks.bind('load error', updateControl);
-					base.bind('updatesubtitlestate', updateControl);
-					updateControl();
-				});
 			}
 			
+			
+			$.webshims.ready('track', function(){
+				var menuObj;
+				var tracks = [];
+				var textTracks = media.prop('textTracks');
+				var throttledUpdate = (function(){
+					var timer;
+					var triggerTimer;
+					return function(e){
+						clearTimeout(timer);
+						clearTimeout(triggerTimer);
+						if(e.type == 'updatesubtitlestate'){
+							triggerTimer = setTimeout(function(){
+								media.trigger('updatetracklist');
+							}, 0);
+						}
+						timer = setTimeout(updateTrackMenu, 19);
+					};
+				})();
+				function createSubtitleMenu(menu){
+					if(!menuObj){
+						menuObj = new $.jme.ButtonMenu(control, menu, function(index, button){
+							$.each(tracks, function(i, track){
+								track.mode = (i == index) ? 'showing' : 'disabled';
+								updateMode();
+							});
+						});
+					} else {
+						menuObj.addMenu(menu);
+					}
+					
+					updateMode();
+				}
+				
+				function updateMode(){
+					$('button', menuObj.menu).each(function(i){
+						$(this)[(tracks[i].mode == 'showing') ? 'addClass' : 'removeClass']('active-track');
+					});
+				}
+				
+				function updateTrackMenu(){
+					tracks = [];
+					$.each(textTracks, function(i, track){
+						if(showKinds[track.kind]){
+							tracks.push(track);
+						}
+					});
+					if(tracks.length){
+						createSubtitleMenu('<div class="'+that[pseudoClasses].menu +'" >'+ (getTrackMenu(tracks)) +'</div>');
+						if(!base.hasClass(that[pseudoClasses].hasTrack) || base.hasClass(that[pseudoClasses].noTrack)){
+							control.prop('disabled', false);
+							base
+								.addClass(that[pseudoClasses].hasTrack)
+								.removeClass(that[pseudoClasses].noTrack)
+								.triggerHandler('controlschanged')
+							;
+						}
+					} else if(!base.hasClass(that[pseudoClasses].noTrack) || base.hasClass(that[pseudoClasses].hasTrack)){
+						control.prop('disabled', true);
+						base
+							.addClass(that[pseudoClasses].noTrack)
+							.removeClass(that[pseudoClasses].hasTrack)
+							.triggerHandler('controlschanged')
+						;
+					}
+				}
+				
+				updateTrackMenu();
+				$([textTracks]).on('addtrack removetrack', throttledUpdate);
+				base.bind('updatesubtitlestate', throttledUpdate);
+				
+			});
 			
 		}
 		

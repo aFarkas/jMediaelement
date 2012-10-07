@@ -410,10 +410,24 @@ body.has-media-fullscreen {
 	margin: 1px 0;
 	white-space: nowrap;
 }
-.media-controls .subtitle-menu button.active-track {
+.media-controls .subtitle-menu button:before {
+	content: '';
+	display: inline-block;
+	margin: -0.1em 3px 0 0;
+	vertical-align: middle;
+	width: 5px;
+	height: 5px;
+	border: 1px solid #ccc;
+	border-radius: 50%;
+}
+
+.media-controls .subtitle-menu button[aria-checked="true"] {
 	text-decoration: underline;
 }
 
+.media-controls .subtitle-menu button[aria-checked="true"]:before {
+	background: #fff;
+}
 
 .media-controls .captions .jme-icon {
 	width: 16px;

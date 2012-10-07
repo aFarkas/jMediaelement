@@ -45,7 +45,7 @@
 
 
 		$.jme = {
-			version: '2.0.1',
+			version: '2.0.2',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -708,18 +708,19 @@
 
 			$(baseSelector, context).add(insertedElement.filter(baseSelector)).jmePlayer();
 		};
-
-		$(function(){
-			createSelectors();
-			initJME(document, $([]));
-		});
-		webshims.ready('mediaelement', function(){
-			webshims.addReady(function(context, insertedElement){
-				if(context !== document){
-					initJME(context, insertedElement);
-				}
+		setTimeout(function(){
+			$(function(){
+				createSelectors();
+				initJME(document, $([]));
 			});
-		});
+			webshims.ready('mediaelement', function(){
+				webshims.addReady(function(context, insertedElement){
+					if(context !== document){
+						initJME(context, insertedElement);
+					}
+				});
+			});
+		}, 9);
 
 })(jQuery);
 	
@@ -1396,7 +1397,7 @@
 			}
 			
 			setTimeout(function(){
-				$(buttons.filter('.active-track')[0] || buttons[0]).focus();
+				$(buttons.filter('[aria-checked="true"]')[0] || buttons[0]).focus();
 			}, 60);
 		},
 		toggle: function(){
@@ -1421,7 +1422,7 @@
 				var className = (track.kind == 'caption') ? 'caption-type' : 'subtitle-type';
 				var lang = track.language;
 				lang = (lang) ? ' <span class="track-lang">'+ lang +'</span>' : '';
-				return '<li class="'+ className +'" role="presentation"><button role="menuitem">'+ track.label + lang +'</button></li>';
+				return '<li class="'+ className +'" role="presentation"><button role="menuitemcheckbox">'+ track.label + lang +'</button></li>';
 			})
 		;
 		return '<div><ul>' + items.join('') +'</ul></div>';
@@ -1473,13 +1474,19 @@
 						timer = setTimeout(updateTrackMenu, 19);
 					};
 				})();
+				
 				function createSubtitleMenu(menu){
 					if(!menuObj){
 						menuObj = new $.jme.ButtonMenu(control, menu, function(index, button){
-							$.each(tracks, function(i, track){
-								track.mode = (i == index) ? 'showing' : 'disabled';
-								updateMode();
-							});
+							if($.attr(button, 'aria-checked') == 'true'){
+								tracks[index].mode = 'disabled';
+							} else {
+								$.each(tracks, function(i, track){
+									track.mode = (i == index) ? 'showing' : 'disabled';
+								});
+							}
+							media.prop('textTracks');
+							updateMode();
 						});
 					} else {
 						menuObj.addMenu(menu);
@@ -1490,14 +1497,14 @@
 				
 				function updateMode(){
 					$('button', menuObj.menu).each(function(i){
-						$(this)[(tracks[i].mode == 'showing') ? 'addClass' : 'removeClass']('active-track');
+						$.attr(this, 'aria-checked', (tracks[i].mode == 'showing') ? 'true' : 'false');
 					});
 				}
 				
 				function updateTrackMenu(){
 					tracks = [];
 					$.each(textTracks, function(i, track){
-						if(showKinds[track.kind]){
+						if(showKinds[track.kind] && track.readyState != 3){
 							tracks.push(track);
 						}
 					});
@@ -1520,10 +1527,14 @@
 						;
 					}
 				}
-				
-				updateTrackMenu();
-				$([textTracks]).on('addtrack removetrack', throttledUpdate);
-				base.bind('updatesubtitlestate', throttledUpdate);
+				if(!textTracks){
+					textTracks = [];
+					updateTrackMenu();
+				} else {
+					updateTrackMenu();
+					$([textTracks]).on('addtrack removetrack', throttledUpdate);
+					base.bind('updatesubtitlestate', throttledUpdate);
+				}
 				
 			});
 			

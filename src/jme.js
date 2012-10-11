@@ -21,6 +21,9 @@
 				if(!args){
 					args = []; 
 				}
+				if(window.console){
+					console.log('$.fn.callProp deprecated. use $.fn.jmeFn instead', prop, args);
+				}
 				this.each(function(){
 					var fn = $.prop(this, prop);
 
@@ -133,11 +136,10 @@
 		;
 		
 		$.fn.jmeFn = function(fn){
-
 			var args = Array.prototype.slice.call( arguments, 1 );
 			var ret;
 			this.each(function(){
-				ret = fns[fn].apply(this, args);
+				ret = (fns[fn] || $.prop(this, fn)).apply(this, args);
 				if(ret !== undefined){
 					return false;
 				}
@@ -150,7 +152,7 @@
 		var baseSelector;
 		var pluginSelectors = [];
 		var ns = '';
-		var createSelectors = function(){
+		$.jme.createSelectors = function(){
 			if(baseSelector){return;}
 			ns = $.jme.classNS;
 			baseSelector = 'div.'+ns+ 'mediaplayer';
@@ -166,6 +168,25 @@
 
 			});
 			pluginSelectors = pluginSelectors.join(',');
+		};
+		$.jme.initJME = function(context, insertedElement){
+			$('video, audio', context)
+				.add(insertedElement.filter('video, audio'))
+				.filter('[data-muted]')
+				.each(function(){
+					$.prop(this, 'muted', true);
+				})
+				.end()
+				.filter('[data-volume]')
+				.each(function(){
+					var defaultVolume = $(this).data('volume');
+					if(defaultVolume <= 1 && defaultVolume >= 0){
+						$.prop(this, 'volume', defaultVolume);
+					}
+				})
+			;
+	
+			$(baseSelector, context).add(insertedElement.filter(baseSelector)).jmePlayer();
 		};
 
 		var idlStates = {
@@ -283,36 +304,6 @@
 			return txtChangeFn;
 		};
 
-//		$.jme.timedClass = {
-//			add: function(elem, className, max){
-//				$.jme.timedClass.remove(elem, className);
-//				elem = $(elem);
-//				if(!max){
-//					max = 20;
-//				}
-//				var data = $.data(elem[0], 'timedClass'+className, {
-//					i: 0,
-//					timer: setInterval(function(){
-//						elem.removeClass(className+'-'+ data.i);
-//						data.i++;
-//						if(data.i > max){
-//							data.i = 0;
-//						}
-//						elem.addClass(className+'-'+ data.i);
-//					}, 25)
-//				});
-//			},
-//			remove: function(elem, className){
-//				elem = $(elem);
-//				var data = $.data(elem[0], 'timedClass'+className);
-//				if(data){
-//					elem.removeClass(className+'-'+ data.i);
-//					clearInterval(data.timer);
-//					$.removeData(elem[0], 'timedClass'+className);
-//				}
-//			}
-//		};
-
 		$.fn.jmePlayer = function(opts){
 			var removeClasses = ['idle', 'playing', 'ended', 'waiting', 'mediaerror'].map(function(state){
 				return ns+'state-'+state;
@@ -358,18 +349,14 @@
 						if(idlStates[state]){
 							state = 'idle';
 						}
-//						if(state == 'waiting'){
-//							$.jme.timedClass.add(base, ns +'state-'+ state);
-//						} else {
-//							$.jme.timedClass.remove(base, ns +'state-'+ state);
-//						}
+						
 						base.removeClass(removeClasses).addClass(ns +'state-'+ state);
 					};
 					jmeData.media = media;
 					jmeData.player = base;
 					media
 						.bind('ended', function(){
-							media.callProp('pause');
+							media.jmeFn('pause');
 						})
 						.bind('emptied waiting playing ended pause mediaerror', mediaUpdateFn)
 						.bind('volumechange updateJMEState', function(){
@@ -493,13 +480,13 @@
 				} else {
 					setSrc(0, srces);
 				}
-				data.media.callProp('load');
+				data.media.jmeFn('load');
 				return 'noDataSet';
 			}
 		});
 		
 		$.jme.defineMethod('togglePlay', function(){
-			$(this).callProp( ( props.isPlaying.get(this) ) ? 'pause' : 'play' );
+			$(this).jmeFn( ( props.isPlaying.get(this) ) ? 'pause' : 'play' );
 		});
 
 
@@ -688,40 +675,6 @@
 				};
 			});
 		})();
-
-		var initJME = function(context, insertedElement){
-			$('video, audio', context)
-				.add(insertedElement.filter('video, audio'))
-				.filter('[data-muted]')
-				.each(function(){
-					$.prop(this, 'muted', true);
-				})
-				.end()
-				.filter('[data-volume]')
-				.each(function(){
-					var defaultVolume = $(this).data('volume');
-					if(defaultVolume <= 1 && defaultVolume >= 0){
-						$.prop(this, 'volume', defaultVolume);
-					}
-				})
-			;
-
-			$(baseSelector, context).add(insertedElement.filter(baseSelector)).jmePlayer();
-		};
-		setTimeout(function(){
-			$(function(){
-				createSelectors();
-				initJME(document, $([]));
-			});
-			webshims.ready('mediaelement', function(){
-				webshims.addReady(function(context, insertedElement){
-					if(context !== document){
-						initJME(context, insertedElement);
-					}
-				});
-			});
-		}, 9);
-
 })(jQuery);
 	
 (function($){
@@ -847,8 +800,10 @@
 
 	$.jme.registerPlugin('volume-slider', {
 		structure: defaultStructure,
+		
 		_create: function(control, media, base){
 			loadJqueryUI();
+			
 			var volume = createGetSetHandler(
 				function(){
 					var volume = media.prop('volume');
@@ -884,12 +839,15 @@
 
 	$.jme.registerPlugin('time-slider', {
 		structure: defaultStructure,
+		pseudoClasses: {
+			no: 'no-duration'
+		},
 		options: {
 			format: ['mm', 'ss']
 		},
 		_create: function(control, media, base){
 			loadJqueryUI();
-			
+			var module = this;
 			var time = createGetSetHandler(
 				function(){
 					var time = media.prop('currentTime');
@@ -908,11 +866,24 @@
 			);
 			var createFn = function(){
 				var duration = media.prop('duration');
-				
+				var hasDuration = $.jme.classNS+'has-duration';
+				var noDuration = $.jme.classNS+'no-duration';
+				var durationChange = function(){
+					duration = media.prop('duration');
+					if(duration && isFinite(duration) && !isNaN(duration)){
+						control
+							._uiSlider('option', 'disabled', false)
+							._uiSlider('option', 'max', duration)
+						;
+						base.removeClass(module[pseudoClasses].no);
+					} else {
+						control._uiSlider('option', 'disabled', true);
+						control._uiSlider('value', 0);
+						base.addClass(module[pseudoClasses].no);
+					}
+				};
 				control._uiSlider({
 					range: 'min',
-					max: duration || 1,
-					disabled: !duration || !isFinite(duration),
 					step: 0.1,
 					value: media.prop('currentTime'),
 					slide: function(e, data){
@@ -924,19 +895,12 @@
 				media.bind({
 					timeupdate: time.get,
 					emptied: function(){
-						control._uiSlider('option', 'disabled', true);
+						durationChange();
 						control._uiSlider('value', 0);
 					},
-					durationchange: function(){
-						duration = media.prop('duration');
-						if(duration && isFinite(duration)){
-							control
-								._uiSlider('option', 'disabled', false)
-								._uiSlider('option', 'max', duration)
-							;
-						}
-					}
+					durationchange: durationChange
 				});
+				durationChange();
 			};
 			base.jmeFn('addControls', $('<div class="'+ $.jme.classNS +'buffer-progress" />').prependTo(control) );
 			onSliderReady(createFn);
@@ -1258,7 +1222,7 @@
 
 				}
 				data.player.triggerHandler('playerdimensionchange', ['fullwindow']);
-				data.media.callProp('play');
+				data.media.jmeFn('play');
 			} else {
 				if(!data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
 				$(document).unbind('.jmefullscreen');
@@ -1433,7 +1397,7 @@
 		pseudoClasses: {
 			enabled: 'state-captionsenabled',
 			disabled: 'state-captionsdisabled',
-			noTrack: 'no-tracks',
+			noTrack: 'no-track',
 			hasTrack: 'has-track',
 			menu: 'subtitle-menu'
 		},
@@ -1574,4 +1538,20 @@
 		
 	});
 	
+})(jQuery);
+
+(function($){
+	$(function(){
+		$.jme.createSelectors();
+		if(!$.jme.blockInit){
+			$.jme.initJME(document, $([]));
+		}
+	});
+	$.webshims.ready('mediaelement', function(){
+		$.webshims.addReady(function(context, insertedElement){
+			if(context !== document){
+				$.jme.initJME(context, insertedElement);
+			}
+		});
+	});
 })(jQuery);

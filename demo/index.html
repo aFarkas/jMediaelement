@@ -3,6 +3,9 @@
 <head>
 	<meta charset="utf-8"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	
+	<link href="demo-style/styles.css" rel="stylesheet" />
+	
 	<link href="default-style/css/player-styles.css" rel="stylesheet" />
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.js"></script>
@@ -30,381 +33,399 @@
 		}
 	</script>
 	<title>jme2</title>
+	
+	
 </head>
 <body>
-	<div class="intro">
-		<p>JME is a declarative HTML component library including DOM APIs and CSS-hooks to extend/customize HTML5 mediaelements (audio/video)</p>
+<div class="intro">
+	<p>JME is a declarative HTML component library including DOM APIs and CSS-hooks to extend/customize HTML5 mediaelements (audio/video)</p>
+</div>
+<div class="mediaplayer" data-jme='{"controlbar": true}'>
+	<video preload="none" poster="media/sintel/sintel-trailer.png">
+		<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
+		<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
+		
+		<track kind="subtitles" src="media/sintel/sintel-trailer_en.vtt" srclang="en" label="English subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_de.vtt" srclang="de" label="German subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_es.vtt" srclang="es" label="Spanish subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_fr.vtt" srclang="fr" label="French subtitles" />
+	</video>
+</div>
+
+
+<div class="element">
+	<h3>mediaplayer</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>mediaplayer</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		<dt>
+			jme pseudo classes
+		</dt>
+		<dd>
+			<dl>
+				<dt>media state classes</dt>
+				<dd><code>state-idle</code></dd>
+				<dd><code>state-waiting</code></dd>
+				<dd><code>state-playing</code></dd>
+				<dd><code>state-initial</code></dd>
+				<dd><code>state-ended</code></dd>
+				<dd><code>state-error</code></dd>
+				<dt>user state classes</dt>
+				<dd><code>focusenter</code></dd>
+				<dd><code>useractive</code></dd>
+				<dd><code>fover</code></dd>
+				<dd><code>(:hover)</code></dd>
+			</dl>
+		</dd>
+		
+		<dt>
+			jme content attributes
+		</dt>
+		<dd>
+			<code>controlbar</code>
+		</dd>
+		<dd>
+			<code>controls</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				property boolean controlbar;
+				property boolean fullscreen;
+				readonly property jQuery media; 
+				jQuery addControls(controls);
+			};</pre>
+		</dd>
+	</dl>
+	<div class="element-intro">
+		<p>The <code>mediaplayer</code> element class wraps a mediaelement (audio/video) and associates this mediaelement with its control elements. The <code>mediaplayer</code> element class serves also as an user interaction wrapper for the player.</p>
 	</div>
-	<div class="mediaplayer" preload="none" data-jme='{"controlbar": true}'>
-		<video poster="media/sintel/sintel-trailer.png">
+	<p>Using jme pseudo classes to build the user interface.</p>
+	<pre class="example">
+		<code>
+			.mediaplayer .media-controls {
+				transition: all 400ms ease 0s;
+			}
+			/* hide player controls, if mediaelement is playing,... */
+			.mediaplayer.state-playing .media-controls {
+				opacity: 0;
+			}
+			/* ...but show controls if user is moving his mouse */
+			.mediaplayer.useractive .media-controls {
+				opacity: 1;
+			}
+		</code>
+	</pre>
+	<p>Using jme interface to switch to custom styleable controls:</p>
+	<pre class="example">
+		<code>
+			$('div.mediaplayer').jmeProp('controlbar', true);
+		</code>
+	</pre>
+	<p>Using jme interface to toggle fullscreen:</p>
+	<pre class="example">
+		<code>
+			$('div.mediaplayer').jmeProp('fullscreen', function(i, state){
+			    return !state;
+			});
+		</code>
+	</pre>
+	
+	<p>Dynamically add a new control to a mediaplayer:</p>
+	<pre class="example">
+		<code>
+			$('div.mediaplayer')
+				.jmeFn('addControls', $('&lt;button class="play-pause"&gt;play/pause&lt;/button&gt;').prependTo('body') )
+			;
+		</code>
+	</pre>
+</div>
+
+<div class="element">
+	<h3>JME extensions for native audio/video element</h3>
+	<dl class="element">
+		<dt>
+			elements
+		</dt>
+		<dd>
+			<code>audio</code>
+		</dd>
+		<dd>
+			<code>video</code>
+		</dd>
+		
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				property mixed srces;
+				readonly property boolean isPlaying;
+				readonly property number progress;
+				jQuery togglePlay();
+				Rangearray concerningRange([type:string ("buffered"), time:string (currentTime)]);
+				formatedTime formatTime(seconds:number[, format:Array]); 
+			};</pre>
+		</dd>
+	</dl>
+</div>
+
+<div class="element">
+	<h3>play-pause button</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>play-pause</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>button</code>
+		</dd>
+		<dt>
+			jme pseudo classes
+		</dt>
+		<dd>
+			<code>state-paused</code>,  <code>state-playing</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+			};</pre>
+		</dd>
+	</dl>
+	<div class="example">
+		<button class="play-pause control-example">play / pause</button>
+	</div>
+</div>
+<div class="element">
+	<h3>mute-unmute button</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>mute-unmute</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>button</code>
+		</dd>
+		<dt>
+			jme pseudo classes
+		</dt>
+		<dd>
+			<code>state-mute</code>,  <code>state-unmute</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+			};</pre>
+		</dd>
+	</dl>
+	<div class="example">
+		<button class="mute-unmute control-example">mute /unmute</button>
+	</div>
+</div>
+<div class="element">
+	<h3>buffer-progress</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>buffer-progress</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+				readonly proptery Number progress;
+			};</pre>
+		</dd>
+	</dl>
+</div>
+<div class="element">
+	<h3>volume-slider</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>volume-slider</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+			};</pre>
+		</dd>
+	</dl>
+</div>
+<div class="element">
+	<h3>time-slider</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>time-slider</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		<dt>
+			jme content attributes
+		</dt>
+		<dd>
+			<code>format</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+				property mixed format; //not implemented yet
+			};</pre>
+		</dd>
+	</dl>
+</div>
+
+<div class="element">
+	<h3>currenttime-display</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>currenttime-display</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		<dt>
+			jme content attributes
+		</dt>
+		<dd>
+			<code>format</code>
+		</dd>
+		<dd>
+			<code>countdown</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+				property boolean countdown;
+				property mixed format;
+			};</pre>
+		</dd>
+	</dl>
+	
+	<div class="example">
+		<span class="currenttime-display control-example" data-jme='{"countdown": true, "format": "hh:mm:ss"}'></span>
+	</div>
+</div>
+
+<div class="element">
+	<h3>duration-display</h3>
+	<dl class="element">
+		<dt>
+			jme element class
+		</dt>
+		<dd>
+			<code>currenttime-display</code>
+		</dd>
+		<dt>
+			prefered elements
+		</dt>
+		<dd>
+			<code>div</code>
+		</dd>
+		<dt>
+			jme content attributes
+		</dt>
+		<dd>
+			<code>format</code>
+		</dd>
+		<dt>jme interface</dt>
+		<dd>
+			<pre class="idl">{
+				readonly property jQuery player;
+				readonly property jQuery media;
+				property mixed format;
+			};</pre>
+		</dd>
+	</dl>
+</div>
+
+<hr />
+
+<div style="width: 100%;" >
+	<h3>intrinsic ratio responsive/fluid video</h3>
+	<p>based on  http://www.alistapart.com/articles/creating-intrinsic-ratios-for-video/</p>
+	
+	<h4>16:9 ratio</h4>
+	<div class="mediaplayer ratio-16-9" data-jme='{"controlbar": true}'>
+		<video poster="media/sintel/sintel-trailer.png" preload="none" style="width: 100%; height: 100%;">
 			<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
 			<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
-			
-			<track kind="subtitles" src="media/sintel/sintel-trailer_en.vtt" srclang="en" label="English subtitles" />
-			<track kind="subtitles" src="media/sintel/sintel-trailer_de.vtt" srclang="de" label="German subtitles" />
-			<track kind="subtitles" src="media/sintel/sintel-trailer_es.vtt" srclang="es" label="Spanish subtitles" />
-			<track kind="subtitles" src="media/sintel/sintel-trailer_fr.vtt" srclang="fr" label="French subtitles" />
 		</video>
 	</div>
-		
 	
-	<div class="element">
-		<h3>mediaplayer</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>mediaplayer</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			<dt>
-				jme pseudo classes
-			</dt>
-			<dd>
-				<dl>
-					<dt>media state classes</dt>
-					<dd><code>state-idle</code></dd>
-					<dd><code>state-waiting</code></dd>
-					<dd><code>state-playing</code></dd>
-					<dd><code>state-initial</code></dd>
-					<dd><code>state-ended</code></dd>
-					<dd><code>state-error</code></dd>
-					<dt>user state classes</dt>
-					<dd><code>focusenter</code></dd>
-					<dd><code>useractive</code></dd>
-					<dd><code>fover</code></dd>
-					<dd><code>(:hover)</code></dd>
-				</dl>
-			</dd>
-			
-			<dt>
-				jme content attributes
-			</dt>
-			<dd>
-				<code>controlbar</code>
-			</dd>
-			<dd>
-				<code>controls</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					property boolean controlbar;
-					property boolean fullscreen;
-					readonly property jQuery media; 
-					jQuery addControls(controls);
-				};</pre>
-			</dd>
-		</dl>
-		<div class="element-intro">
-			<p>The <code>mediaplayer</code> element class wraps a mediaelement (audio/video) and associates this mediaelement with its control elements. The <code>mediaplayer</code> element class serves also as an user interaction wrapper for the player.</p>
-		</div>
-		<p>Using jme pseudo classes to build the user interface.</p>
-		<pre class="example">
-			<code>
-				.mediaplayer .media-controls {
-					transition: all 400ms ease 0s;
-				}
-				/* hide player controls, if mediaelement is playing,... */
-				.mediaplayer.state-playing .media-controls {
-					opacity: 0;
-				}
-				/* ...but show controls if user is moving his mouse */
-				.mediaplayer.useractive .media-controls {
-					opacity: 1;
-				}
-			</code>
-		</pre>
-		<p>Using jme interface to switch to custom styleable controls:</p>
-		<pre class="example">
-			<code>
-				$('div.mediaplayer').jmeProp('controlbar', true);
-			</code>
-		</pre>
-		<p>Using jme interface to toggle fullscreen:</p>
-		<pre class="example">
-			<code>
-				$('div.mediaplayer').jmeProp('fullscreen', function(i, state){
-				    return !state;
-				});
-			</code>
-		</pre>
-		
-		<p>Dynamically add a new control to a mediaplayer:</p>
-		<pre class="example">
-			<code>
-				$('div.mediaplayer')
-					.jmeFn('addControls', $('&lt;button class="play-pause"&gt;play/pause&lt;/button&gt;').prependTo('body') )
-				;
-			</code>
-		</pre>
+	<h4>4:3 ratio</h4>
+	<div class="mediaplayer ratio-4-3" data-jme='{"controlbar": true}'>
+		<video poster="media/sintel/sintel-trailer.png" preload="none" style="width: 100%; height: 100%;">
+			<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
+			<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
+		</video>
 	</div>
-	
-	<div class="element">
-		<h3>JME extensions for native audio/video element</h3>
-		<dl class="element">
-			<dt>
-				elements
-			</dt>
-			<dd>
-				<code>audio</code>
-			</dd>
-			<dd>
-				<code>video</code>
-			</dd>
-			
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					property mixed srces;
-					readonly property boolean isPlaying;
-					readonly property number progress;
-					jQuery togglePlay();
-					Rangearray concerningRange([type:string ("buffered"), time:string (currentTime)]);
-					formatedTime formatTime(seconds:number[, format:Array]); 
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	
-	<div class="element">
-		<h3>play-pause button</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>play-pause</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>button</code>
-			</dd>
-			<dt>
-				jme pseudo classes
-			</dt>
-			<dd>
-				<code>state-paused</code>,  <code>state-playing</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	<div class="element">
-		<h3>mute-unmute button</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>mute-unmute</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>button</code>
-			</dd>
-			<dt>
-				jme pseudo classes
-			</dt>
-			<dd>
-				<code>state-mute</code>,  <code>state-unmute</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	<div class="element">
-		<h3>buffer-progress</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>buffer-progress</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-					readonly proptery Number progress;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	<div class="element">
-		<h3>volume-slider</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>volume-slider</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	<div class="element">
-		<h3>time-slider</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>time-slider</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			<dt>
-				jme content attributes
-			</dt>
-			<dd>
-				<code>format</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-					property mixed format; //not implemented yet
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	
-	<div class="element">
-		<h3>currenttime-display</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>currenttime-display</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			<dt>
-				jme content attributes
-			</dt>
-			<dd>
-				<code>format</code>
-			</dd>
-			<dd>
-				<code>countdown</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-					property boolean countdown;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	
-	<div class="element">
-		<h3>duration-display</h3>
-		<dl class="element">
-			<dt>
-				jme element class
-			</dt>
-			<dd>
-				<code>currenttime-display</code>
-			</dd>
-			<dt>
-				prefered elements
-			</dt>
-			<dd>
-				<code>div</code>
-			</dd>
-			<dt>
-				jme content attributes
-			</dt>
-			<dd>
-				<code>format</code>
-			</dd>
-			<dt>jme interface</dt>
-			<dd>
-				<pre class="idl">{
-					readonly property jQuery player;
-					readonly property jQuery media;
-					property mixed format;
-				};</pre>
-			</dd>
-		</dl>
-	</div>
-	
-	<hr />
-	
-	<div style="width: 30%;">
-		<h3>intrinsic ratio responsive/fluid video</h3>
-		<p>based on  http://www.alistapart.com/articles/creating-intrinsic-ratios-for-video/</p>
-		<h4>4:3 ratio</h4>
-		<div class="mediaplayer ratio-4-3" preload="none" data-jme='{"controlbar": true}'>
-			<video poster="media/sintel/sintel-trailer.png" style="width: 100%; height: 100%;">
-				<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
-				<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
-			</video>
-		</div>
-		
-		<h4>16:9 ratio</h4>
-		<div class="mediaplayer ratio-16-9" preload="none" data-jme='{"controlbar": true}'>
-			<video poster="media/sintel/sintel-trailer.png" style="width: 100%; height: 100%;">
-				<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
-				<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
-			</video>
-		</div>
-	</div>
-	
+</div>
+<script>
+	jQuery(function(){
+		$('div.mediaplayer').eq(0).jmeFn('addControls', '.control-example');
+	});
+</script>
 </body>
 </html>

@@ -1498,6 +1498,13 @@
 					updateTrackMenu();
 					$([textTracks]).on('addtrack removetrack', throttledUpdate);
 					base.bind('updatesubtitlestate', throttledUpdate);
+					media.bind('updatetrackdisplay', (function(){
+						var timer;
+						return function(){
+							clearTimeout(timer);
+							timer = setTimeout(updateMode, 20);
+						};
+					})());
 				}
 				
 			});

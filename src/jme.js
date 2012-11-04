@@ -685,6 +685,11 @@
 		playing: 1
 	};
 	
+	var pauseStates = {
+		pause: 1,
+		ended: 1
+	};
+	
 	var assumeIE7 = ($.browser.msie && parseFloat($.browser.version, 10) < 8);
 
 
@@ -711,12 +716,12 @@
 			media
 				.bind('play playing ended pause updateJMEState', function(e){
 					var state = e.type;
-					if(state == 'updateJMEState'){
-						state = (media.jmeProp('isPlaying') )? 1 : 0;
-					} else if(playStates[state]){
+					if(playStates[state]){
 						state = 1;
-					} else {
+					} else if(pauseStates[state]) {
 						state = 0;
+					} else {
+						state = (media.jmeProp('isPlaying') )? 1 : 0;
 					}
 					textFn(state);
 				})
@@ -1085,8 +1090,9 @@
 	$.jme.fullscreen = (function() {
 		var parentData;
 		var tmpData;
+		var doc = document.documentElement;
 		var fullScreenApi = {
-			supportsFullScreen: false,
+			supportsFullScreen: Modernizr.prefixed('fullscreenEnabled', document, false) || Modernizr.prefixed('fullScreenEnabled', document, false),
 			isFullScreen: function() { return false; },
 			requestFullScreen: function(elem){
 				parentData = [];
@@ -1132,43 +1138,37 @@
 				}
 			},
 			eventName: 'fullscreenchange',
-			prefix: ''
-		},
-		browserPrefixes = 'webkit moz o ms khtml'.split(' ');
-
-		// check for native support
-		if (typeof document.cancelFullScreen != 'undefined') {
-			fullScreenApi.supportsFullScreen = true;
-		} else {
-			// check for fullscreen support by vendor prefix
-			for (var i = 0, il = browserPrefixes.length; i < il; i++ ) {
-				fullScreenApi.prefix = browserPrefixes[i];
-				if (typeof document[fullScreenApi.prefix + 'CancelFullScreen' ] != 'undefined' ) {
-					fullScreenApi.supportsFullScreen = true;
-					break;
-				}
-			}
-		}
+			exitName: 'exitFullscreen',
+			requestName: 'requestFullscreen',
+			elementName: 'fullscreenElement',
+			enabledName: ''
+		};
 
 		// update methods to do something useful
 		if (fullScreenApi.supportsFullScreen) {
-			fullScreenApi.eventName = fullScreenApi.prefix + 'fullscreenchange';
-
+			fullScreenApi.enabledName = fullScreenApi.supportsFullScreen;
+			fullScreenApi.exitName = Modernizr.prefixed("exitFullscreen", document, false) || Modernizr.prefixed("cancelFullScreen", document, false);
+			fullScreenApi.elementName = Modernizr.prefixed("fullscreenElement", document, false) || Modernizr.prefixed("fullScreenElement", document, false);
+			fullScreenApi.supportsFullScreen = !!fullScreenApi.supportsFullScreen;
+			if(fullScreenApi.elementName != 'fullscreenElement' || fullScreenApi.exitName != 'exitFullscreen' || fullScreenApi.enabledName != 'fullscreenEnabled'){
+				$.each(Modernizr._domPrefixes, function(i, prefix){
+					var requestName = prefix+'RequestFullScreen';
+					if((requestName in doc)){
+						fullScreenApi.eventName = prefix + 'fullscreenchange';
+						fullScreenApi.requestName = requestName;
+						return false;
+					}
+				});
+			}
+			
 			fullScreenApi.isFullScreen = function() {
-				switch (fullScreenApi.prefix) {
-					case '':
-					return document.fullScreen;
-					case 'webkit':
-					return document.webkitIsFullScreen;
-					default:
-					return document[fullScreenApi.prefix + 'FullScreen'];
-				}
+				return document[fullScreenApi.elementName];
 			};
 			fullScreenApi.requestFullScreen = function(el) {
-				return (fullScreenApi.prefix === '') ? el.requestFullScreen() : el[this.prefix + 'RequestFullScreen']();
+				return el[fullScreenApi.requestName]();
 			};
-			fullScreenApi.cancelFullScreen = function(el) {
-				return (fullScreenApi.prefix === '') ? document.cancelFullScreen() : document[this.prefix + 'CancelFullScreen']();
+			fullScreenApi.cancelFullScreen = function() {
+				return document[fullScreenApi.exitName]();
 			};
 		}
 
@@ -1199,9 +1199,9 @@
 
 				try {
 					$.jme.fullscreen.requestFullScreen(data.player[0]);
-				} catch(er){}
-
-
+				} catch(er){
+				}
+				
 				$('html').addClass($.jme.classNS+'has-media-fullscreen');
 
 				data.player.addClass($.jme.classNS+'player-fullscreen');

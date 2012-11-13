@@ -146,15 +146,11 @@ video {
 	padding: 0 10px;
 	-moz-transition: all 400ms;
 	-webkit-transition: all 400ms;
-	-ms-transition: all 400ms;
-	-o-transition: all 400ms;
 	transition: all 400ms;
 }
 .mediaplayer.state-playing .media-controls {
 	-moz-transform: translate(0, 60%);
 	-webkit-transform: translate(0, 60%);
-	-ms-transform: translate(0, 60%);
-	-o-transform: translate(0, 60%);
 	transform: translate(0, 60%);
 	opacity: 0;
 }
@@ -164,8 +160,6 @@ video {
 .mediaplayer.useractive .media-controls {
 	-moz-transform: translate(0, 0);
 	-webkit-transform: translate(0, 0);
-	-ms-transform: translate(0, 0);
-	-o-transform: translate(0, 0);
 	transform: translate(0, 0);
 	opacity: 1;
 }

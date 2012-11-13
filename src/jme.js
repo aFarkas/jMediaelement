@@ -15,32 +15,6 @@
 			$('html').addClass($.support.opacity ? 'opacity' : 'no-opacity');
 		}
 
-		if(!$.fn.callProp){
-			$.fn.callProp  = function(prop, args){
-				var ret;
-				if(!args){
-					args = []; 
-				}
-				if(window.console){
-					console.log('$.fn.callProp deprecated. use $.fn.jmeFn instead', prop, args);
-				}
-				this.each(function(){
-					var fn = $.prop(this, prop);
-
-					if (fn && fn.apply) {
-						ret = fn.apply(this, args);
-						if (ret !== undefined) {
-							return false;
-						}
-					}
-				});
-				return (ret !== undefined) ? ret : this;
-			};
-		}
-
-
-
-
 		var props = {};
 
 		var fns = {};
@@ -320,22 +294,28 @@
 				var jmeData = $.jme.data(this);
 				var mediaData = $.jme.data(media[0]);
 				var mediaUpdateFn;
-				var init;
-				var focusenterTimer;
-				var foverTimer;
+				var init, focusenterTimer, foverTimer, canPlay, removeCanPlay, canplayTimer;
 				
 				mediaData.player = base;
 				mediaData.media = media;
 				if(!jmeData.media){
 					init = true;
+					removeCanPlay = function(){
+						media.unbind('canplay', canPlay);
+						clearTimeout(canplayTimer);
+					};
+					canPlay = function(){
+						var state = ($.prop(this, 'paused')) ? 'idle' : 'playing';
+						base.removeClass(removeClasses).addClass(ns +'state-'+ state);
+					};
 					mediaUpdateFn = function(e){
 						var state = e.type;
 						var readyState;
 						var paused;
+						removeCanPlay();
 						if(state == 'ended' || $.prop(this, 'ended')){
 							state = 'ended';
-						}
-						if(state == 'updateJMEState'){
+						}else if(state == 'updateJMEState'){
 							readyState = $.prop(this, 'readyState');
 							paused = $.prop(this, 'paused');
 							if(!paused && readyState < 3){
@@ -345,18 +325,32 @@
 							} else {
 								state = 'idle';
 							}
-						}
-						if(idlStates[state]){
+						} else if(state == 'waiting'){
+							
+							if($.prop(this, 'readyState') > 2){
+								return;
+							} 
+							
+							canplayTimer = setTimeout(function(){
+								if(media.prop('readyState') > 2){
+									canPlay();
+								}
+							}, 9);
+							media.bind('canPlay', canPlay);
+						} else if(idlStates[state]){
 							state = 'idle';
 						}
-						
-						base.removeClass(removeClasses).addClass(ns +'state-'+ state);
+						if(state){
+							base.removeClass(removeClasses).addClass(ns +'state-'+ state);
+						}
 					};
 					jmeData.media = media;
 					jmeData.player = base;
 					media
 						.bind('ended', function(){
+							removeCanPlay();
 							media.jmeFn('pause');
+							media.jmeFn('load');
 						})
 						.bind('emptied waiting playing ended pause mediaerror', mediaUpdateFn)
 						.bind('volumechange updateJMEState', function(){
@@ -364,14 +358,14 @@
 						})
 						.bind('emptied updateJMEState play playing waiting', function(e){
 							var action;
-							if(e.type == 'emptied'){
+							if(e.type == 'emptied' || (e.type == 'updateJMEState' && $.prop(this, 'paused'))){
 								action = 'addClass';
 							} else if(e.type == 'play' || e.type == 'waiting' || e.type == 'playing'){
 								action = 'removeClass';
-							} else if($.prop(this, 'paused')){
-								action = 'addClass';
 							}
-							base[action](ns + 'state-initial');
+							if(action){
+								base[action](ns + 'state-initial');
+							}
 						})
 					;
 					
@@ -692,7 +686,6 @@
 	
 	var assumeIE7 = ($.browser.msie && parseFloat($.browser.version, 10) < 8);
 
-
 	var loadJqueryUI = function(){
 		if($.webshims.loader){
 			$.webshims.loader.loadList(['jquery-ui']);
@@ -824,8 +817,9 @@
 				}
 			);
 			var createFn = function(){
+				
 				control._uiSlider({
-					range: assumeIE7 ? false : 'min',
+					range: 'min',
 					max: 1,
 					step: 0.05,
 					value: media.prop('volume'),
@@ -865,7 +859,7 @@
 				},
 				function(value){
 					try {
-						media.prop('currentTime', value);
+						media.prop('currentTime', value).triggerHandler('timechanged', [value]);
 					} catch(er){}
 				}
 			);
@@ -888,7 +882,7 @@
 					}
 				};
 				control._uiSlider({
-					range: 'min',
+					range: assumeIE7 ? false : 'min',
 					step: 0.1,
 					value: media.prop('currentTime'),
 					slide: function(e, data){
@@ -1152,8 +1146,8 @@
 			fullScreenApi.supportsFullScreen = !!fullScreenApi.supportsFullScreen;
 			if(fullScreenApi.elementName != 'fullscreenElement' || fullScreenApi.exitName != 'exitFullscreen' || fullScreenApi.enabledName != 'fullscreenEnabled'){
 				$.each(Modernizr._domPrefixes, function(i, prefix){
-					var requestName = prefix+'RequestFullScreen';
-					if((requestName in doc)){
+					var requestName = prefix+'RequestFullscreen';
+					if((requestName in doc) || ((requestName = prefix+'RequestFullScreen') && (requestName in doc))){
 						fullScreenApi.eventName = prefix + 'fullscreenchange';
 						fullScreenApi.requestName = requestName;
 						return false;
@@ -1542,8 +1536,8 @@
 			media.bind('emptied', updatePoster);
 			updatePoster();
 		}
-		
 	});
+	
 	
 })(jQuery);
 

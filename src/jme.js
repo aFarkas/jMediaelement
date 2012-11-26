@@ -559,7 +559,7 @@
 		$.jme.defineMethod('updateControlbar', function(){
 			var timeSlider = $('.'+ $.jme.classNS +'time-slider', this);
 			if(timeSlider[0] && timeSlider.css('position') !== 'absolute'){
-				var width = Math.floor(timeSlider.parent().width()) - 0.1;
+				var width = Math.floor(timeSlider.parent().width()) - 0.2;
 				
 				var elemWidths = 0; 
 				timeSlider
@@ -573,7 +573,7 @@
 					.end()
 					.show()
 				;
-				timeSlider.width(width - elemWidths - Math.ceil(timeSlider.outerWidth(true) - timeSlider.width()) - 0.3);
+				timeSlider.width(Math.floor(width - elemWidths - Math.ceil(timeSlider.outerWidth(true) - timeSlider.width()) - 0.3));
 			}
 		});
 
@@ -1137,6 +1137,9 @@
 			elementName: 'fullscreenElement',
 			enabledName: ''
 		};
+		
+		fullScreenApi.cancelFullWindow = fullScreenApi.cancelFullScreen;
+		fullScreenApi.requestFullWindow = fullScreenApi.requestFullScreen;
 
 		// update methods to do something useful
 		if (fullScreenApi.supportsFullScreen) {
@@ -1171,7 +1174,7 @@
 	$.jme.defineProp('fullscreen', {
 		set: function(elem, value){
 			var data = $.jme.data(elem);
-			value = !!value;
+			
 			if(!data || !data.player){return 'noDataSet';}
 			if(value){
 				if(data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
@@ -1190,11 +1193,15 @@
 						}
 					})
 				;
-
-				try {
-					$.jme.fullscreen.requestFullScreen(data.player[0]);
-				} catch(er){
+				
+				if(value == 'fullwindow'){
+					$.jme.fullscreen.requestFullWindow(data.player[0]);
+				} else {
+					try {
+						$.jme.fullscreen.requestFullScreen(data.player[0]);
+					} catch(er){}
 				}
+
 				
 				$('html').addClass($.jme.classNS+'has-media-fullscreen');
 
@@ -1205,10 +1212,10 @@
 				if($.jme.fullscreen.supportsFullScreen){
 					$(document)
 						.bind($.jme.fullscreen.eventName+'.jmefullscreen', function(e){
-							var isFullscreen = $.jme.fullscreen.isFullScreen();
-							if(isFullscreen && elem == e.target){
+							var fullScreenElem = $.jme.fullscreen.isFullScreen();
+							if(fullScreenElem && elem == fullScreenElem){
 								$(elem).triggerHandler('playerdimensionchange', ['fullscreen']);
-							} else if(!isFullscreen) {
+							} else {
 								data.player.jmeProp('fullscreen', false);
 							}
 						})
@@ -1223,10 +1230,13 @@
 				$('html').removeClass($.jme.classNS+'has-media-fullscreen');
 				data.player.removeClass($.jme.classNS+'player-fullscreen');
 				data.media.removeClass($.jme.classNS+'media-fullscreen');
-
-				try {
-					$.jme.fullscreen.cancelFullScreen();
-				} catch(er){}
+				if($.jme.fullscreen.isFullScreen()){
+					try {
+						$.jme.fullscreen.cancelFullScreen();
+					} catch(er){}
+				} else {
+					$.jme.fullscreen.cancelFullWindow();
+				}
 
 
 				data.player.triggerHandler('playerdimensionchange');
@@ -1254,6 +1264,9 @@
 			enter: 'state-enterfullscreen',
 			exit: 'state-exitfullscreen'
 		},
+		options: {
+			fullscreen: true
+		},
 		structure: btnStructure,
 		text: 'enter fullscreen / exit fullscreen',
 		_create: function(control, media, base){
@@ -1261,10 +1274,12 @@
 			var updateControl = function(){
 				textFn(base.hasClass($.jme.classNS+'player-fullscreen') ? 1 : 0);
 			};
+			var options = this.options;
+			
 			base.bind('playerdimensionchange', updateControl);
 			
 			control.bind((control.is('select')) ? 'change' : 'click', function(){
-				base.jmeProp('fullscreen', !base.hasClass($.jme.classNS+'player-fullscreen'));
+				base.jmeProp('fullscreen', base.hasClass($.jme.classNS+'player-fullscreen') ? false : options.fullscreen);
 			});
 			
 			updateControl();

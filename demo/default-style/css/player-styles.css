@@ -7,6 +7,22 @@ button::-moz-focus-inner {
 }
 
 /* default */
+html.jme-embedded-player,
+html.jme-embedded-player body {
+	margin: 0;
+	padding: 0;
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+html.jme-embedded-player .mediaplayer,
+html.jme-embedded-player .mediaplayer video {
+	width: 100%;
+	height: 100%;
+}
+
 .volume-slider,
 .time-slider {
 	position: relative;
@@ -87,7 +103,7 @@ button::-moz-focus-inner {
 	background: url("../img/loader.gif") no-repeat -9999px -9999px;
 }
 .state-playing .jme-default-media-overlay {
-	display: none;
+	background-image: none;
 }
 
 .state-waiting .jme-default-media-overlay {
@@ -138,6 +154,7 @@ video {
 	left: 0;
 	bottom: 10px;
 	width: 100%;
+	outline: none;
 }
 
 .mediaplayer .media-controls {
@@ -308,6 +325,15 @@ html > body .media-controls .media-bar {
 	min-width: 1px;
 	top: 0;
 }
+
+.state-muted .media-controls  .volume-slider .ui-slider-range {
+	visibility: hidden;
+}
+
+/*.state-muted .media-controls  .volume-slider .ui-slider-handle {
+	left: 0 !important;
+}*/
+
 .media-controls  .volume-slider .ui-slider-handle {
 	top: 0;
 	left: 0;
@@ -324,6 +350,9 @@ html > body .media-controls .media-bar {
 }
 .media-controls .fullscreen {
 	margin-left: 5px;
+}
+.no-fullwindow .fullscreen {
+	display: none;
 }
 .media-controls .fullscreen,
 .media-controls .mute-unmute {

@@ -17,20 +17,26 @@
 	<script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
 	<script src="http://afarkas.github.com/webshim/demos/js-webshim/minified/polyfiller.js"></script>
 	<!-- END: polyfill -->
-	
 	<script src="../src/jme.js"></script>
+	<script src="../src/jme.fullscreen.js"></script>
+	<script src="../src/jme.track.js"></script>
+	
 	<script>
-		(!$.jme && document.write('<script src="js\/jme.js"><\/script>'));
+		(!$.jme && document.write('<script src="js\/jme.full.js"><\/script>'));
 	</script>
 	
 	<!-- start polyfill (only if webshims is included) -->
 	<script>
 		if($.webshims && $.webshims.setOptions){
 			$.webshims.setOptions({
-				track: {override: true}
+				track: {override: true},
+				mediaelement: {
+					player: 'jaris'
+				}
 			});
 			$.webshims.polyfill('mediaelement');
 		}
+		$.jme.startJME();
 	</script>
 	<title>jme2</title>
 	
@@ -41,7 +47,7 @@
 	<p>JME is a declarative HTML component library including DOM APIs and CSS-hooks to extend/customize HTML5 mediaelements (audio/video)</p>
 </div>
 <div class="mediaplayer" data-jme='{"controlbar": true}'>
-	<video preload="none" poster="media/sintel/sintel-trailer.png">
+	<video controls="controls" preload="none" poster="media/sintel/sintel-trailer.png">
 		<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
 		<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
 		
@@ -426,6 +432,7 @@
 	jQuery(function(){
 		$('div.mediaplayer').eq(0).jmeFn('addControls', '.control-example');
 	});
+	
 </script>
 </body>
 </html>

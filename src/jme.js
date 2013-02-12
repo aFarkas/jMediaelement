@@ -47,6 +47,9 @@
 				fns[name] = fn;
 			},
 			defineProp: function(name, desc){
+				if(!desc){
+					desc = {};
+				}
 				if(!desc.set){
 					if(desc.readonly){
 						desc.set = function(){
@@ -187,35 +190,33 @@
 			return list;
 		};
 		
-		if(!('labels' in document.createElement('input'))){
-			webshims.ready('dom-support', function(){
-				if(!webshims.defineNodeNamesProperty){return;}
-				webshims.defineNodeNamesProperty('button, input, keygen, meter, output, progress, select, textarea', 'labels', {
-					prop: {
-						get: function(){
-							var labels = [];
-							var id = this.id;
-							if(id){
-								labels = $('label[for="'+ id +'"]');
-							} 
-							if(!labels[0]) {
-								labels = $(this).closest('label', this.form);
-							}
-							return (labels[0]) ? labels.get() : null;
-						},
-						writeable: false
-					}
-				});
+		webshims.ready('dom-support', function(){
+			if(!webshims.defineNodeNamesProperty || $('<input />').prop('labels')){return;}
+			webshims.defineNodeNamesProperty('button, input, keygen, meter, output, progress, select, textarea', 'labels', {
+				prop: {
+					get: function(){
+						var labels = [];
+						var id = this.id;
+						if(id){
+							labels = $('label[for="'+ id +'"]');
+						} 
+						if(!labels[0]) {
+							labels = $(this).closest('label', this.form);
+						}
+						return labels.get();
+					},
+					writeable: false
+				}
 			});
-		}
+		});
+		
 
 		$.jme.getButtonText = function(button, classes){
 			
 			var btnTextElem = $('span.jme-text, +label span.jme-text', button);
 			var btnLabelElem = button.prop('labels');
-			if(btnLabelElem){
-				btnLabelElem = $(btnLabelElem);
-			}
+			
+			btnLabelElem = (btnLabelElem && btnLabelElem[0]) ? $(btnLabelElem).eq(0) : false;
 			
 			if(!btnTextElem[0]){
 				btnTextElem = btnLabelElem || button;
@@ -315,7 +316,22 @@
 						removeCanPlay();
 						if(state == 'ended' || $.prop(this, 'ended')){
 							state = 'ended';
-						}else if(state == 'updateJMEState'){
+						} else if(state == 'waiting'){
+							
+							if($.prop(this, 'readyState') > 2){
+								state = '';
+							} else {
+								canplayTimer = setTimeout(function(){
+									if(media.prop('readyState') > 2){
+										canPlay();
+									}
+								}, 9);
+								media.bind('canPlay', canPlay);
+							}
+							
+						} else if(idlStates[state]){
+							state = 'idle';
+						} else {
 							readyState = $.prop(this, 'readyState');
 							paused = $.prop(this, 'paused');
 							if(!paused && readyState < 3){
@@ -325,21 +341,8 @@
 							} else {
 								state = 'idle';
 							}
-						} else if(state == 'waiting'){
-							
-							if($.prop(this, 'readyState') > 2){
-								return;
-							} 
-							
-							canplayTimer = setTimeout(function(){
-								if(media.prop('readyState') > 2){
-									canPlay();
-								}
-							}, 9);
-							media.bind('canPlay', canPlay);
-						} else if(idlStates[state]){
-							state = 'idle';
 						}
+						
 						if(state){
 							base.removeClass(removeClasses).addClass(ns +'state-'+ state);
 						}
@@ -350,11 +353,22 @@
 						.bind('ended', function(){
 							removeCanPlay();
 							media.jmeFn('pause');
-							media.jmeFn('load');
+							if(!media.prop('autoplay')){
+								media.jmeFn('load');
+							}
 						})
-						.bind('emptied waiting playing ended pause mediaerror', mediaUpdateFn)
+						.bind('emptied waiting canplay canplaythrough playing ended pause mediaerror', mediaUpdateFn)
 						.bind('volumechange updateJMEState', function(){
-							base[$.prop(this, 'muted') ? 'addClass' : 'removeClass'](ns +'state-muted');
+							var volume = $.prop(this, 'volume');
+							base[!volume || $.prop(this, 'muted') ? 'addClass' : 'removeClass'](ns +'state-muted');
+							if(volume < 0.34){
+								volume = 'low';
+							} else if(volume < 0.67){
+								volume = 'medium';
+							} else {
+								volume = 'high';
+							}
+							base.attr('data-volume', volume);
 						})
 						.bind('emptied updateJMEState play playing waiting', function(e){
 							var action;
@@ -386,7 +400,6 @@
 								base.removeClass(ns+'focusenter');
 							}, 1);
 						})
-
 						.bind('mouseenter focusin', function(){
 							clearTimeout(foverTimer);
 							base.addClass(ns+'fover');
@@ -421,16 +434,10 @@
 		});
 
 		$.jme.defineProp('player', {
-			get: function(elem){
-				return $.jme.data(this, 'player') || null;
-			},
 			readonly: true
 		});
 
 		$.jme.defineProp('media', {
-			get: function(elem){
-				return $.jme.data(this, 'media') || null;
-			},
 			readonly: true
 		});
 
@@ -501,13 +508,13 @@
 							var plugin = $.jme.plugins[name];
 							if(plugin && plugin.structure){
 								structure += plugin.structure.replace('{%class%}', ns+name).replace('{%text%}', plugin.text || '');
-							} else if(name && name.indexOf('<') != -1){
+							} else if(name){
 								structure += name;
 							}
 						});
 						data._controlbar = $( mediaControls.barStructure );
 						controlBar = data._controlbar.find('div.jme-cb-box').addClass(ns+'media-controls');
-						controls = data._controlbar.filter('div.jme-default-media-overlay').addClass(ns+'play-pause');
+						controls = data._controlbar.filter('.jme-default-media-overlay').addClass(ns+'play-pause');
 						controls =  controls.add( controlBar );
 						controls = controls.add( $(structure).appendTo(controlBar) );
 						data._controlbar.appendTo(data.player);
@@ -527,6 +534,7 @@
 			var data = $.jme.data(this) || {};
 
 			if(!data.media){return;}
+			var oldControls = $.jme.data(data.player[0], 'controlElements') || $([]);
 			controls = $(controls);
 			$.each($.jme.plugins, function(name, plugin){
 				controls
@@ -551,6 +559,9 @@
 					})
 				;
 			});
+			
+			$.jme.data(data.player[0], 'controlElements', oldControls.add(controls));
+			
 			data.player.triggerHandler('controlsadded');
 		});
 
@@ -579,7 +590,7 @@
 
 		$.jme.registerPlugin('media-controls', {
 			pluginOrder: ['play-pause', '<div class="media-bar">', 'currenttime-display', 'time-slider', 'duration-display', '<div class="volume-controls">', 'mute-unmute', 'volume-slider', '</div>', 'fullscreen', '<div class="subtitle-controls">', 'captions', '</div>', '</div>'],
-			barStructure: '<div class="jme-default-media-overlay"></div><div class="jme-default-control-bar"><div class="jme-cb-box"></div></div>',
+			barStructure: '<div class="jme-default-media-overlay"></div><div class="jme-default-control-bar" tabindex="-1"><div class="jme-cb-box"></div></div>',
 			_create: function(control, media, base, options){
 				var timer;
 				var update = function(){
@@ -696,6 +707,8 @@
 	};
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var defaultStructure = '<div  class="{%class%}"></div>';
+	var slideStructure = '<div class="{%class%}"><div class="slider-rail"><a href="#" class="ui-slider-handle"></a></div></div>';
+	
 	$.jme.registerPlugin('play-pause', {
 		pseudoClasses: {
 			play: 'state-paused',
@@ -720,8 +733,9 @@
 				})
 				.triggerHandler('updateJMEState')
 			;
-			control.bind((control.is('select')) ? 'change' : 'click', function(){
+			control.bind((control.is('select')) ? 'change' : 'click', function(e){
 				media.jmeFn('togglePlay');
+				e.stopPropagation();
 			});
 			
 		}
@@ -743,8 +757,9 @@
 				.triggerHandler('updateJMEState')
 			;
 			
-			control.bind((control.is('select')) ? 'change' : 'click', function(){
+			control.bind((control.is('select')) ? 'change' : 'click', function(e){
 				media.prop('muted', !media.prop('muted'));
+				e.stopPropagation();
 			});
 			
 		}
@@ -797,7 +812,7 @@
 	}
 
 	$.jme.registerPlugin('volume-slider', {
-		structure: defaultStructure,
+		structure: slideStructure,
 		
 		_create: function(control, media, base){
 			loadJqueryUI();
@@ -837,7 +852,7 @@
 	});
 
 	$.jme.registerPlugin('time-slider', {
-		structure: defaultStructure,
+		structure: slideStructure,
 		pseudoClasses: {
 			no: 'no-duration'
 		},
@@ -1080,448 +1095,6 @@
 	});
 
 
-	//taken from http://johndyer.name/native-fullscreen-javascript-api-plus-jquery-plugin/
-	$.jme.fullscreen = (function() {
-		var parentData;
-		var tmpData;
-		var doc = document.documentElement;
-		var fullScreenApi = {
-			supportsFullScreen: Modernizr.prefixed('fullscreenEnabled', document, false) || Modernizr.prefixed('fullScreenEnabled', document, false),
-			isFullScreen: function() { return false; },
-			requestFullScreen: function(elem){
-				parentData = [];
-				$(elem).parentsUntil('body').each(function(){
-					var pos =  $.css(this, 'position');
-					var left = this.scrollLeft;
-					var top = this.scrollTop;
-					var changed;
-					tmpData = {elemStyle: this.style, elem: this};
-					if(pos !== 'static'){
-						changed = true;
-						tmpData.pos = tmpData.elemStyle.position;
-						this.style.position = 'static';
-					}
-					if(left){
-						changed = true;
-						tmpData.left = left;
-					}
-					if(top){
-						changed = true;
-						tmpData.top = top;
-					}
-					if(changed){
-						parentData.push(tmpData);
-					}
-				});
-				tmpData = null;
-			},
-			cancelFullScreen: function(){
-				if(parentData){
-					$.each(parentData, function(i, data){
-						if('pos' in data){
-							data.elemStyle.position = data.pos;
-						}
-						if(data.left){
-							data.elem.scrollLeft = data.left;
-						}
-						if(data.top){
-							data.elem.scrollTop = data.top;
-						}
-						data = null;
-					});
-				}
-			},
-			eventName: 'fullscreenchange',
-			exitName: 'exitFullscreen',
-			requestName: 'requestFullscreen',
-			elementName: 'fullscreenElement',
-			enabledName: ''
-		};
-		
-		fullScreenApi.cancelFullWindow = fullScreenApi.cancelFullScreen;
-		fullScreenApi.requestFullWindow = fullScreenApi.requestFullScreen;
-
-		// update methods to do something useful
-		if (fullScreenApi.supportsFullScreen) {
-			fullScreenApi.enabledName = fullScreenApi.supportsFullScreen;
-			fullScreenApi.exitName = Modernizr.prefixed("exitFullscreen", document, false) || Modernizr.prefixed("cancelFullScreen", document, false);
-			fullScreenApi.elementName = Modernizr.prefixed("fullscreenElement", document, false) || Modernizr.prefixed("fullScreenElement", document, false);
-			fullScreenApi.supportsFullScreen = !!fullScreenApi.supportsFullScreen;
-			if(fullScreenApi.elementName != 'fullscreenElement' || fullScreenApi.exitName != 'exitFullscreen' || fullScreenApi.enabledName != 'fullscreenEnabled'){
-				$.each(Modernizr._domPrefixes, function(i, prefix){
-					var requestName = prefix+'RequestFullscreen';
-					if((requestName in doc) || ((requestName = prefix+'RequestFullScreen') && (requestName in doc))){
-						fullScreenApi.eventName = prefix + 'fullscreenchange';
-						fullScreenApi.requestName = requestName;
-						return false;
-					}
-				});
-			}
-			
-			fullScreenApi.isFullScreen = function() {
-				return document[fullScreenApi.elementName];
-			};
-			fullScreenApi.requestFullScreen = function(el) {
-				return el[fullScreenApi.requestName]();
-			};
-			fullScreenApi.cancelFullScreen = function() {
-				return document[fullScreenApi.exitName]();
-			};
-		}
-
-		return fullScreenApi;
-	})();
-	$.jme.defineProp('fullscreen', {
-		set: function(elem, value){
-			var data = $.jme.data(elem);
-			
-			if(!data || !data.player){return 'noDataSet';}
-			if(value){
-				if(data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
-
-				data.scrollPos = {
-					top: $(window).scrollTop(),
-					left: $(window).scrollLeft()
-				};
-
-				$(document)
-					.unbind('.jmefullscreen')
-					.bind('keydown.jmefullscreen', function(e){
-						if(e.keyCode == 27){
-							data.player.jmeProp('fullscreen', false);
-							return false;
-						}
-					})
-				;
-				
-				if(value == 'fullwindow'){
-					$.jme.fullscreen.requestFullWindow(data.player[0]);
-				} else {
-					try {
-						$.jme.fullscreen.requestFullScreen(data.player[0]);
-					} catch(er){}
-				}
-
-				
-				$('html').addClass($.jme.classNS+'has-media-fullscreen');
-
-				data.player.addClass($.jme.classNS+'player-fullscreen');
-
-				data.media.addClass($.jme.classNS+'media-fullscreen');
-
-				if($.jme.fullscreen.supportsFullScreen){
-					$(document)
-						.bind($.jme.fullscreen.eventName+'.jmefullscreen', function(e){
-							var fullScreenElem = $.jme.fullscreen.isFullScreen();
-							if(fullScreenElem && elem == fullScreenElem){
-								$(elem).triggerHandler('playerdimensionchange', ['fullscreen']);
-							} else {
-								data.player.jmeProp('fullscreen', false);
-							}
-						})
-					;
-
-				}
-				data.player.triggerHandler('playerdimensionchange', ['fullwindow']);
-				data.media.jmeFn('play');
-			} else {
-				if(!data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
-				$(document).unbind('.jmefullscreen');
-				$('html').removeClass($.jme.classNS+'has-media-fullscreen');
-				data.player.removeClass($.jme.classNS+'player-fullscreen');
-				data.media.removeClass($.jme.classNS+'media-fullscreen');
-				if($.jme.fullscreen.isFullScreen()){
-					try {
-						$.jme.fullscreen.cancelFullScreen();
-					} catch(er){}
-				} else {
-					$.jme.fullscreen.cancelFullWindow();
-				}
-
-
-				data.player.triggerHandler('playerdimensionchange');
-				if(data.scrollPos){
-					$(window).scrollTop(data.scrollPos.top);
-					$(window).scrollLeft(data.scrollPos.left);
-					delete data.scrollPos;
-				}
-			}
-			return 'noDataSet';
-		},
-		get: function(elem){
-			var data = $.jme.data(elem);
-			if(!data || !data.player){return;}
-			var fs = data.player.hasClass($.jme.classNS+'player-fullscreen');
-			if(!fs){return false;}
-			return $.jme.fullscreen.isFullScreen() || 'fullwindow';
-		}
-	});
-
-
-
-	$.jme.registerPlugin('fullscreen', {
-		pseudoClasses: {
-			enter: 'state-enterfullscreen',
-			exit: 'state-exitfullscreen'
-		},
-		options: {
-			fullscreen: true
-		},
-		structure: btnStructure,
-		text: 'enter fullscreen / exit fullscreen',
-		_create: function(control, media, base){
-			var textFn = $.jme.getButtonText(control, [this[pseudoClasses].enter, this[pseudoClasses].exit]);
-			var updateControl = function(){
-				textFn(base.hasClass($.jme.classNS+'player-fullscreen') ? 1 : 0);
-			};
-			var options = this.options;
-			
-			base.bind('playerdimensionchange', updateControl);
-			
-			control.bind((control.is('select')) ? 'change' : 'click', function(){
-				base.jmeProp('fullscreen', base.hasClass($.jme.classNS+'player-fullscreen') ? false : options.fullscreen);
-			});
-			
-			updateControl();
-		}
-	});
-
-	/**
-	 * Added captions Plugin
-	 * @author mderting
-	 */
-	
-	$.jme.ButtonMenu = function(button, menu, clickHandler){
-		
-		this.button = $(button).attr({'aria-haspopup': 'true'});
-		
-		
-		
-		this.clickHandler = clickHandler;
-		
-		this.toggle = $.proxy(this, 'toggle');
-		this.keyIndex = $.proxy(this, 'keyIndex');
-		this._buttonClick = $.proxy(this, '_buttonClick');
-		
-		
-		this.addMenu(menu);
-		this._closeFocusOut();
-		this.button.bind('click', this.toggle);
-		
-	};
-	
-	$.jme.ButtonMenu.prototype = {
-		addMenu: function(menu){
-			if(this.menu){
-				this.menu.remove();
-			}
-			this.menu = $(menu);
-			this.buttons = $('button', this.menu);
-			this.menu.insertAfter(this.button);
-			this.menu
-				.bind('keydown', this.keyIndex)
-				.delegate('button', 'click', this._buttonClick)
-			;
-		},
-		_closeFocusOut: function(){
-			var that  = this;
-			var timer;
-			var stopFocusOut = function(){
-					clearTimeout(timer);
-					setTimeout(function(){
-						clearTimeout(timer);
-					}, 9);
-				};
-			this.menu
-				.parent()
-				.bind('focusin', stopFocusOut)
-				.bind('mousedown', stopFocusOut)
-				.bind('focusout', function(e){
-					timer = setTimeout(function(){
-						that.hide();
-					}, 40);
-				})
-			;
-		},
-		_buttonClick: function(e){
-			this.clickHandler(this.buttons.index(e.currentTarget), e.currentTarget);
-			this.hide();
-		},
-		keyIndex: function(e){
-			var dir = (e.keyCode == 40) ? 1 : (e.keyCode == 38) ? -1 : 0;
-			if(dir){
-				var buttons = this.buttons.not(':disabled');
-				var activeButton = buttons.filter(':focus');
-				
-				activeButton = buttons[buttons.index(activeButton) + dir] || buttons.filter(dir > 0 ? ':first' : ':last');
-				activeButton.focus();
-				e.preventDefault();
-			}
-		},
-		show: function(){
-			if(this.isVisible){return;}
-			var buttons = this.buttons.not(':disabled');
-			this.isVisible = true;
-			this.menu.addClass('visible-menu');
-			try {
-				this.activeElement = document.activeElement || this.button[0];
-			} catch(er){
-				this.activeElement = this.button[0];
-			}
-			
-			setTimeout(function(){
-				$(buttons.filter('[aria-checked="true"]')[0] || buttons[0]).focus();
-			}, 60);
-		},
-		toggle: function(){
-			this[this.isVisible ? 'hide' : 'show']();
-		},
-		hide: function(){
-			if(!this.isVisible){return;}
-			this.isVisible = false;
-			this.menu.removeClass('visible-menu');
-			if(this.activeElement){
-				try {
-					this.activeElement.focus();
-				} catch(er){}
-			}
-			this.activeElement = false;
-		}
-	};
-	
-	var showKinds = {subtitles: 1, caption: 1};
-	var getTrackMenu = function(tracks){
-		var items = $.map(tracks, function(track){
-				var className = (track.kind == 'caption') ? 'caption-type' : 'subtitle-type';
-				var lang = track.language;
-				lang = (lang) ? ' <span class="track-lang">'+ lang +'</span>' : '';
-				return '<li class="'+ className +'" role="presentation"><button role="menuitemcheckbox">'+ track.label + lang +'</button></li>';
-			})
-		;
-		return '<div><ul>' + items.join('') +'</ul></div>';
-	};
-	
-	
-	$.jme.registerPlugin('captions', {
-		pseudoClasses: {
-			enabled: 'state-captionsenabled',
-			disabled: 'state-captionsdisabled',
-			noTrack: 'no-track',
-			hasTrack: 'has-track',
-			menu: 'subtitle-menu'
-		},
-		structure: btnStructure,
-		text: 'subtitles menu',
-		_create: function(control, media, base, options){
-			var that = this;
-			
-			var trackElems = media.find('track');
-			var btnTextElem = $('span.jme-text, +label span.jme-text', control);
-			if(!btnTextElem[0]){
-				btnTextElem = control;
-			}
-			btnTextElem.html(that.text);
-			if(!trackElems.length){
-				control.prop('disabled', true);
-				base.addClass(that[pseudoClasses].noTrack);
-			} else {
-				base.addClass(that[pseudoClasses].hasTrack);
-			}
-			
-			
-			$.webshims.ready('track', function(){
-				var menuObj;
-				var tracks = [];
-				var textTracks = media.prop('textTracks');
-				var throttledUpdate = (function(){
-					var timer;
-					var triggerTimer;
-					return function(e){
-						clearTimeout(timer);
-						clearTimeout(triggerTimer);
-						if(e.type == 'updatesubtitlestate'){
-							triggerTimer = setTimeout(function(){
-								media.trigger('updatetracklist');
-							}, 0);
-						}
-						timer = setTimeout(updateTrackMenu, 19);
-					};
-				})();
-				
-				function createSubtitleMenu(menu){
-					if(!menuObj){
-						menuObj = new $.jme.ButtonMenu(control, menu, function(index, button){
-							if($.attr(button, 'aria-checked') == 'true'){
-								tracks[index].mode = 'disabled';
-							} else {
-								$.each(tracks, function(i, track){
-									track.mode = (i == index) ? 'showing' : 'disabled';
-								});
-							}
-							media.prop('textTracks');
-							updateMode();
-						});
-					} else {
-						menuObj.addMenu(menu);
-					}
-					
-					updateMode();
-				}
-				
-				function updateMode(){
-					$('button', menuObj.menu).each(function(i){
-						$.attr(this, 'aria-checked', (tracks[i].mode == 'showing') ? 'true' : 'false');
-					});
-				}
-				
-				function updateTrackMenu(){
-					tracks = [];
-					$.each(textTracks, function(i, track){
-						if(showKinds[track.kind] && track.readyState != 3){
-							tracks.push(track);
-						}
-					});
-					if(tracks.length){
-						createSubtitleMenu('<div class="'+that[pseudoClasses].menu +'" >'+ (getTrackMenu(tracks)) +'</div>');
-						if(!base.hasClass(that[pseudoClasses].hasTrack) || base.hasClass(that[pseudoClasses].noTrack)){
-							control.prop('disabled', false);
-							base
-								.addClass(that[pseudoClasses].hasTrack)
-								.removeClass(that[pseudoClasses].noTrack)
-								.triggerHandler('controlschanged')
-							;
-						}
-					} else if(!base.hasClass(that[pseudoClasses].noTrack) || base.hasClass(that[pseudoClasses].hasTrack)){
-						control.prop('disabled', true);
-						base
-							.addClass(that[pseudoClasses].noTrack)
-							.removeClass(that[pseudoClasses].hasTrack)
-							.triggerHandler('controlschanged')
-						;
-					}
-				}
-				if(!textTracks){
-					textTracks = [];
-					updateTrackMenu();
-				} else {
-					updateTrackMenu();
-					$([textTracks]).on('addtrack removetrack', throttledUpdate);
-					base.bind('updatesubtitlestate', throttledUpdate);
-					media.bind('updatetrackdisplay', (function(){
-						var timer;
-						return function(){
-							clearTimeout(timer);
-							timer = setTimeout(updateMode, 20);
-						};
-					})());
-				}
-				
-			});
-			
-		}
-		
-	});
-
 	/**
 	 * Added Poster Plugin
 	 * @author mderting
@@ -1557,17 +1130,37 @@
 })(jQuery);
 
 (function($){
-	$(function(){
-		$.jme.createSelectors();
-		if(!$.jme.blockInit){
-			$.jme.initJME(document, $([]));
+	var started, startedTimer;
+	var jmeInitWarning = function(){
+		if(started){return;}
+		if(window.console){
+			window.console.log('you need to call $.jme.startJME. Call startJME now delayed!');
 		}
+		$.jme.startJME();
+	};
+	
+	$(function(){
+		startedTimer = setTimeout(jmeInitWarning, 999);
 	});
-	$.webshims.ready('mediaelement', function(){
-		$.webshims.addReady(function(context, insertedElement){
-			if(context !== document){
-				$.jme.initJME(context, insertedElement);
+	$.jme.startJME = function(){
+		if(started){return;}
+		$(function(){
+			$.jme.createSelectors();
+			if(!$.jme.blockInit){
+				$.jme.initJME(document, $([]));
 			}
 		});
-	});
+		$.webshims.ready('mediaelement', function(){
+			$.webshims.addReady(function(context, insertedElement){
+				if(context !== document){
+					$.jme.initJME(context, insertedElement);
+				}
+			});
+		});
+		$(window).unbind('load', jmeInitWarning);
+		started = true;
+		clearTimeout(startedTimer);
+	};
+	
+	$(window).bind('load', jmeInitWarning);
 })(jQuery);

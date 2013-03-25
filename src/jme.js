@@ -695,7 +695,7 @@
 		ended: 1
 	};
 	
-	var assumeIE7 = ($.browser.msie && parseFloat($.browser.version, 10) < 8);
+	var assumeIE7 = !(Modernizr.localstorage || Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
 	var loadJqueryUI = function(){
 		if($.webshims.loader){

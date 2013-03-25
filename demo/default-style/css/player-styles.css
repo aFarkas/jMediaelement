@@ -172,7 +172,7 @@ video {
 	opacity: 0;
 }
 .no-opacity .mediaplayer.state-playing .media-controls {
-	display: none;
+	visibility: hidden;
 }
 .mediaplayer.useractive .media-controls {
 	-moz-transform: translate(0, 0);
@@ -181,7 +181,7 @@ video {
 	opacity: 1;
 }
 .no-opacity .mediaplayer.useractive .media-controls {
-	display: block;
+	visibility: visible;
 }
 .media-controls button {
 	cursor: pointer;

@@ -353,7 +353,7 @@
 						.bind('ended', function(){
 							removeCanPlay();
 							media.jmeFn('pause');
-							if(!media.prop('autoplay')){
+							if(!media.prop('autoplay') && !media.prop('loop') && !media.hasClass('no-reload')){
 								media.jmeFn('load');
 							}
 						})
@@ -697,17 +697,50 @@
 	
 	var assumeIE7 = !(Modernizr.localstorage || Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
-	var loadJqueryUI = function(){
-		if($.webshims.loader){
-			$.webshims.loader.loadList(['jquery-ui']);
-			if($.webshims.modules['input-widgets'].src){
-				$.webshims.loader.loadList(['input-widgets']);
+	var loadRange = function(){
+		if($.webshims.loader && !loadRange.rangeType){
+			if(!$.webshims.modules["range-ui"] || $.fn.slider){
+				$.webshims.loader.loadList(['jquery-ui']);
+				loadRange.rangeType = 'jqueryui';
+				if($.webshims.modules['input-widgets'].src){
+					$.webshims.loader.loadList(['input-widgets']);
+				}
+			} else if($.webshims.modules["range-ui"]){
+				loadRange.rangeType = 'rangeui';
+				$.webshims.polyfill('es5');
+				$.webshims.loader.loadList(['range-ui']);
 			}
 		}
 	};
+	var onSliderReady = function(fn){
+		var complete;
+		loadRange();
+		if(loadRange.rangeType == 'jqueryui'){
+			complete = function(){
+				if(!$.fn._uiSlider){
+					if(!$.mobile || !$.mobile.slider){
+						$.fn._uiSlider = $.fn.slider;
+					} else {
+						$.widget('jme._uiSlider', $.ui.slider.prototype);
+					}
+				}
+				fn();
+			};
+			$.webshims.ready('jquery-ui', function(){
+				if(!$.ui || !$.ui.slider){
+					$.webshims.ready('input-widgets', complete);
+				} else {
+					complete();
+				}
+			});
+		} else {
+			$.webshims.ready('range-ui', fn);
+		}
+	};
+	
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var defaultStructure = '<div  class="{%class%}"></div>';
-	var slideStructure = '<div class="{%class%}"><div class="slider-rail"><a href="#" class="ui-slider-handle"></a></div></div>';
+	var slideStructure = '<div class="{%class%}"></div>';
 	
 	$.jme.registerPlugin('play-pause', {
 		pseudoClasses: {
@@ -765,26 +798,6 @@
 		}
 	});
 
-	var onSliderReady = function(fn){
-		var complete = function(){
-			if(!$.fn._uiSlider){
-				if(!$.mobile || !$.mobile.slider){
-					$.fn._uiSlider = $.fn.slider;
-				} else {
-					$.widget('jme._uiSlider', $.ui.slider.prototype);
-				}
-			}
-			fn();
-		};
-		$.webshims.ready('jquery-ui', function(){
-			if(!$.ui || !$.ui.slider){
-				$.webshims.ready('input-widgets', complete);
-			} else {
-				complete();
-			}
-		});
-	};
-
 	function createGetSetHandler(get, set){
 		var throttleTimer;
 		var blockedTimer;
@@ -810,40 +823,76 @@
 			}
 		};
 	}
-
+	
 	$.jme.registerPlugin('volume-slider', {
 		structure: slideStructure,
 		
 		_create: function(control, media, base){
-			loadJqueryUI();
+			loadRange();
 			
-			var volume = createGetSetHandler(
-				function(){
-					var volume = media.prop('volume');
-					if(volume !== undefined){
-						control._uiSlider('value', volume);
-					}
-				},
-				function(value){
-					media.prop({
-						muted: false,
-						volume: value
-					});
-				}
-			);
 			var createFn = function(){
-				
-				control._uiSlider({
-					range: 'min',
-					max: 1,
-					step: 0.05,
-					value: media.prop('volume'),
-					slide: function(e, data){
-						if(e.originalEvent){
-							volume.set(data.value);
+				var api, volume;
+				if(loadRange.rangeType == 'jqueryui'){
+					volume = createGetSetHandler(
+						function(){
+							var volume = media.prop('volume');
+							if(volume !== undefined){
+								control._uiSlider('value', volume);
+							}
+						},
+						function(value){
+							media.prop({
+								muted: false,
+								volume: value
+							});
 						}
-					}
-				});
+					);
+					
+					control
+						.html('<div class="slider-rail"><a href="#" class="ui-slider-handle"></a></div>')
+						._uiSlider({
+							range: 'min',
+							max: 1,
+							step: 0.05,
+							value: media.prop('volume'),
+							slide: function(e, data){
+								if(e.originalEvent){
+									volume.set(data.value);
+								}
+							}
+						})
+					;
+					
+				} else {
+					volume = createGetSetHandler(
+						function(){
+							var volume = media.prop('volume');
+							if(volume !== undefined){
+								api.value(volume);
+							}
+						},
+						function(value){
+							media.prop({
+								muted: false,
+								volume: api.options.value
+							});
+						}
+					);
+					
+					api = control
+						.rangeUI({
+							min: 0,
+							max: 1,
+							//animate: true,
+							step: 'any',
+							input: function(){
+								volume.set();
+							} 
+						})
+						.data('rangeUi')
+					;
+						
+				}
 				media.bind('volumechange', volume.get);
 			};
 
@@ -860,63 +909,133 @@
 			format: ['mm', 'ss']
 		},
 		_create: function(control, media, base){
-			loadJqueryUI();
+			loadRange();
+			
 			var module = this;
-			var time = createGetSetHandler(
-				function(){
-					var time = media.prop('currentTime');
-					if(!isNaN(time)){
-						try {
-							control._uiSlider('value', time);
-						} catch(er){}
-					}
-					
-				},
-				function(value){
-					try {
-						media.prop('currentTime', value).triggerHandler('timechanged', [value]);
-					} catch(er){}
-				}
-			);
+			
 			var createFn = function(){
-				var duration = media.prop('duration');
+				var time, durationChange, api;
 				var hasDuration = $.jme.classNS+'has-duration';
 				var noDuration = $.jme.classNS+'no-duration';
-				var durationChange = function(){
-					duration = media.prop('duration');
-					if(duration && isFinite(duration) && !isNaN(duration)){
-						control
-							._uiSlider('option', 'disabled', false)
-							._uiSlider('option', 'max', duration)
-						;
-						base.removeClass(module[pseudoClasses].no);
-					} else {
-						control._uiSlider('option', 'disabled', true);
-						control._uiSlider('value', 0);
-						base.addClass(module[pseudoClasses].no);
-					}
-				};
-				control._uiSlider({
-					range: assumeIE7 ? false : 'min',
-					step: 0.1,
-					value: media.prop('currentTime'),
-					slide: function(e, data){
-						if(e.originalEvent){
-							time.set(data.value);
+				var duration = media.prop('duration');
+				
+				if(loadRange.rangeType == 'jqueryui'){
+					time = createGetSetHandler(
+						function(){
+							var time = media.prop('currentTime');
+							if(!isNaN(time)){
+								try {
+									control._uiSlider('value', time);
+								} catch(er){}
+							}
+							
+						},
+						function(value){
+							try {
+								media.prop('currentTime', value).triggerHandler('timechanged', [value]);
+							} catch(er){}
 						}
-					}
-				});
-				media.bind({
-					timeupdate: time.get,
-					emptied: function(){
-						durationChange();
-						control._uiSlider('value', 0);
-					},
-					durationchange: durationChange
-				});
+					);
+					
+					durationChange = function(){
+						duration = media.prop('duration');
+						if(duration && isFinite(duration) && !isNaN(duration)){
+							control
+								._uiSlider('option', 'disabled', false)
+								._uiSlider('option', 'max', duration)
+							;
+							base.removeClass(module[pseudoClasses].no);
+						} else {
+							control._uiSlider('option', 'disabled', true);
+							control._uiSlider('value', 0);
+							base.addClass(module[pseudoClasses].no);
+						}
+					};
+					
+					control._uiSlider({
+						range: assumeIE7 ? false : 'min',
+						step: 0.1,
+						value: media.prop('currentTime'),
+						slide: function(e, data){
+							if(e.originalEvent){
+								time.set(data.value);
+							}
+						}
+					});
+					media.bind({
+						timeupdate: time.get,
+						emptied: function(){
+							durationChange();
+							control._uiSlider('value', 0);
+						},
+						durationchange: durationChange
+					});
+					
+				} else {
+					
+					time = createGetSetHandler(
+						function(){
+							var time = media.prop('currentTime');
+							if(!isNaN(time)){
+								try {
+									api.value(time);
+								} catch(er){}
+							}
+							
+						},
+						function(){
+							try {
+								media.prop('currentTime', api.options.value).triggerHandler('timechanged', [api.options.value]);
+							} catch(er){}
+						}
+					);
+					
+					durationChange = function(){
+						duration = media.prop('duration');
+						if(duration && isFinite(duration) && !isNaN(duration)){
+							api.disabled(false);
+							api.max(duration);
+							
+							base.removeClass(module[pseudoClasses].no);
+						} else {
+							api.disabled(true);
+							api.max(0);
+							base.addClass(module[pseudoClasses].no);
+						}
+					};
+					
+					api = control
+						.rangeUI({
+							min: 0,
+							value: media.prop('currentTime') || 0,
+							//animate: true,
+							step: 'any',
+							input: function(){
+								time.set();
+							} 
+						})
+						.data('rangeUi')
+					;
+					
+					
+					media.bind({
+						timeupdate: time.get,
+						emptied: function(){
+							durationChange();
+							api.value(0);
+							control._uiSlider('value', 0);
+						},
+						durationchange: durationChange
+					});
+				}
+				
+				
+				
+				
+				base.jmeFn('addControls', $('<div class="'+ $.jme.classNS +'buffer-progress" />').prependTo(control) );
 				durationChange();
 			};
-			base.jmeFn('addControls', $('<div class="'+ $.jme.classNS +'buffer-progress" />').prependTo(control) );
+			
 			onSliderReady(createFn);
 		}
 	});

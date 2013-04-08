@@ -384,11 +384,13 @@
 					;
 					
 					base
+						//assume inactive
+						.addClass(ns+'userinactive')
 						.bind('useractive', function(){
-							base.addClass(ns+'useractive');
+							base.addClass(ns+'useractive').removeClass(ns+'userinactive');
 						})
 						.bind('userinactive', {idletime: 3500}, function(){
-							base.removeClass(ns+'useractive');
+							base.removeClass(ns+'useractive').addClass(ns+'userinactive');
 						})
 						.bind('focusin', function(){
 							clearTimeout(focusenterTimer);
@@ -698,10 +700,11 @@
 	var assumeIE7 = !(Modernizr.localstorage || Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
 	var loadRange = function(){
+		
 		if($.webshims.loader && !loadRange.rangeType){
 			if(!$.webshims.modules["range-ui"] || $.fn.slider){
 				$.webshims.loader.loadList(['jquery-ui']);
-				loadRange.rangeType = 'jqueryui';
+				
 				if($.webshims.modules['input-widgets'].src){
 					$.webshims.loader.loadList(['input-widgets']);
 				}
@@ -710,6 +713,9 @@
 				$.webshims.polyfill('es5');
 				$.webshims.loader.loadList(['range-ui']);
 			}
+		}
+		if(!loadRange.rangeType){
+			loadRange.rangeType = 'jqueryui';
 		}
 	};
 	var onSliderReady = function(fn){
@@ -914,10 +920,11 @@
 			var module = this;
 			
 			var createFn = function(){
-				var time, durationChange, api;
+				var time, durationChange, api, timeShow, hasDuration;
 				var hasDuration = $.jme.classNS+'has-duration';
 				var noDuration = $.jme.classNS+'no-duration';
 				var duration = media.prop('duration');
+				
 				
 				if(loadRange.rangeType == 'jqueryui'){
 					time = createGetSetHandler(
@@ -992,7 +999,8 @@
 					
 					durationChange = function(){
 						duration = media.prop('duration');
-						if(duration && isFinite(duration) && !isNaN(duration)){
+						hasDuration = duration && isFinite(duration) && !isNaN(duration);
+						if(hasDuration){
 							api.disabled(false);
 							api.max(duration);
 							
@@ -1012,11 +1020,47 @@
 							step: 'any',
 							input: function(){
 								time.set();
-							} 
+							},
+							textValue: function(val){
+								return media.jmeFn('formatTime', val);
+							}
 						})
 						.data('rangeUi')
 					;
 					
+					timeShow = $('<span class="'+ $.jme.classNS +'time-select" />').appendTo(control);
+					
+					control
+						.on({
+							'mouseenter': function(e){
+								if(hasDuration){
+									var widgetLeft = (control.offset() || {left: 0}).left;
+									var widgetWidth = control.innerWidth();
+									var posLeft = function(x){
+										var perc = (x - widgetLeft) / widgetWidth * 100;
+										timeShow
+											.html(media.jmeFn('formatTime', duration * perc / 100))
+											.css({left: perc+'%'})
+										;
+									};
+									
+									posLeft(e.pageX);
+									timeShow.addClass($.jme.classNS +'show-time-select');
+									control
+										.off('.jmetimeselect')
+										.on('mousemove.jmetimeselect', function(e){
+											posLeft(e.pageX);
+										})
+									;
+								}
+							},
+							mouseleave: function(){
+								//timeShow.removeClass($.jme.classNS +'show-time-select');
+								control.off('.jmetimeselect');
+							}
+						})
+					
+					$('<div class="'+ $.jme.classNS +'buffer-progress" />').prependTo(control)
 					
 					media.bind({
 						timeupdate: time.get,

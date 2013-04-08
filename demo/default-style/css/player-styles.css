@@ -165,6 +165,7 @@ video {
 	-webkit-transition: all 400ms;
 	transition: all 400ms;
 }
+
 .mediaplayer.state-playing .media-controls {
 	-moz-transform: translate(0, 60%);
 	-webkit-transform: translate(0, 60%);
@@ -286,6 +287,29 @@ html > body .media-controls .media-bar {
 	top: 1px;
 }
 
+.media-controls .time-select {
+	position: absolute;
+	visibility: hidden;
+	opacity: 0;
+	top: -1.2em;
+	background: #000;
+	color: #fff;
+	display: inline-block;
+	width: 3em;
+	padding: 3px;
+	margin: -3px 0 0 -1.5em;
+	font-size: 12px;
+	line-height: 14px;
+	text-align: center;
+	transition: opacity 400ms, visibility 400ms;
+}
+
+.media-controls .show-time-select {
+	visibility: visible;
+	opacity: 1;
+}
+
+
 
 .media-controls .buffer-progress {
 	height: 100%;
@@ -374,8 +398,13 @@ body.has-media-fullscreen {
 	position: fixed !important;
 	z-index: 999999;
 	background: #000;
+	
 }
-.player-fullscreen,
+.mediaplayer.state-playing.userinactive,
+.mediaplayer.state-playing.userinactive * {
+	cursor: none !important;
+}
+
 .media-fullscreen,
 .player-fullscreen .polyfill-mediaelement {
 	top: 0 !important;

@@ -433,7 +433,8 @@ body.has-media-fullscreen {
 }
 
 .media-fullscreen,
-.player-fullscreen .polyfill-mediaelement {
+.player-fullscreen .polyfill-mediaelement,
+.player-fullscreen {
 	top: 0 !important;
 	left: 0 !important;
 	right: 0 !important;

@@ -8,9 +8,10 @@
 	
 	<link href="default-style/css/player-styles.css" rel="stylesheet" />
 	
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.js"></script>
-	<!-- only slider + dependencies are required -->
-	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
+	<!-- only slider + dependencies are required 
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.1/jquery-ui.min.js"></script>
+	-->
 	<!-- END: slider -->
 	
 	<!-- polyfill: only needed if you want to make it cross browser (do not hotlink) -->
@@ -29,10 +30,7 @@
 	<script>
 		if($.webshims && $.webshims.setOptions){
 			$.webshims.setOptions({
-				track: {override: true},
-				mediaelement: {
-					player: 'jaris'
-				}
+				track: {override: true}
 			});
 			$.webshims.polyfill('mediaelement');
 		}
@@ -48,8 +46,8 @@
 </div>
 <div class="mediaplayer" data-jme='{"controlbar": true}'>
 	<video controls="controls" preload="none" poster="media/sintel/sintel-trailer.png">
-		<source src="media/sintel/sintel-trailer.m4v" type="video/mp4" />
-		<source src="media/sintel/sintel-trailer.webm" type="video/webm" />
+		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.m4v" type="video/mp4" />
+		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.webm" type="video/webm" />
 		
 		<track kind="subtitles" src="media/sintel/sintel-trailer_en.vtt" srclang="en" label="English subtitles" />
 		<track kind="subtitles" src="media/sintel/sintel-trailer_de.vtt" srclang="de" label="German subtitles" />

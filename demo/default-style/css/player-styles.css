@@ -288,7 +288,7 @@ html > body .media-controls .media-bar {
 	height: 15px;
 	margin: 0 0 0 -2px;
 	outline: medium none;
-	top: -4px;
+	top: -5px;
 	width: 5px;
 	z-index: 9;
 }
@@ -427,8 +427,8 @@ body.has-media-fullscreen {
 	background: #000;
 	
 }
-.mediaplayer.state-playing.userinactive,
-.mediaplayer.state-playing.userinactive * {
+.mediaplayer.player-fullscreen.state-playing.userinactive,
+.mediaplayer.player-fullscreen.state-playing.userinactive * {
 	cursor: none !important;
 }
 

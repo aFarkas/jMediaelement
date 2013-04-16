@@ -316,6 +316,7 @@
 						var readyState;
 						var paused;
 						removeCanPlay();
+						
 						if(state == 'ended' || $.prop(this, 'ended')){
 							state = 'ended';
 						} else if(state == 'waiting'){
@@ -708,7 +709,7 @@
 		ended: 1
 	};
 	
-	var assumeIE7 = !(Modernizr.localstorage || Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
+	var assumeIE7 = !(Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
 	var loadRange = function(){
 		
@@ -1017,7 +1018,7 @@
 							base.removeClass(module[pseudoClasses].no);
 						} else {
 							api.disabled(true);
-							api.max(0);
+							api.max(Number.MAX_VALUE);
 							base.addClass(module[pseudoClasses].no);
 						}
 					};
@@ -1068,7 +1069,8 @@
 								timeShow.removeClass($.jme.classNS +'show-time-select');
 								control.off('.jmetimeselect');
 							}
-						});
+						})
+					;
 					
 					
 					media.bind({
@@ -1076,7 +1078,6 @@
 						emptied: function(){
 							durationChange();
 							api.value(0);
-							control._uiSlider('value', 0);
 						},
 						durationchange: durationChange
 					});

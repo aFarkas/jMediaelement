@@ -18,11 +18,24 @@
 		var props = {};
 
 		var fns = {};
+		var allowPreload = false;
+		$(window).on('load', function(){
+			allowPreload = true;
+			var scrollTimer;
+			var allow = function(){
+				allowPreload = true;
+			};
+			$(window).on('scroll', function(){
+				allowPreload = false;
+				clearTimeout(scrollTimer);
+				scrollTimer = setTimeout(allow, 999);
+			});
+		});
 
 
 
 		$.jme = {
-			version: '2.0.4',
+			version: '2.0.5',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -409,10 +422,10 @@
 							'mouseenter focusin': function(){
 								clearTimeout(foverTimer);
 								base.addClass(ns+'fover');
-								if(needPreload){
+								if(needPreload && allowPreload){
 									media.prop('preload', 'auto');
+									needPreload = false;
 								}
-								needPreload = false;
 							},
 							'mouseleave focusout': function(){
 								clearTimeout(foverTimer);

@@ -121,12 +121,27 @@
 			$('html').addClass(fullScreenApi.supportsFullScreen ? 'fullscreen' : 'no-fullscreen');
 		}
 		
-		if(!fullScreenApi.supportsFullScreen && window.parent != window){
+		if(window.parent != window){
 			(function(){
 				try{
-					var a = window.frameElement.style;
+					var frame = window.frameElement;
+					var fStyle = frame.style;
+					if (fullScreenApi.supportsFullScreen) {
+						if('allowfullscreen' in frame && !frame.allowfullscreen) {
+							frame.allowfullscreen = true;
+						} else {
+							if(frame.getAttribute('webkitallowfullscreen') == null){
+								frame.setAttribute('webkitallowfullscreen', '');
+							}
+							if(frame.getAttribute('allowfullscreen') == null){
+								frame.setAttribute('allowfullscreen', 'allowfullscreen');
+							}
+						}
+					}
 				} catch(er){
-					$('html').addClass('no-fullwindow');
+					if(!fullScreenApi.supportsFullScreen){
+						$('html').addClass('no-fullwindow');
+					}
 				}
 			})();
 			

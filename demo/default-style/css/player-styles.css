@@ -286,9 +286,9 @@ html > body .media-controls .media-bar {
 .media-controls .time-slider .ws-range-thumb {
 	background: url("../img/player-sprites.png") no-repeat scroll 0 -1099px transparent;
 	height: 15px;
-	margin: 0 0 0 -2px;
+	margin: -5px 0 0 -2px;
 	outline: medium none;
-	top: -5px;
+	top: 0;
 	width: 5px;
 	z-index: 9;
 }

@@ -1,4 +1,14 @@
-(function($){
+(function (factory) {
+	var $ = window.jQuery;
+	if($.jme){
+		factory($);
+	} else {
+		$(window).on('jmepluginready', function(){
+			factory($);
+		});
+	}
+	
+}(function($){
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var pseudoClasses = 'pseudoClasses';
 	
@@ -288,4 +298,4 @@
 			updateControl();
 		}
 	});
-})(jQuery);
+}));

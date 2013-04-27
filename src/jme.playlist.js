@@ -1,4 +1,14 @@
-(function($){
+(function (factory) {
+	var $ = window.jQuery;
+	if($.jme){
+		factory($);
+	} else {
+		$(window).on('jmepluginready', function(){
+			factory($);
+		});
+	}
+	
+}(function($){
 	var multiple = {
 		contentURL: 1
 	};
@@ -101,4 +111,4 @@
 			console.log(control.jmeProp('selectedItem'));
 		}
 	});
-})(jQuery);
+}));

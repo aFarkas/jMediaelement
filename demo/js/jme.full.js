@@ -35,7 +35,7 @@
 
 
 		$.jme = {
-			version: '2.0.5',
+			version: '2.0.6',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -725,18 +725,10 @@
 	var assumeIE7 = !(Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
 	var loadRange = function(){
-		
-		if($.webshims.loader && !loadRange.rangeType){
-			if(!$.webshims.modules["range-ui"] || $.fn.slider){
-				$.webshims.loader.loadList(['jquery-ui']);
-				
-				if($.webshims.modules['input-widgets'].src){
-					$.webshims.loader.loadList(['input-widgets']);
-				}
-			} else if($.webshims.modules["range-ui"]){
-				loadRange.rangeType = 'rangeui';
-				$.webshims.loader.loadList(['range-ui']);
-			}
+		var rangeUI;
+		if($.webshims.loader && !loadRange.rangeType && (rangeUI =$.webshims.modules["range-ui"]) && (!$.ui || !$.ui.slider || rangeUI.loaded) ){
+			loadRange.rangeType = 'rangeui';
+			$.webshims.loader.loadList(['range-ui']);
 		}
 		if(!loadRange.rangeType){
 			loadRange.rangeType = 'jqueryui';
@@ -746,23 +738,18 @@
 		var complete;
 		loadRange();
 		if(loadRange.rangeType == 'jqueryui'){
-			complete = function(){
-				if(!$.fn._uiSlider){
-					if(!$.mobile || !$.mobile.slider){
-						$.fn._uiSlider = $.fn.slider;
-					} else {
-						$.widget('jme._uiSlider', $.ui.slider.prototype);
-					}
-				}
-				fn();
-			};
-			$.webshims.ready('jquery-ui', function(){
-				if(!$.ui || !$.ui.slider){
-					$.webshims.ready('input-widgets', complete);
+			if(!$.fn._uiSlider){
+				if(!$.mobile || !$.mobile.slider){
+					$.fn._uiSlider = $.fn.slider;
 				} else {
-					complete();
+					$.widget('jme._uiSlider', $.ui.slider.prototype);
 				}
-			});
+			}
+			if($.ui && $.ui.slider){
+				fn();
+			} else if(window.console){
+				console.log('could not load slider');
+			}
 		} else {
 			$.webshims.ready('range-ui', fn);
 		}
@@ -1312,7 +1299,7 @@
 		}
 	});
 	
-	
+	$(window).trigger('jmepluginready');
 })(jQuery);
 
 (function($){
@@ -1342,7 +1329,17 @@
 		started = true;
 	};
 	
-})(jQuery);;(function($){
+})(jQuery);;(function (factory) {
+	var $ = window.jQuery;
+	if($.jme){
+		factory($);
+	} else {
+		$(window).on('jmepluginready', function(){
+			factory($);
+		});
+	}
+	
+}(function($){
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var pseudoClasses = 'pseudoClasses';
 	
@@ -1632,8 +1629,18 @@
 			updateControl();
 		}
 	});
-})(jQuery);
-;(function($){
+}));
+;(function (factory) {
+	var $ = window.jQuery;
+	if($.jme){
+		factory($);
+	} else {
+		$(window).on('jmepluginready', function(){
+			factory($);
+		});
+	}
+	
+}(function($){
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var pseudoClasses = 'pseudoClasses';
 	/**
@@ -1869,4 +1876,4 @@
 		}
 		
 	});
-})(jQuery);
+}));

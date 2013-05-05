@@ -12,7 +12,7 @@
 		var webshims = $.webshims;
 
 		if(!window.Modernizr || !('opacity' in Modernizr)){
-			$('html').addClass($.support.opacity ? 'opacity' : 'no-opacity');
+			$('html').addClass(('opacity' in document.documentElement.style) ? 'opacity' : 'no-opacity');
 		}
 
 		var props = {};

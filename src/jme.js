@@ -1,4 +1,5 @@
 (function($){
+	if(!window.webshims){
 		$.webshims = $.webshims || {
 			ready: function(type, fn){
 				fn();
@@ -9,6 +10,9 @@
 				});
 			}
 		};
+		window.webshims = $.webshims;
+	}
+		
 		var webshims = $.webshims;
 
 		if(!window.Modernizr || !('opacity' in Modernizr)){
@@ -35,7 +39,7 @@
 
 
 		$.jme = {
-			version: '2.0.6',
+			version: '2.0.7',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -729,6 +733,8 @@
 		if($.webshims.loader && !loadRange.rangeType && (rangeUI =$.webshims.modules["range-ui"]) && (!$.ui || !$.ui.slider || rangeUI.loaded) ){
 			loadRange.rangeType = 'rangeui';
 			$.webshims.loader.loadList(['range-ui']);
+		} else if($.fn.rangeUI){
+			loadRange.rangeType = 'rangeui';
 		}
 		if(!loadRange.rangeType){
 			loadRange.rangeType = 'jqueryui';

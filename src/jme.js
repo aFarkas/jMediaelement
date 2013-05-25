@@ -39,7 +39,7 @@
 
 
 		$.jme = {
-			version: '2.0.7',
+			version: '2.0.8',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -680,7 +680,7 @@
 					}
 					data.trigger[name] = true;
 
-					if( !data.bound ){
+					if(!data.bound){
 						jElm
 							.bind('mouseleave.jmeuseractivity', setInactive)
 							.bind('mousemove.jmeuseractivity focusin.jmeuseractivity mouseenter.jmeuseractivity keydown.jmeuseractivity keyup.jmeuseractivity mousedown.jmeuseractivity', setActive)
@@ -729,36 +729,14 @@
 	var assumeIE7 = !(Modernizr.boxSizing || Modernizr['display-table'] || Modernizr.video || $.support.getSetAttribute);
 
 	var loadRange = function(){
-		var rangeUI;
-		if($.webshims.loader && !loadRange.rangeType && (rangeUI =$.webshims.modules["range-ui"]) && (!$.ui || !$.ui.slider || rangeUI.loaded) ){
-			loadRange.rangeType = 'rangeui';
+		if($.webshims.loader){
 			$.webshims.loader.loadList(['range-ui']);
-		} else if($.fn.rangeUI){
-			loadRange.rangeType = 'rangeui';
 		}
-		if(!loadRange.rangeType){
-			loadRange.rangeType = 'jqueryui';
-		}
+		
 	};
 	var onSliderReady = function(fn){
-		var complete;
 		loadRange();
-		if(loadRange.rangeType == 'jqueryui'){
-			if(!$.fn._uiSlider){
-				if(!$.mobile || !$.mobile.slider){
-					$.fn._uiSlider = $.fn.slider;
-				} else {
-					$.widget('jme._uiSlider', $.ui.slider.prototype);
-				}
-			}
-			if($.ui && $.ui.slider){
-				fn();
-			} else if(window.console){
-				console.log('could not load slider');
-			}
-		} else {
-			$.webshims.ready('range-ui', fn);
-		}
+		$.webshims.ready('range-ui', fn);
 	};
 	
 	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
@@ -855,67 +833,34 @@
 			
 			var createFn = function(){
 				var api, volume;
-				if(loadRange.rangeType == 'jqueryui'){
-					volume = createGetSetHandler(
-						function(){
-							var volume = media.prop('volume');
-							if(volume !== undefined){
-								control._uiSlider('value', volume);
-							}
-						},
-						function(value){
-							media.prop({
-								muted: false,
-								volume: value
-							});
+				
+				volume = createGetSetHandler(
+					function(){
+						var volume = media.prop('volume');
+						if(volume !== undefined){
+							api.value(volume);
 						}
-					);
-					
-					control
-						.html('<div class="slider-rail"><a href="#" class="ui-slider-handle"></a></div>')
-						._uiSlider({
-							range: 'min',
-							max: 1,
-							step: 0.05,
-							value: media.prop('volume'),
-							slide: function(e, data){
-								if(e.originalEvent){
-									volume.set(data.value);
-								}
-							}
-						})
-					;
-					
-				} else {
-					volume = createGetSetHandler(
-						function(){
-							var volume = media.prop('volume');
-							if(volume !== undefined){
-								api.value(volume);
-							}
-						},
-						function(value){
-							media.prop({
-								muted: false,
-								volume: api.options.value
-							});
-						}
-					);
-					
-					api = control
-						.rangeUI({
-							min: 0,
-							max: 1,
-							//animate: true,
-							step: 'any',
-							input: function(){
-								volume.set();
-							} 
-						})
-						.data('rangeUi')
-					;
-						
-				}
+					},
+					function(value){
+						media.prop({
+							muted: false,
+							volume: api.options.value
+						});
+					}
+				);
+				
+				api = control
+					.rangeUI({
+						min: 0,
+						max: 1,
+						//animate: true,
+						step: 'any',
+						input: function(){
+							volume.set();
+						} 
+					})
+					.data('rangeUi')
+				;
 				media.bind('volumechange', volume.get);
 			};
 
@@ -937,157 +882,101 @@
 			var module = this;
 			
 			var createFn = function(){
-				var time, durationChange, api, timeShow, hasDuration;
+				var time, durationChange, api, timeShow;
 				var hasDuration = $.jme.classNS+'has-duration';
 				var noDuration = $.jme.classNS+'no-duration';
 				var duration = media.prop('duration');
 				
+				time = createGetSetHandler(
+					function(){
+						var time = media.prop('currentTime');
+						if(!isNaN(time)){
+							try {
+								api.value(time);
+							} catch(er){}
+						}
+						
+					},
+					function(){
+						try {
+							media.prop('currentTime', api.options.value).triggerHandler('timechanged', [api.options.value]);
+						} catch(er){}
+					}
+				);
 				
-				if(loadRange.rangeType == 'jqueryui'){
-					time = createGetSetHandler(
-						function(){
-							var time = media.prop('currentTime');
-							if(!isNaN(time)){
-								try {
-									control._uiSlider('value', time);
-								} catch(er){}
-							}
-							
+				durationChange = function(){
+					duration = media.prop('duration');
+					hasDuration = duration && isFinite(duration) && !isNaN(duration);
+					if(hasDuration){
+						api.disabled(false);
+						api.max(duration);
+						
+						base.removeClass(module[pseudoClasses].no);
+					} else {
+						api.disabled(true);
+						api.max(Number.MAX_VALUE);
+						base.addClass(module[pseudoClasses].no);
+					}
+				};
+				
+				api = control
+					.rangeUI({
+						min: 0,
+						value: media.prop('currentTime') || 0,
+						//animate: true,
+						step: 'any',
+						input: function(){
+							time.set();
 						},
-						function(value){
-							try {
-								media.prop('currentTime', value).triggerHandler('timechanged', [value]);
-							} catch(er){}
+						textValue: function(val){
+							return media.jmeFn('formatTime', val);
 						}
-					);
-					
-					durationChange = function(){
-						duration = media.prop('duration');
-						if(duration && isFinite(duration) && !isNaN(duration)){
-							control
-								._uiSlider('option', 'disabled', false)
-								._uiSlider('option', 'max', duration)
-							;
-							base.removeClass(module[pseudoClasses].no);
-						} else {
-							control._uiSlider('option', 'disabled', true);
-							control._uiSlider('value', 0);
-							base.addClass(module[pseudoClasses].no);
-						}
-					};
-					
-					control._uiSlider({
-						range: assumeIE7 ? false : 'min',
-						step: 0.1,
-						value: media.prop('currentTime'),
-						slide: function(e, data){
-							if(e.originalEvent){
-								time.set(data.value);
-							}
-						}
-					});
-					media.bind({
-						timeupdate: time.get,
-						emptied: function(){
-							durationChange();
-							control._uiSlider('value', 0);
-						},
-						durationchange: durationChange
-					});
-					
-				} else {
-					
-					time = createGetSetHandler(
-						function(){
-							var time = media.prop('currentTime');
-							if(!isNaN(time)){
-								try {
-									api.value(time);
-								} catch(er){}
-							}
-							
-						},
-						function(){
-							try {
-								media.prop('currentTime', api.options.value).triggerHandler('timechanged', [api.options.value]);
-							} catch(er){}
-						}
-					);
-					
-					durationChange = function(){
-						duration = media.prop('duration');
-						hasDuration = duration && isFinite(duration) && !isNaN(duration);
-						if(hasDuration){
-							api.disabled(false);
-							api.max(duration);
-							
-							base.removeClass(module[pseudoClasses].no);
-						} else {
-							api.disabled(true);
-							api.max(Number.MAX_VALUE);
-							base.addClass(module[pseudoClasses].no);
-						}
-					};
-					
-					api = control
-						.rangeUI({
-							min: 0,
-							value: media.prop('currentTime') || 0,
-							//animate: true,
-							step: 'any',
-							input: function(){
-								time.set();
-							},
-							textValue: function(val){
-								return media.jmeFn('formatTime', val);
-							}
-						})
-						.data('rangeUi')
-					;
-					
-					timeShow = $('<span class="'+ $.jme.classNS +'time-select" />').appendTo(control);
-					
-					control
-						.on({
-							'mouseenter': function(e){
-								if(hasDuration){
-									var widgetLeft = (control.offset() || {left: 0}).left;
-									var widgetWidth = control.innerWidth();
-									var posLeft = function(x){
-										var perc = (x - widgetLeft) / widgetWidth * 100;
-										timeShow
-											.html(media.jmeFn('formatTime', duration * perc / 100))
-											.css({left: perc+'%'})
-										;
-									};
-									
-									posLeft(e.pageX);
-									timeShow.addClass($.jme.classNS +'show-time-select');
-									control
-										.off('.jmetimeselect')
-										.on('mousemove.jmetimeselect', function(e){
-											posLeft(e.pageX);
-										})
+					})
+					.data('rangeUi')
+				;
+				
+				timeShow = $('<span class="'+ $.jme.classNS +'time-select" />').appendTo(control);
+				
+				control
+					.on({
+						'mouseenter': function(e){
+							if(hasDuration){
+								var widgetLeft = (control.offset() || {left: 0}).left;
+								var widgetWidth = control.innerWidth();
+								var posLeft = function(x){
+									var perc = (x - widgetLeft) / widgetWidth * 100;
+									timeShow
+										.html(media.jmeFn('formatTime', duration * perc / 100))
+										.css({left: perc+'%'})
 									;
-								}
-							},
-							mouseleave: function(){
-								timeShow.removeClass($.jme.classNS +'show-time-select');
-								control.off('.jmetimeselect');
+								};
+								
+								posLeft(e.pageX);
+								timeShow.addClass($.jme.classNS +'show-time-select');
+								control
+									.off('.jmetimeselect')
+									.on('mousemove.jmetimeselect', function(e){
+										posLeft(e.pageX);
+									})
+								;
 							}
-						})
-					;
-					
-					
-					media.bind({
-						timeupdate: time.get,
-						emptied: function(){
-							durationChange();
-							api.value(0);
 						},
-						durationchange: durationChange
-					});
-				}
+						mouseleave: function(){
+							timeShow.removeClass($.jme.classNS +'show-time-select');
+							control.off('.jmetimeselect');
+						}
+					})
+				;
+				
+				
+				media.bind({
+					timeupdate: time.get,
+					emptied: function(){
+						durationChange();
+						api.value(0);
+					},
+					durationchange: durationChange
+				});
 				
 				
 				
@@ -1304,8 +1193,6 @@
 			updatePoster();
 		}
 	});
-	
-	$(window).trigger('jmepluginready');
 })(jQuery);
 
 (function($){
@@ -1314,12 +1201,10 @@
 	$.jme.startJME = function(){
 		if(started){return;}
 		var modules;
-		if((modules = $.webshims.modules) && (modules["range-ui"])){
+		if($.webshims.loader){
 			setTimeout(function(){
-				if(!$.fn.slider){
-					$.webshims.loader.loadList(['range-ui']);
-				}
-			}, 9);
+				$.webshims.loader.loadList(['range-ui']);
+			}, 0);
 		}
 		$(function(){
 			$.jme.createSelectors();
@@ -1334,5 +1219,5 @@
 		});
 		started = true;
 	};
-	
+	$(window).trigger('jmepluginready');
 })(jQuery);

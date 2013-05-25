@@ -1,6 +1,6 @@
 {
   "name": "jme",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "devDependencies": {
     "grunt": "~0.4.1",
 	"grunt-contrib-watch": ">=0.3.0",

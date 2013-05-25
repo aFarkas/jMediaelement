@@ -34,6 +34,10 @@ module.exports = function(grunt) {
             track: {
                 src: 'src/jme.track.js',
                 dest: 'demo/js/plugins/jme.track.min.js'
+            },
+            track: {
+                src: 'src/jme.embed.js',
+                dest: 'demo/js/plugins/jme.embed.min.js'
             }
 		},
 		watch: {

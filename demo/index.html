@@ -116,6 +116,8 @@
 				property boolean fullscreen;
 				readonly property jQuery media; 
 				jQuery addControls(controls);
+				readonly property string embedUrl;
+				jQuery getIframe([width, height]);
 			};</pre>
 		</dd>
 	</dl>
@@ -148,7 +150,7 @@
 	<pre class="example">
 		<code>
 			$('div.mediaplayer').jmeProp('fullscreen', function(i, state){
-			    return !state;
+				return !state;
 			});
 		</code>
 	</pre>

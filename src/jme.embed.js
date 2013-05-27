@@ -34,6 +34,9 @@
 					if(cfg.e == 'video'){
 						cfg.a.preload = 'none';
 					}
+					if(!$.jme){
+						cfg.a.controls = 'controls';
+					}
 					var media = $(document.createElement(cfg.e)).attr(cfg.a).appendTo(player);
 					
 					if(cfg.e == 'video'){

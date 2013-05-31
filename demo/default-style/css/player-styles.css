@@ -105,6 +105,10 @@ video {
 	height: 288px;
 }
 
+.audioplayer {
+	height: 160px;
+}
+
 .mediaplayer.ratio-16-9,
 .mediaplayer.ratio-4-3 {
 	position: relative;
@@ -143,7 +147,6 @@ video {
 	max-width: 980px;
 	margin: 0 auto;
 	padding: 0 10px;
-	-moz-transition: all 400ms;
 	-webkit-transition: all 400ms;
 	transition: all 400ms;
 }
@@ -155,22 +158,20 @@ video {
 	font-family: monospace;
 }
 
-.mediaplayer.state-playing .media-controls {
-	-moz-transform: translate(0, 60%);
+.videoplayer.state-playing .media-controls {
 	-webkit-transform: translate(0, 60%);
 	transform: translate(0, 60%);
 	opacity: 0;
 }
-.no-opacity .mediaplayer.state-playing .media-controls {
+.no-opacity .videoplayer.state-playing .media-controls {
 	visibility: hidden;
 }
-.mediaplayer.useractive .media-controls {
-	-moz-transform: translate(0, 0);
+.videoplayer.useractive .media-controls {
 	-webkit-transform: translate(0, 0);
 	transform: translate(0, 0);
 	opacity: 1;
 }
-.no-opacity .mediaplayer.useractive .media-controls {
+.no-opacity .videoplayer.useractive .media-controls {
 	visibility: visible;
 }
 .media-controls button {

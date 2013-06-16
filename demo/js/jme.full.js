@@ -314,6 +314,8 @@
 				var jmeData = $.jme.data(this);
 				var mediaData = $.jme.data(media[0]);
 				
+				
+				base.addClass(media.prop('nodeName').toLowerCase()+'player');
 				mediaData.player = base;
 				mediaData.media = media;
 				if(!jmeData.media){

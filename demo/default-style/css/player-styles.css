@@ -105,6 +105,10 @@ video {
 	height: 288px;
 }
 
+.mediaplayer {
+	height: auto;
+}
+
 .audioplayer {
 	height: 160px;
 }
@@ -518,6 +522,7 @@ body.has-media-fullscreen {
 	background-position: 3px -1797px;
 }
 
+.audioplayer .media-controls .fullscreen,
 .mobile .media-controls .volume-controls,
 .mobile.no-fullscreen .media-controls .fullscreen {
 	display: none;

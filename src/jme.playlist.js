@@ -1,5 +1,5 @@
 (function (factory) {
-	var $ = window.jQuery;
+	var $ = window.webshims && webshims.$ || jQuery;
 	if($.jme){
 		factory($);
 	} else {

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+	
+	<link href="demo-style/styles.css" rel="stylesheet" />
+	<style>
+		
+.fontawsome-icon,
+.jme-default-media-overlay,
+.media-controls button {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	-webkit-font-smoothing: antialiased;
+	line-height: normal;
+	color: #fff;
+}
+
+.icon-spin,
+.state-waiting .jme-default-media-overlay:before {
+	animation: spin 2s infinite linear;
+}
+
+.mediaplayer .media-controls:after {
+	content: " ";
+	display: block;
+	clear: both;
+}
+</style>
+	<link href="font-style/css/player-styles.css" rel="stylesheet" />
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
+	
+	
+	<!-- polyfill: only needed if you want to make it cross browser (do not hotlink) -->
+	<script src="http://afarkas.github.io/webshim/demos/js-webshim/minified/extras/modernizr-custom.js"></script>
+	<script src="http://afarkas.github.io/webshim/demos/js-webshim/minified/polyfiller.js"></script>
+	<!-- END: polyfill -->
+	
+	<!-- only needed if you don't use webshims polyfiller 
+	<script src="http://afarkas.github.io/webshim/demos/js-webshim/minified/shims/range-ui.js"></script>
+	-->
+	<script src="../src/jme.js"></script>
+	<script src="../src/jme.fullscreen.js"></script>
+	<script src="../src/jme.track.js"></script>
+	<script src="../src/jme.embed.js"></script>
+	
+	
+	
+	<script>
+		(!$.jme && document.write('<script src="js\/jme.full.js"><\/script>'));
+		
+var setCountryValidity = function () {
+	var message = 'Please     Enter different country ';
+	
+	//only test if valid or we have set invalid
+	if ($("#country2").is(':valid') || $("#country2").prop('validationMessage') == message) {
+		if ($('#country1').val() != $("#country2").val()) {
+			message = '';
+		}
+		
+		$("#country2").setCustomValidity(message);
+	}
+};
+
+//test if country1 was changed
+$("#country1")
+	.on('change', setCountryValidity)
+;
+//test if country2 was changed and ...
+$("#country2")
+	.on('change', setCountryValidity)
+	//... on DOMready
+	.each(setCountryValidity)
+;
+	</script>
+	
+	<!-- start polyfill (only if webshims is included) -->
+	<script>
+		if($.webshims && $.webshims.setOptions){
+			$.webshims.setOptions({
+				track: {override: true}
+			});
+			$.webshims.polyfill('mediaelement');
+		}
+		
+		//config embedded-player path (should be full path) in production
+		//try $('.mediaplayer').jmeFn('getIframe');
+		$.jme.options.embeddedPlayer = 'embedded-player.html';
+		$.jme.startJME();
+	</script>
+	<title>jme2</title>
+	
+	
+</head>
+<body>
+
+<div class="mediaplayer" data-jme='{"controlbar": true}'>
+	<video controls="controls" preload="none" poster="media/sintel/sintel-trailer.png">
+		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.m4v" type="video/mp4" />
+		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.webm" type="video/webm" />
+		
+		<track kind="subtitles" src="media/sintel/sintel-trailer_en.vtt" srclang="en" label="English subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_de.vtt" srclang="de" label="German subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_es.vtt" srclang="es" label="Spanish subtitles" />
+		<track kind="subtitles" src="media/sintel/sintel-trailer_fr.vtt" srclang="fr" label="French subtitles" />
+	</video>
+</div>
+
+<br /><br /><br /><br />
+<div class="mediaplayer" data-jme='{"controlbar": true}'>
+	<audio controls="controls" preload="none">
+		<source src="http://cdn.yayquery.com/ep/23/yayquery_23.mp3" type="audio/mp3" />
+	</audio>
+</div>
+
+
+</body>
+</html>

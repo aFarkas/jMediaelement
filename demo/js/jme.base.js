@@ -39,7 +39,7 @@
 
 
 		$.jme = {
-			version: '2.0.8',
+			version: '2.0.9',
 			classNS: '',
 			options: {},
 			plugins: {},
@@ -113,21 +113,9 @@
 			}
 		};
 		
-		var oldAccess = true;
-		try {
-			$.access( $(document.documentElement), 't', undefined, true, $.noop );
-		} catch(er){
-			oldAccess = false;
-		}
-
-		$.fn.jmeProp = oldAccess ?
-			function(name, value){
-				return $.access( this, name, value, true, $.jme.prop );
-			} :
-			function(name, value){
-				return $.access( this, $.jme.prop, name, value, arguments.length > 1 );
-			}
-		;
+		$.fn.jmeProp = function(name, value){
+			return $.access( this, $.jme.prop, name, value, arguments.length > 1 );
+		};
 		
 		$.fn.jmeFn = function(fn){
 			var args = Array.prototype.slice.call( arguments, 1 );
@@ -603,11 +591,17 @@
 		$.jme.defineMethod('updateControlbar', function(){
 			var timeSlider = $('.'+ $.jme.classNS +'time-slider', this);
 			if(timeSlider[0] && timeSlider.css('position') !== 'absolute'){
-				var width = Math.floor(timeSlider.parent().width()) - 0.2;
+				var width;
+				var elemWidths = 0;
+				var oldCss = {
+					position: timeSlider[0].style.position,
+					display: timeSlider[0].style.display
+				};
 				
-				var elemWidths = 0; 
+				timeSlider.css({display: 'none', position: 'absolute'});
+				
+				width = Math.floor(timeSlider.parent().width()) - 0.2;
 				timeSlider
-					.hide()
 					.siblings()
 					.each(function(){
 						if(this !== timeSlider[0] && $.css(this, 'position') !== 'absolute' && $.css(this, 'display') !== 'none'){
@@ -615,7 +609,7 @@
 						}
 					})
 					.end()
-					.show()
+					.css(oldCss)
 				;
 				timeSlider.width(Math.floor(width - elemWidths - Math.ceil(timeSlider.outerWidth(true) - timeSlider.width()) - 0.3));
 			}
@@ -1222,4 +1216,4 @@
 		started = true;
 	};
 	$(window).trigger('jmepluginready');
-})(jQuery);
+})(window.webshims && webshims.$ || jQuery);

@@ -1,5 +1,5 @@
 (function (factory) {
-	var $ = window.jQuery;
+	var $ = window.webshims && webshims.$ || jQuery;
 	if($.jme){
 		factory($);
 	} else {
@@ -140,6 +140,7 @@
 			
 			var trackElems = media.find('track');
 			var btnTextElem = $('span.jme-text, +label span.jme-text', control);
+			
 			if(!btnTextElem[0]){
 				btnTextElem = control;
 			}
@@ -153,7 +154,7 @@
 			
 			
 			$.webshims.ready('track', function(){
-				var menuObj;
+				var menuObj, throttledUpdateMode;
 				var tracks = [];
 				var textTracks = media.prop('textTracks');
 				var throttledUpdate = (function(){
@@ -170,7 +171,6 @@
 						timer = setTimeout(updateTrackMenu, 19);
 					};
 				})();
-				
 				function createSubtitleMenu(menu){
 					if(!menuObj){
 						menuObj = new $.jme.ButtonMenu(control, menu, function(index, button){
@@ -227,16 +227,20 @@
 					textTracks = [];
 					updateTrackMenu();
 				} else {
-					updateTrackMenu();
-					$([textTracks]).on('addtrack removetrack', throttledUpdate);
-					base.bind('updatesubtitlestate', throttledUpdate);
-					media.bind('updatetrackdisplay', (function(){
+					throttledUpdateMode = (function(){
 						var timer;
 						return function(){
 							clearTimeout(timer);
 							timer = setTimeout(updateMode, 20);
 						};
-					})());
+					})();
+					updateTrackMenu();
+					$([textTracks])
+						.on('addtrack removetrack', throttledUpdate)
+						.on('change', throttledUpdateMode)
+					;
+					base.bind('updatesubtitlestate', throttledUpdate);
+					media.bind('updatetrackdisplay', throttledUpdateMode);
 				}
 				
 			});

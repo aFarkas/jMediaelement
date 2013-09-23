@@ -1,5 +1,5 @@
 (function (factory) {
-	var $ = window.jQuery;
+	var $ = window.webshims && webshims.$ || jQuery;
 	if($.jme){
 		factory($);
 	} else {
@@ -165,7 +165,7 @@
 		set: function(elem, value){
 			var data = $.jme.data(elem);
 			
-			if(!data || !data.player){return 'noDataSet';}
+			if((!data || !data.player) && !$(elem).hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
 			if(value){
 				if(data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
 
@@ -222,11 +222,13 @@
 				data.player.triggerHandler('playerdimensionchange', ['fullwindow']);
 				
 			} else {
-				if(!data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
+				if(data.player && !data.player.hasClass($.jme.classNS+'player-fullscreen')){return 'noDataSet';}
 				$(document).unbind('.jmefullscreen');
 				$('html').removeClass($.jme.classNS+'has-media-fullscreen');
-				data.player.removeClass($.jme.classNS+'player-fullscreen');
-				data.media.removeClass($.jme.classNS+'media-fullscreen');
+				if(data.player && data.media){
+					data.player.removeClass($.jme.classNS+'player-fullscreen');
+					data.media.removeClass($.jme.classNS+'media-fullscreen');
+				}
 				if($.jme.fullscreen.isFullScreen()){
 					try {
 						$.jme.fullscreen.cancelFullScreen();
@@ -235,8 +237,9 @@
 					$.jme.fullscreen.cancelFullWindow();
 				}
 
-
-				data.player.triggerHandler('playerdimensionchange');
+				if(data.player){
+					data.player.triggerHandler('playerdimensionchange');
+				}
 				if(data.scrollPos){
 					$(window).scrollTop(data.scrollPos.top);
 					$(window).scrollLeft(data.scrollPos.left);

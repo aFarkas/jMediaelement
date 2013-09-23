@@ -139,5 +139,5 @@
 	});
 	
 }));
-})(jQuery);
+})(window.webshims && webshims.$ || jQuery);
 

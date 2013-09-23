@@ -1,9 +1,37 @@
+@font-face {
+	font-family: 'FontAwesome';
+	src: url('../fonts/fontawesome-webfont.eot?v=3.0.1');
+	src: url('../fonts/fontawesome-webfont.eot?#iefix&v=3.0.1') format('embedded-opentype'),
+	  url('../fonts/fontawesome-webfont.woff?v=3.0.1') format('woff'),
+	  url('../fonts/fontawesome-webfont.ttf?v=3.0.1') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
 button {
 	overflow: visible;
 }
 button::-moz-focus-inner {
 	padding:0;
 	border:0;
+}
+
+.fontawsome-icon,
+.jme-default-media-overlay,
+.media-controls button.play-pause {
+	font-family: FontAwesome;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: inherit;
+	-webkit-font-smoothing: antialiased;
+	line-height: normal;
+}
+
+
+
+@keyframes spin {
+	0% { transform: rotate(0deg); }
+	100% { transform: rotate(359deg); }
 }
 
 /* default */
@@ -80,20 +108,23 @@ html.jme-embedded-player .mediaplayer video {
 	width: 100%;
 	height: 100%;
 	cursor: pointer;
-	background: url("../img/loader.gif") no-repeat -9999px -9999px;
+	font-size: 450%;
 }
 
-.state-playing .jme-default-media-overlay {
-	background-image: none;
+.jme-default-media-overlay:before {
+	position: absolute;
+	top: 100px;
+	left: 50%;
+	margin: 0 0 0 -0.5em;
 }
 
-.state-waiting .jme-default-media-overlay {
-	background-position: center;
+.state-waiting .jme-default-media-overlay:before {
+	content: "\f02d";
 }
 
-.state-idle .jme-default-media-overlay,
-.state-ended .jme-default-media-overlay {
-	background: url("../img/play-overlay.png") no-repeat center;
+.state-idle .jme-default-media-overlay:before,
+.state-ended .jme-default-media-overlay:before {
+	content: "\f022";
 }
 /* default end */
 
@@ -107,6 +138,7 @@ video {
 
 .mediaplayer {
 	height: auto;
+	font-size: 16px;
 }
 
 .audioplayer {
@@ -142,17 +174,20 @@ video {
 .jme-default-control-bar {
 	position: absolute;
 	left: 0;
-	bottom: 10px;
-	width: 100%;
+	bottom: 0;
+	right: 0;
 	outline: none;
 }
 
 .mediaplayer .media-controls {
-	max-width: 980px;
+	position: relative;
+	zoom: 1;
 	margin: 0 auto;
-	padding: 0 10px;
+	padding: 10px;
 	-webkit-transition: all 400ms;
 	transition: all 400ms;
+	background: #000;
+	background: rgba(0, 0, 0, 0.6);
 }
 
 
@@ -163,16 +198,12 @@ video {
 }
 
 .videoplayer.state-playing .media-controls {
-	-webkit-transform: translate(0, 60%);
-	transform: translate(0, 60%);
 	opacity: 0;
 }
 .no-opacity .videoplayer.state-playing .media-controls {
 	visibility: hidden;
 }
 .videoplayer.useractive .media-controls {
-	-webkit-transform: translate(0, 0);
-	transform: translate(0, 0);
 	opacity: 1;
 }
 .no-opacity .videoplayer.useractive .media-controls {
@@ -184,9 +215,9 @@ video {
 	overflow: visible;
 	border: 0;
 	padding: 0;
-	border-radius: 5px;
 	-webkit-appearance: none;
-	background: url("../img/player-sprites.png") no-repeat 0 -200px;
+	background: transparent;
+	color: #fff;
 }
 
 .media-controls button:hover,
@@ -209,11 +240,7 @@ video {
 }
 
 .media-controls button .jme-icon {
-	display: inline-block;
-	vertical-align: top;
-	width: 13px;
-	height: 13px;
-	background: url("../img/player-sprites.png") no-repeat -9999px -9999px;
+	display: none;
 }
 
 .media-controls button .jme-text {
@@ -221,6 +248,7 @@ video {
 	left: -9999px;
 	width: 0;
 	overflow: hidden;
+	font: arial;
 }
 
 .media-controls button.play-pause {
@@ -230,31 +258,14 @@ video {
 	width: 42px;
 }
 
-.media-controls button.play-pause .jme-icon {
-	margin: 2px 0 0 2px;
-	background-position: 0 -700px;
+.media-controls button.play-pause:before {
+	content: "\f029";
 }
 
-.media-controls button.play-pause.state-playing .jme-icon {
-	background-position: 1px -799px;
+.media-controls button.play-pause.state-playing:before {
+	content: "\f02a";
 }
 
-.media-controls .media-bar  {
-	position: relative;
-	margin: 0 0 0 55px;
-	padding: 3px 5px 1px;
-	height: 100%;
-	min-height: 18px;
-	border-radius: 5px 5px 5px 5px;
-	color: #FFFFFF;
-	font-size: 11px;
-	background: url("../img/player-sprites.png") repeat-x scroll 0 0 #333333;
-}
-
-html > body .media-controls .media-bar {
-	height: auto;
-	background-color: transparent;
-}
 .media-controls .media-bar > * {
 	float: left;
 }
@@ -265,6 +276,11 @@ html > body .media-controls .media-bar {
 	vertical-align: middle;
 	font-size: 0;
 	outline: none;
+	background: #fff;
+	background: rgba(255, 255, 255, 0.6);
+	height: 4px;
+	padding: 0;
+	cursor: pointer;
 }
 .media-controls .ws-range-rail {
 	position: absolute;
@@ -275,30 +291,22 @@ html > body .media-controls .media-bar {
 	height: 100%;
 }
 
-.media-controls .time-slider {
-	margin: 1px 10px 0;
-	background: url("../img/player-sprites.png") repeat-x scroll 0 -104px #999999;
-	border-radius: 3px 3px 3px 3px;
-	height: 4px;
-	padding: 1px;
-	top: 3px;
-}
 
-
-.media-controls .time-slider .ws-range-thumb {
-	background: url("../img/player-sprites.png") no-repeat scroll 0 -1099px transparent;
+.media-controls .ws-range-thumb {
+	background: #fff;
 	height: 15px;
 	margin: -5px 0 0 -2px;
-	outline: medium none;
 	top: 0;
 	width: 5px;
 	z-index: 9;
 }
 
-
-.media-controls .time-slider.ws-focus .ws-range-thumb,
-.media-controls .time-slider.ws-active .ws-range-thumb {
-	background-position: 0 -1199px;
+.media-controls .time-slider {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	top: 0;
 }
 
 .media-controls .time-slider .ws-range-progress {

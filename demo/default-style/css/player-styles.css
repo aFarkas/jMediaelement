@@ -46,6 +46,8 @@ html.jme-embedded-player .mediaplayer video {
 	min-width: 1px;
 	background: #000;
 	cursor: pointer;
+	border-radius: 0;
+	border: 0;
 }
 
 .volume-slider[aria-disabled="true"] .ws-range-thumb,
@@ -265,6 +267,7 @@ html > body .media-controls .media-bar {
 	vertical-align: middle;
 	font-size: 0;
 	outline: none;
+	box-shdow: none;
 }
 .media-controls .ws-range-rail {
 	position: absolute;
@@ -309,6 +312,7 @@ html > body .media-controls .media-bar {
 	cursor: pointer;
 	left: 0;
 	top: 0;
+	box-shdow: none;
 }
 
 .media-controls .time-select {
@@ -375,6 +379,7 @@ html > body .media-controls .media-bar {
 	min-height: 1px;
 	min-width: 1px;
 	top: 0;
+	box-shdow: none;
 }
 
 .state-muted .media-controls .volume-slider .ws-range-progress {

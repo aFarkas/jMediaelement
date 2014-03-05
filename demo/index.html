@@ -3,8 +3,7 @@
 <head>
 	<meta charset="utf-8"/>
 	<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-	
-	<link href="demo-style/styles.css" rel="stylesheet" />
+
 	
 	<link href="default-style/css/player-styles.css" rel="stylesheet" />
 	
@@ -32,11 +31,11 @@
 	
 	<!-- start polyfill (only if webshims is included) -->
 	<script>
-		if($.webshims && $.webshims.setOptions){
-			$.webshims.setOptions({
+		if(webshims && webshims.setOptions){
+			webshims.setOptions({
 				track: {override: true}
 			});
-			$.webshims.polyfill('mediaelement');
+			webshims.polyfill('mediaelement');
 		}
 		
 		//config embedded-player path (should be full path) in production
@@ -56,11 +55,13 @@
 	<video controls="controls" preload="none" poster="media/sintel/sintel-trailer.png">
 		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.m4v" type="video/mp4" />
 		<source src="http://corrupt-system.de/assets/media/sintel/sintel-trailer.webm" type="video/webm" />
-		
+
 		<track kind="subtitles" src="media/sintel/sintel-trailer_en.vtt" srclang="en" label="English subtitles" />
+
 		<track kind="subtitles" src="media/sintel/sintel-trailer_de.vtt" srclang="de" label="German subtitles" />
 		<track kind="subtitles" src="media/sintel/sintel-trailer_es.vtt" srclang="es" label="Spanish subtitles" />
 		<track kind="subtitles" src="media/sintel/sintel-trailer_fr.vtt" srclang="fr" label="French subtitles" />
+
 	</video>
 </div>
 

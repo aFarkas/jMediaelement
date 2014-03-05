@@ -1531,7 +1531,7 @@
 	}
 	
 }(function($){
-	var btnStructure = '<button class="{%class%}"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
+	var btnStructure = '<button class="{%class%}" type="button"><span class="jme-icon"></span><span class="jme-text">{%text%}</span></button>';
 	var pseudoClasses = 'pseudoClasses';
 	/**
 	 * Added captions Plugin
@@ -1579,9 +1579,9 @@
 				};
 			this.menu
 				.parent()
-				.bind('focusin', stopFocusOut)
-				.bind('mousedown', stopFocusOut)
-				.bind('focusout', function(e){
+				.on('focusin', stopFocusOut)
+				.on('mousedown', stopFocusOut)
+				.on('focusout', function(e){
 					timer = setTimeout(function(){
 						that.hide();
 					}, 40);
@@ -1661,24 +1661,30 @@
 			var that = this;
 			
 			var trackElems = media.find('track');
+			var checkbox = $(control).clone().attr({role: 'checkbox'}).insertBefore(control);
+
 			var btnTextElem = $('span.jme-text, +label span.jme-text', control);
-			
+
 			if(!btnTextElem[0]){
 				btnTextElem = control;
 			}
+
 			btnTextElem.html(that.text);
+
 			if(!trackElems.length){
 				control.prop('disabled', true);
 				base.addClass(that[pseudoClasses].noTrack);
 			} else {
 				base.addClass(that[pseudoClasses].hasTrack);
 			}
+
+			base.attr('data-tracks', trackElems.length);
 			
-			
-			$.webshims.ready('track', function(){
+			webshims.ready('track', function(){
 				var menuObj, throttledUpdateMode;
 				var tracks = [];
 				var textTracks = media.prop('textTracks');
+
 				var throttledUpdate = (function(){
 					var timer;
 					var triggerTimer;
@@ -1693,9 +1699,12 @@
 						timer = setTimeout(updateTrackMenu, 19);
 					};
 				})();
+
 				function createSubtitleMenu(menu){
+					var menuClick;
+
 					if(!menuObj){
-						menuObj = new $.jme.ButtonMenu(control, menu, function(index, button){
+						menuClick = function(index, button){
 							if($.attr(button, 'aria-checked') == 'true'){
 								tracks[index].mode = 'disabled';
 							} else {
@@ -1705,6 +1714,12 @@
 							}
 							media.prop('textTracks');
 							updateMode();
+						};
+
+						menuObj = new $.jme.ButtonMenu(control, menu, menuClick);
+						checkbox.on('click', function(){
+							menuClick(0, this);
+							return false;
 						});
 					} else {
 						menuObj.addMenu(menu);
@@ -1715,7 +1730,11 @@
 				
 				function updateMode(){
 					$('button', menuObj.menu).each(function(i){
-						$.attr(this, 'aria-checked', (tracks[i].mode == 'showing') ? 'true' : 'false');
+						var checked = (tracks[i].mode == 'showing') ? 'true' : 'false';
+						if(!i){
+							checkbox.attr('aria-checked', checked);
+						}
+						$.attr(this, 'aria-checked', checked);
 					});
 				}
 				
@@ -1726,8 +1745,14 @@
 							tracks.push(track);
 						}
 					});
+
+					base.attr('data-tracks', tracks.length);
+
 					if(tracks.length){
 						createSubtitleMenu('<div class="'+that[pseudoClasses].menu +'" >'+ (getTrackMenu(tracks)) +'</div>');
+
+						$('span.jme-text, +label span.jme-text', checkbox).text((tracks[0].label || ' ') + (tracks[0].lang || ''));
+
 						if(!base.hasClass(that[pseudoClasses].hasTrack) || base.hasClass(that[pseudoClasses].noTrack)){
 							control.prop('disabled', false);
 							base
@@ -1736,6 +1761,7 @@
 								.triggerHandler('controlschanged')
 							;
 						}
+
 					} else if(!base.hasClass(that[pseudoClasses].noTrack) || base.hasClass(that[pseudoClasses].hasTrack)){
 						control.prop('disabled', true);
 						base
@@ -1745,6 +1771,7 @@
 						;
 					}
 				}
+
 				if(!textTracks){
 					textTracks = [];
 					updateTrackMenu();
@@ -1756,13 +1783,16 @@
 							timer = setTimeout(updateMode, 20);
 						};
 					})();
+
 					updateTrackMenu();
+
 					$([textTracks])
 						.on('addtrack removetrack', throttledUpdate)
 						.on('change', throttledUpdateMode)
 					;
-					base.bind('updatesubtitlestate', throttledUpdate);
-					media.bind('updatetrackdisplay', throttledUpdateMode);
+
+					base.on('updatesubtitlestate', throttledUpdate);
+					media.on('updatetrackdisplay', throttledUpdateMode);
 				}
 				
 			});

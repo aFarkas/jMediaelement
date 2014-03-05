@@ -535,6 +535,20 @@ body.has-media-fullscreen {
 	background-position: 3px -1797px;
 }
 
+.media-controls .captions[role="checkbox"] {
+	display: none;
+}
+
+/*for checkbox captions
+[data-tracks="1"] .media-controls .captions[role="checkbox"] {
+	display: inline-block;
+}
+
+[data-tracks="1"] .media-controls .captions[role="checkbox"] + .captions {
+	display: none;
+}
+*/
+
 .audioplayer .media-controls .fullscreen,
 .mobile .media-controls .volume-controls,
 .mobile.no-fullscreen .media-controls .fullscreen {
